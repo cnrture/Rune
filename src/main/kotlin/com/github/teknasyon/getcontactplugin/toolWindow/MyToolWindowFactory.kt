@@ -1,4 +1,4 @@
-package com.github.cnrture.getcontactandroidstudiopluginproject.toolWindow
+package com.github.teknasyon.getcontactplugin.toolWindow
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.thisLogger
@@ -8,8 +8,8 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.content.ContentFactory
-import com.github.cnrture.getcontactandroidstudiopluginproject.MyBundle
-import com.github.cnrture.getcontactandroidstudiopluginproject.services.MyProjectService
+import com.github.teknasyon.getcontactplugin.MyBundle
+import com.github.teknasyon.getcontactplugin.services.MyProjectService
 import javax.swing.JButton
 
 

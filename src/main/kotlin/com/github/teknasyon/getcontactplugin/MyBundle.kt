@@ -1,4 +1,4 @@
-package com.github.cnrture.getcontactandroidstudiopluginproject
+package com.github.teknasyon.getcontactplugin
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls

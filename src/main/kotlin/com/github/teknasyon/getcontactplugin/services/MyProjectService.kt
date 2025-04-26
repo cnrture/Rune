@@ -1,9 +1,9 @@
-package com.github.cnrture.getcontactandroidstudiopluginproject.services
+package com.github.teknasyon.getcontactplugin.services
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
-import com.github.cnrture.getcontactandroidstudiopluginproject.MyBundle
+import com.github.teknasyon.getcontactplugin.MyBundle
 
 @Service(Service.Level.PROJECT)
 class MyProjectService(project: Project) {

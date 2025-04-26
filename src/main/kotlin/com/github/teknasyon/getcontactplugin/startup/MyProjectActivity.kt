@@ -1,4 +1,4 @@
-package com.github.cnrture.getcontactandroidstudiopluginproject.startup
+package com.github.teknasyon.getcontactplugin.startup
 
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
