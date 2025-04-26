@@ -7,11 +7,4 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.android</depends>
     <depends>com.intellij.modules.androidstudio</depends>
-
-    <resource-bundle>messages.MyBundle</resource-bundle>
-
-    <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.teknasyon.getcontactplugin.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.teknasyon.getcontactplugin.startup.MyProjectActivity" />
-    </extensions>
 </idea-plugin>
