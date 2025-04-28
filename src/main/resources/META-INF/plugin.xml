@@ -1,10 +1,19 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.teknasyon.getcontactplugin</id>
-    <name>Getcontact-Android-Studio-Plugin-Project</name>
+    <name>Getcontact Android Studio Project</name>
     <vendor>Teknasyon</vendor>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>org.jetbrains.android</depends>
-    <depends>com.intellij.modules.androidstudio</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <actions>
+        <action
+                id="ModuleMaker.Open.ToolsMenu"
+                class="com.github.teknasyon.getcontactplugin.ModuleMakerAction"
+                text="Create Getcontact Module"
+                description="Create getcontact module">
+            <add-to-group group-id="ToolsMenu"/>
+        </action>
+    </actions>
 </idea-plugin>
