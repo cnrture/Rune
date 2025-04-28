@@ -1,0 +1,199 @@
+package com.github.teknasyon.getcontactplugin.components
+
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentColor
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Launch
+import androidx.compose.material.icons.automirrored.filled.TextSnippet
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.github.teknasyon.getcontactplugin.file.ExpandableFile
+import com.github.teknasyon.getcontactplugin.file.FileTree
+
+@Composable
+fun GetcontactFileTree(model: FileTree, height: Dp, onClick: (ExpandableFile) -> Unit, modifier: Modifier) {
+    Surface(
+        modifier = modifier.height(height)
+    ) {
+        with(LocalDensity.current) {
+            Box {
+                val lazyListState = rememberLazyListState()
+                val scrollState = rememberScrollState()
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().horizontalScroll(scrollState),
+                    state = lazyListState
+                ) {
+                    items(model.items.size) {
+                        FileTreeItemView(
+                            model = model.items[it],
+                            height = 14.sp.toDp() * 1.5f,
+                            showBottomPadding = it == model.items.size - 1 &&
+                                (lazyListState.canScrollForward || lazyListState.canScrollBackward),
+                            showEndPadding = scrollState.canScrollForward || scrollState.canScrollBackward,
+                            onClick = onClick,
+                        )
+                    }
+                }
+
+                VerticalScrollbar(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    adapter = rememberScrollbarAdapter(lazyListState),
+                )
+
+                HorizontalScrollbar(
+                    modifier = Modifier.align(Alignment.BottomStart),
+                    adapter = rememberScrollbarAdapter(scrollState),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FileTreeItemView(
+    height: Dp,
+    model: FileTree.Item,
+    onClick: (ExpandableFile) -> Unit,
+    showBottomPadding: Boolean,
+    showEndPadding: Boolean,
+) =
+    Row(
+        modifier = Modifier
+            .wrapContentHeight()
+            .clickable {
+                model.open()
+                onClick(model.file)
+            }
+            .padding(
+                start = 24.dp * model.level,
+                end = if (showEndPadding) 8.dp else 0.dp,
+                bottom = if (showBottomPadding) 8.dp else 0.dp
+            )
+            .height(height)
+            .fillMaxWidth()
+    ) {
+        val interactionSource = remember { MutableInteractionSource() }
+        val active by interactionSource.collectIsHoveredAsState()
+
+        FileItemIcon(
+            modifier = Modifier.align(Alignment.CenterVertically),
+            model = model,
+        )
+        Text(
+            text = model.name,
+            color = if (active) LocalContentColor.current.copy(alpha = 0.60f) else LocalContentColor.current,
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .clipToBounds()
+                .hoverable(interactionSource),
+            softWrap = true,
+            fontSize = 16.sp,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+        )
+    }
+
+@Composable
+private fun FileItemIcon(modifier: Modifier, model: FileTree.Item) {
+    Box(
+        modifier = modifier
+            .size(24.dp)
+            .padding(4.dp),
+    ) {
+        when (val type = model.type) {
+            is FileTree.ItemType.Folder -> when {
+                !type.canExpand -> Unit
+                type.isExpanded -> Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = LocalContentColor.current,
+                )
+
+                else -> Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = LocalContentColor.current,
+                )
+            }
+
+            is FileTree.ItemType.File -> when (type.ext) {
+                in sourceCodeFileExtensions -> Icon(
+                    imageVector = Icons.Default.Code,
+                    contentDescription = null,
+                    tint = Color(0xFF3E86A0),
+                )
+
+                "txt" -> Icon(
+                    imageVector = Icons.Default.Description,
+                    contentDescription = null,
+                    tint = Color(0xFF87939A),
+                )
+
+                "md" -> Icon(
+                    imageVector = Icons.Default.Description,
+                    contentDescription = null,
+                    tint = Color(0xFF87939A),
+                )
+
+                "gitignore" -> Icon(
+                    imageVector = Icons.Default.BrokenImage,
+                    contentDescription = null,
+                    tint = Color(0xFF87939A),
+                )
+
+                "gradle" -> Icon(
+                    imageVector = Icons.Default.Build,
+                    contentDescription = null,
+                    tint = Color(0xFF87939A),
+                )
+
+                "kts" -> Icon(
+                    imageVector = Icons.Default.Build,
+                    contentDescription = null,
+                    tint = Color(0xFF3E86A0),
+                )
+
+                "properties" -> Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = null,
+                    tint = Color(0xFF62B543),
+                )
+
+                "bat" -> Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Launch,
+                    contentDescription = null,
+                    tint = Color(0xFF87939A),
+                )
+
+                else -> Icon(
+                    imageVector = Icons.AutoMirrored.Filled.TextSnippet,
+                    contentDescription = null,
+                    tint = Color(0xFF87939A),
+                )
+            }
+        }
+    }
+}
+
+private val sourceCodeFileExtensions = listOf("java", "kt", "xml")
