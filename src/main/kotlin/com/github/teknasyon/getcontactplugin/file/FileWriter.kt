@@ -1,9 +1,12 @@
 package com.github.teknasyon.getcontactplugin.file
 
+import com.github.teknasyon.getcontactplugin.common.Constants
+import com.github.teknasyon.getcontactplugin.template.FeatureTemplate
 import com.github.teknasyon.getcontactplugin.template.GitIgnoreTemplate
 import com.github.teknasyon.getcontactplugin.template.TemplateWriter
 import java.io.File
 import java.io.FileWriter
+import java.io.IOException
 import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -105,12 +108,93 @@ class FileWriter {
         return listOf(filePath)
     }
 
+    fun createFeatureFiles(
+        moduleFile: File,
+        moduleName: String,
+        packageName: String,
+        showErrorDialog: (String) -> Unit,
+        showSuccessDialog: () -> Unit,
+    ): List<File> {
+        val featureFile = Paths.get(moduleFile.absolutePath, moduleName.lowercase()).toFile()
+
+        val commonDir = Paths.get(featureFile.absolutePath, "common").toFile()
+        val dataDir = Paths.get(featureFile.absolutePath, "data").toFile()
+        val diDir = Paths.get(featureFile.absolutePath, "di").toFile()
+        val domainDir = Paths.get(featureFile.absolutePath, "domain").toFile()
+        val presentationDir = Paths.get(featureFile.absolutePath, "presentation").toFile()
+
+        listOf(commonDir, dataDir, diDir, domainDir, presentationDir).forEach { it.mkdirs() }
+
+        val capitalizedModuleName = moduleName.replaceFirstChar { it.uppercase() }
+
+        val filePaths = listOf(
+            Paths.get(presentationDir.absolutePath, "${capitalizedModuleName}Screen.kt").toFile(),
+            Paths.get(presentationDir.absolutePath, "${capitalizedModuleName}ViewModel.kt").toFile(),
+            Paths.get(presentationDir.absolutePath, "${capitalizedModuleName}ComponentKey.kt").toFile(),
+            Paths.get(presentationDir.absolutePath, "${capitalizedModuleName}Contract.kt").toFile(),
+            Paths.get(presentationDir.absolutePath, "${capitalizedModuleName}PreviewProvider.kt").toFile(),
+        )
+
+        val successfullyCreatedFiles = mutableListOf<File>()
+
+        filePaths.forEach { file ->
+            try {
+                val writer: Writer = FileWriter(file)
+                val extendedPackageName = if (packageName.endsWith(".$moduleName")) {
+                    "$packageName.presentation"
+                } else {
+                    "$packageName.$moduleName.presentation"
+                }
+                val dataToWrite = when (file.name) {
+                    "${capitalizedModuleName}Screen.kt" -> {
+                        FeatureTemplate.getScreen(extendedPackageName, capitalizedModuleName)
+                    }
+
+                    "${capitalizedModuleName}ViewModel.kt" -> {
+                        FeatureTemplate.getViewModel(extendedPackageName, capitalizedModuleName)
+                    }
+
+                    "${capitalizedModuleName}ComponentKey.kt" -> {
+                        FeatureTemplate.getComponentKey(extendedPackageName, capitalizedModuleName)
+                    }
+
+                    "${capitalizedModuleName}Contract.kt" -> {
+                        FeatureTemplate.getContract(extendedPackageName, capitalizedModuleName)
+                    }
+
+                    "${capitalizedModuleName}PreviewProvider.kt" -> {
+                        FeatureTemplate.getPreviewProvider(extendedPackageName, capitalizedModuleName)
+                    }
+
+                    else -> Constants.EMPTY
+                }
+
+                if (dataToWrite.isNotEmpty()) {
+                    writer.write(dataToWrite)
+                    writer.flush()
+                    writer.close()
+                    successfullyCreatedFiles.add(file)
+                } else {
+                    showErrorDialog("No data to write for ${file.name}")
+                }
+            } catch (e: IOException) {
+                showErrorDialog("Error creating file ${file.name}: ${e.message}")
+            } catch (e: Exception) {
+                showErrorDialog("Unexpected error: ${e.message}")
+            }
+        }
+        showSuccessDialog()
+        return successfullyCreatedFiles
+    }
+
     private fun createDefaultPackages(
         moduleFile: File,
         packageName: String,
     ): List<File> {
         fun makePath(srcPath: File): File {
-            val packagePath = Paths.get(srcPath.path, packageName.split(".").joinToString(File.separator)).toFile()
+            val packagePath = Paths.get(
+                srcPath.path, packageName.split(".").joinToString(File.separator)
+            ).toFile()
             val stringBuilder = StringBuilder()
             val filePath = Paths.get(srcPath.absolutePath, stringBuilder.toString()).toFile()
             packagePath.mkdirs()
