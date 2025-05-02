@@ -27,7 +27,6 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
 
     private fun createToolWindowComponent(project: Project): JComponent {
         return ComposePanel().apply {
-            setBounds(0, 0, 300, 300)
             setContent {
                 WidgetTheme {
                     GetcontactToolWindowContent(project)
