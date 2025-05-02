@@ -7,23 +7,10 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
 
-    <actions>
-        <action
-                id="ModuleMaker.Open.ToolsMenu"
-                class="com.github.teknasyon.getcontactplugin.ModuleMakerAction"
-                text="Create Getcontact Module"
-                description="Create getcontact module">
-            <add-to-group group-id="ToolsMenu"/>
-        </action>
-
-        <action
-                id="FeatureMaker.Open.ToolsMenu"
-                class="com.github.teknasyon.getcontactplugin.FeatureMakerAction"
-                text="Create Getcontact Feature"
-                description="Create getcontact feature"
-                icon="/icons/gtc_logo.svg">
-            <add-to-group group-id="ToolsMenu"/>
-            <add-to-group group-id="NewGroup" anchor="last"/>
-        </action>
-    </actions>
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Getcontact"
+                    anchor="right"
+                    icon="/icons/pluginIcon.svg"
+                    factoryClass="com.github.teknasyon.getcontactplugin.GetcontactToolWindowFactory"/>
+    </extensions>
 </idea-plugin>
