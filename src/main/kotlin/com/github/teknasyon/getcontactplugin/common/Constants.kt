@@ -4,6 +4,8 @@ import freemarker.template.Configuration
 import freemarker.template.Version
 
 object Constants {
+    const val EMPTY = ""
+
     const val WINDOW_WIDTH = 840
     const val WINDOW_HEIGHT = 800
     const val FILE_TREE_WIDTH = 300
