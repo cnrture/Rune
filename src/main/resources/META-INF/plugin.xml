@@ -15,5 +15,15 @@
                 description="Create getcontact module">
             <add-to-group group-id="ToolsMenu"/>
         </action>
+
+        <action
+                id="FeatureMaker.Open.ToolsMenu"
+                class="com.github.teknasyon.getcontactplugin.FeatureMakerAction"
+                text="Create Getcontact Feature"
+                description="Create getcontact feature"
+                icon="/icons/gtc_logo.svg">
+            <add-to-group group-id="ToolsMenu"/>
+            <add-to-group group-id="NewGroup" anchor="last"/>
+        </action>
     </actions>
 </idea-plugin>
