@@ -22,11 +22,10 @@ class FileWriter {
         moduleType: String,
         showErrorDialog: (String) -> Unit,
         showSuccessDialog: () -> Unit,
-        gradleFileFollowModule: Boolean,
         packageName: String,
         addReadme: Boolean,
         addGitIgnore: Boolean,
-        rootPathString: String,
+        dependencies: List<String> = emptyList(),
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
@@ -46,20 +45,18 @@ class FileWriter {
         moduleFile.mkdirs()
 
         addToSettingsAtCorrectLocation(
-            rootPathAsString = rootPathString,
-            modulePathAsString = modulePathAsString,
             settingsGradleFile = settingsGradleFile,
-            showErrorDialog = showErrorDialog
+            modulePathAsString = modulePathAsString,
         )
 
         filesCreated += createDefaultModuleStructure(
             moduleFile = moduleFile,
             moduleName = moduleName,
             moduleType = moduleType,
-            gradleFileFollowModule = gradleFileFollowModule,
             packageName = packageName,
             addReadme = addReadme,
             addGitIgnore = addGitIgnore,
+            dependencies = dependencies,
         )
 
         showSuccessDialog()
@@ -71,19 +68,18 @@ class FileWriter {
         moduleFile: File,
         moduleName: String,
         moduleType: String,
-        gradleFileFollowModule: Boolean,
         packageName: String,
         addReadme: Boolean,
         addGitIgnore: Boolean,
+        dependencies: List<String> = emptyList(),
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
         filesCreated += templateWriter.createGradleFile(
             moduleFile = moduleFile,
-            moduleName = moduleName,
             moduleType = moduleType,
-            gradleFileFollowModule = gradleFileFollowModule,
             packageName = packageName,
+            dependencies = dependencies,
         )
 
         if (addReadme) filesCreated += templateWriter.createReadmeFile(moduleFile, moduleName)
@@ -210,121 +206,139 @@ class FileWriter {
     private fun addToSettingsAtCorrectLocation(
         settingsGradleFile: File,
         modulePathAsString: String,
-        showErrorDialog: (String) -> Unit,
-        rootPathAsString: String,
     ) {
-        val settingsFile = Files.readAllLines(Paths.get(settingsGradleFile.toURI()))
+        val settingsFileContent = Files.readAllLines(Paths.get(settingsGradleFile.toURI()))
 
-        val includeKeywords = listOf("includeProject", "includeBuild", "include")
+        val modulePath = modulePathAsString.removePrefix(":")
+        val moduleCategory = determineModuleCategory(modulePath)
 
-        val twoParametersPattern = """\(".+", ".+"\)""".toRegex()
+        val includeBlocks = findIncludeBlocksWithCategories(settingsFileContent)
 
-        val lastNonEmptyLineInSettingsGradleFile = settingsFile.last { settingsFileLine ->
-            settingsFileLine.isNotEmpty() && includeKeywords.any {
-                settingsFileLine.contains(it)
-            }
-        }
-        val projectIncludeKeyword = includeKeywords.firstOrNull { includeKeyword ->
-            lastNonEmptyLineInSettingsGradleFile.contains(includeKeyword)
-        }
-
-        if (projectIncludeKeyword == null) {
-            showErrorDialog("Could not find any include statements in settings.gradle(.kts) file")
-            return
-        }
-
-        val usesTwoParameters = settingsFile.any { line ->
-            twoParametersPattern.containsMatchIn(line)
-        }
-
-        val lastLineNumberOfFirstIncludeProjectStatement = settingsFile.indexOfLast {
-            settingsFileContainsSpecialIncludeKeyword(it, projectIncludeKeyword)
-        }
-
-        var tempIndexForSettingsFile = lastLineNumberOfFirstIncludeProjectStatement
-        while (tempIndexForSettingsFile >= 0) {
-            val currentLine = settingsFile[tempIndexForSettingsFile]
-            if (currentLine.trim().isEmpty() || settingsFileContainsSpecialIncludeKeyword(
-                    stringToCheck = currentLine,
-                    projectIncludeKeyword = projectIncludeKeyword,
-                )
-            ) {
-                tempIndexForSettingsFile--
-            } else {
-                break
-            }
-        }
-
-        val firstLineNumberOfFirstIncludeProjectStatement = tempIndexForSettingsFile + 1
-
-        if (firstLineNumberOfFirstIncludeProjectStatement <= 0) {
-            showErrorDialog("Could not find any include statements in settings.gradle(.kts) file")
-            return
-        }
-
-        val includeProjectStatements = settingsFile.subList(
-            firstLineNumberOfFirstIncludeProjectStatement,
-            lastLineNumberOfFirstIncludeProjectStatement + 1
-        ).filter { it.isNotEmpty() }.toMutableList()
-
-        val textToWrite = constructTextToWrite(
-            usesTwoParameters = usesTwoParameters,
-            projectIncludeKeyword = projectIncludeKeyword,
+        val updatedContent = insertModuleInCategory(
+            settingsFileContent = settingsFileContent.toMutableList(),
             modulePathAsString = modulePathAsString,
-            rootPathAsString = rootPathAsString
+            moduleCategory = moduleCategory,
+            categoryBlocks = includeBlocks,
         )
 
-        val insertionIndex = includeProjectStatements.indexOfFirst {
-            it.isNotEmpty() && it.lowercase() >= textToWrite.lowercase()
-        }
+        Files.write(Paths.get(settingsGradleFile.toURI()), updatedContent)
+    }
 
-        if (insertionIndex < 0) {
-            val offsetAmount = if (includeProjectStatements.size == 1 && includeProjectStatements.first()
-                    .doesNotContainModule(projectIncludeKeyword)
-            ) {
-                0
-            } else {
-                1
+    private fun determineModuleCategory(modulePath: String): String {
+        return when {
+            modulePath.startsWith("library:") -> "Libraries"
+            modulePath.startsWith("plugin:") -> "Plugins"
+            modulePath.startsWith("feature:") -> "Features"
+            modulePath.startsWith("launcher:") -> "Launchers"
+            else -> "Root"
+        }
+    }
+
+    private fun findIncludeBlocksWithCategories(settingsFileContent: List<String>): Map<String, Pair<Int, Int>> {
+        val categoryBlocks = mutableMapOf<String, Pair<Int, Int>>()
+        var currentCategory = "Root"
+        var categoryStart = -1
+        var inIncludeBlock = false
+
+        settingsFileContent.forEachIndexed { index, line ->
+            if (line.trim().startsWith("//") && !inIncludeBlock) {
+                val potentialCategory = line.trim().removePrefix("//").trim()
+                if (potentialCategory in listOf("Libraries", "Plugins", "Features", "Launchers")) {
+                    currentCategory = potentialCategory
+                    categoryStart = index
+                }
             }
-            settingsFile.add(lastLineNumberOfFirstIncludeProjectStatement + offsetAmount, textToWrite)
-        } else {
-            settingsFile.add(insertionIndex + firstLineNumberOfFirstIncludeProjectStatement, textToWrite)
+
+            if (line.contains("include ") || line.contains("include(")) {
+                if (!inIncludeBlock) {
+                    inIncludeBlock = true
+                    if (!categoryBlocks.containsKey(currentCategory)) {
+                        categoryBlocks[currentCategory] = Pair(index, index)
+                    }
+                }
+
+                if (!line.endsWith(",")) {
+                    inIncludeBlock = false
+                    categoryBlocks[currentCategory] = Pair(
+                        categoryBlocks[currentCategory]?.first ?: index,
+                        index
+                    )
+                }
+            } else if (inIncludeBlock) {
+                if (!line.trim().endsWith(",")) {
+                    inIncludeBlock = false
+                    categoryBlocks[currentCategory] = Pair(
+                        categoryBlocks[currentCategory]?.first ?: categoryStart,
+                        index
+                    )
+                }
+            }
         }
 
-        Files.write(Paths.get(settingsGradleFile.toURI()), settingsFile)
+        return categoryBlocks
     }
 
-    private fun settingsFileContainsSpecialIncludeKeyword(
-        stringToCheck: String,
-        projectIncludeKeyword: String,
-    ): Boolean {
-        return stringToCheck.contains("$projectIncludeKeyword(\"") ||
-            stringToCheck.contains("$projectIncludeKeyword('") ||
-            stringToCheck.contains("$projectIncludeKeyword(") ||
-            stringToCheck.contains("$projectIncludeKeyword \"") ||
-            stringToCheck.contains("$projectIncludeKeyword '")
-    }
-
-    private fun constructTextToWrite(
-        usesTwoParameters: Boolean,
-        projectIncludeKeyword: String,
+    private fun insertModuleInCategory(
+        settingsFileContent: MutableList<String>,
         modulePathAsString: String,
-        rootPathAsString: String,
-    ): String {
-        fun buildText(path: String): String {
-            val parametersString = if (usesTwoParameters) {
-                val filePath = "$rootPathAsString${path.replace(":", File.separator)}".removePrefix("/")
-                "\"$path\", \"$filePath\""
+        moduleCategory: String,
+        categoryBlocks: Map<String, Pair<Int, Int>>,
+    ): MutableList<String> {
+        if (categoryBlocks.containsKey(moduleCategory)) {
+            val (blockStart, blockEnd) = categoryBlocks[moduleCategory]!!
+            
+            val insertPosition = blockEnd
+            val lastLine = settingsFileContent[insertPosition]
+            
+            val baseIndentation = lastLine.takeWhile { it.isWhitespace() }
+            
+            var continuationIndentation = ""
+            if (insertPosition > blockStart) {
+                for (i in blockStart + 1..insertPosition) {
+                    val line = settingsFileContent[i].trim()
+                    if (line.startsWith("':") && !line.startsWith("include")) {
+                        // Continuation satırı bulduk, girintiyi al
+                        continuationIndentation = settingsFileContent[i].takeWhile { it.isWhitespace() }
+                        break
+                    }
+                }
+                
+                if (continuationIndentation.isEmpty()) {
+                    continuationIndentation = baseIndentation + " ".repeat(8)
+                }
             } else {
-                "\"$path\""
+                continuationIndentation = baseIndentation + " ".repeat(8)
             }
-            return "$projectIncludeKeyword($parametersString)"
+            
+            val trimmedLastLine = lastLine.trim()
+            
+            if (trimmedLastLine.endsWith(",")) {
+                settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
+            } else if (trimmedLastLine.contains("include") && 
+                      (trimmedLastLine.endsWith("'") || trimmedLastLine.endsWith("\""))) {
+                settingsFileContent[insertPosition] = "${lastLine},"
+                settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
+            } else if (trimmedLastLine.endsWith("'") || trimmedLastLine.endsWith("\"")) {
+                settingsFileContent[insertPosition] = "${lastLine},"
+                settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
+            } else {
+                val includeStatement = constructIncludeStatement(modulePathAsString)
+                settingsFileContent.add(insertPosition + 1, "$baseIndentation$includeStatement")
+            }
+            
+            return settingsFileContent
+        } else {
+            settingsFileContent.add("")
+            settingsFileContent.add("// $moduleCategory")
+            
+            val includeStatement = constructIncludeStatement(modulePathAsString)
+            settingsFileContent.add(includeStatement)
+            
+            return settingsFileContent
         }
-
-        return buildText(modulePathAsString)
     }
-}
 
-private fun String.doesNotContainModule(includeKeyword: String): Boolean {
-    return this.replace(" ", "").replace("(", "") == includeKeyword
+    private fun constructIncludeStatement(modulePathAsString: String): String {
+        return "include '$modulePathAsString'"
+    }
 }
