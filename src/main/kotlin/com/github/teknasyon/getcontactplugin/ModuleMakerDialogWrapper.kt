@@ -1,16 +1,11 @@
 package com.github.teknasyon.getcontactplugin
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.graphics.Color
@@ -46,10 +41,10 @@ class ModuleMakerDialogWrapper(
 
     private val fileWriter = FileWriter()
 
-    private val existingModules = mutableStateOf<List<String>>(emptyList())
+    private var existingModules = listOf<String>()
+    private val selectedDependencies = mutableStateListOf<String>()
 
     private var selectedSrcValue = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
-    private val gradleFileNamedAfterModule = mutableStateOf(false)
     private val addReadme = mutableStateOf(false)
     private val addGitIgnore = mutableStateOf(false)
     private val moduleTypeSelection = mutableStateOf(Constants.ANDROID)
@@ -76,15 +71,58 @@ class ModuleMakerDialogWrapper(
         if (settingsFile != null) {
             try {
                 val content = settingsFile.readText()
-                val modulePattern = """include\s*\(\s*["']([^"']+)["']\s*\)""".toRegex()
-                val matches = modulePattern.findAll(content)
-                val modules = matches.map { it.groupValues[1] }.toList()
-                existingModules.value = modules
+
+                val patterns = listOf(
+                    // include(":<module>") formatı (eski)
+                    """include\s*\(\s*["']([^"']+)["']\s*\)""".toRegex(),
+
+                    // include ':<module>' formatı
+                    """include\s+['"]([^"']+)["']""".toRegex(),
+
+                    // include ':module1', ':module2', ... formatı
+                    """include\s+['"]([^"']+)["'](?:\s*,\s*['"]([^"']+)["'])*""".toRegex(),
+
+                    // çok satırlı include için özel işleme
+                    """include\s+['"]([^"']+)["'](?:\s*,\s*\n\s*['"]([^"']+)["'])*""".toRegex()
+                )
+
+                val modulesSet = mutableSetOf<String>()
+
+                patterns.forEach { pattern ->
+                    val matches = pattern.findAll(content)
+                    matches.forEach { matchResult ->
+                        // Grup 1 ve sonrası tüm yakalanan modüller
+                        matchResult.groupValues.drop(1).forEach { moduleValue ->
+                            if (moduleValue.isNotEmpty()) {
+                                modulesSet.add(moduleValue)
+                            }
+                        }
+                    }
+                }
+
+                val multiLinePattern =
+                    """include\s*(?:'[^']*'|"[^"]*")\s*(?:,\s*\n\s*(?:'[^']*'|"[^"]*")\s*)*""".toRegex()
+                val multiLineMatches = multiLinePattern.findAll(content)
+
+                multiLineMatches.forEach { match ->
+                    val modulePattern = """['"]([^"']+)["']""".toRegex()
+                    val moduleMatches = modulePattern.findAll(match.value)
+                    moduleMatches.forEach { moduleMatch ->
+                        val moduleValue = moduleMatch.groupValues[1]
+                        if (moduleValue.isNotEmpty()) {
+                            modulesSet.add(moduleValue)
+                        }
+                    }
+                }
+
+                existingModules = modulesSet.toList().sorted()
             } catch (e: Exception) {
-                existingModules.value = emptyList()
+                println("Error loading modules: ${e.message}")
+                existingModules = emptyList()
             }
         }
     }
+
 
     override fun createCenterPanel(): JComponent {
         return ComposePanel().apply {
@@ -150,16 +188,14 @@ class ModuleMakerDialogWrapper(
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
     private fun ConfigurationPanel(modifier: Modifier = Modifier) {
-        val selectedRootState = remember { selectedSrcValue }
-        val gradleFileNamedAfterModuleState = remember { gradleFileNamedAfterModule }
-        val addReadmeState = remember { addReadme }
-        val addGitIgnoreState = remember { addGitIgnore }
+        var selectedRootState by remember { selectedSrcValue }
+        var addReadmeState by remember { addReadme }
+        var addGitIgnoreState by remember { addGitIgnore }
         val radioOptions = listOf(Constants.ANDROID, Constants.KOTLIN)
-        val moduleTypeSelectionState = remember { moduleTypeSelection }
-        val packageNameState = remember { packageName }
-        val moduleNameState = remember { moduleName }
+        var moduleTypeSelectionState by remember { moduleTypeSelection }
+        var moduleNameState by remember { moduleName }
 
-        val existingModulesState = remember { existingModules }
+        val selectedDependenciesState = remember { selectedDependencies }
 
         Column(
             modifier = modifier
@@ -168,7 +204,7 @@ class ModuleMakerDialogWrapper(
                 .padding(8.dp),
         ) {
             Text(
-                text = "Selected root: ${selectedRootState.value}",
+                text = "Selected root: $selectedRootState",
                 color = GetcontactTheme.colors.onPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -177,85 +213,73 @@ class ModuleMakerDialogWrapper(
             Spacer(modifier = Modifier.height(16.dp))
 
             GetcontactCheckbox(
-                label = "Gradle file named after module",
-                checked = gradleFileNamedAfterModuleState.value,
-                onCheckedChange = { gradleFileNamedAfterModuleState.value = it }
-            )
-
-            GetcontactCheckbox(
                 label = "Add README.md",
-                checked = addReadmeState.value,
-                onCheckedChange = { addReadmeState.value = it }
+                checked = addReadmeState,
+                onCheckedChange = { addReadmeState = it }
             )
 
             GetcontactCheckbox(
                 label = "Add .gitignore",
-                checked = addGitIgnoreState.value,
-                onCheckedChange = { addGitIgnoreState.value = it }
+                checked = addGitIgnoreState,
+                onCheckedChange = { addGitIgnoreState = it }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Module Type",
-                color = GetcontactTheme.colors.onPrimary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = "Module Type",
+                        color = GetcontactTheme.colors.onPrimary,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
 
-            radioOptions.forEach { text ->
-                GetcontactRadioButton(
-                    text = text,
-                    selected = text == moduleTypeSelectionState.value,
-                    onClick = { moduleTypeSelectionState.value = text },
+                    radioOptions.forEach { text ->
+                        GetcontactRadioButton(
+                            text = text,
+                            selected = text == moduleTypeSelectionState,
+                            onClick = { moduleTypeSelectionState = text },
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.size(24.dp))
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Module Name") },
+                    placeholder = { Text(Constants.DEFAULT_MODULE_NAME) },
+                    value = moduleNameState,
+                    onValueChange = { moduleNameState = it },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedLabelColor = GetcontactTheme.colors.onPrimary,
+                        unfocusedLabelColor = GetcontactTheme.colors.onPrimary,
+                        cursorColor = GetcontactTheme.colors.onPrimary,
+                        textColor = GetcontactTheme.colors.onPrimary,
+                        unfocusedBorderColor = GetcontactTheme.colors.onPrimary,
+                        focusedBorderColor = GetcontactTheme.colors.onPrimary,
+                        placeholderColor = GetcontactTheme.colors.onPrimary,
+                    )
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Package Name") },
-                value = packageNameState.value,
-                onValueChange = { packageNameState.value = it },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedLabelColor = GetcontactTheme.colors.onPrimary,
-                    unfocusedLabelColor = GetcontactTheme.colors.onPrimary,
-                    cursorColor = GetcontactTheme.colors.onPrimary,
-                    textColor = GetcontactTheme.colors.onPrimary,
-                    unfocusedBorderColor = GetcontactTheme.colors.onPrimary,
-                    focusedBorderColor = GetcontactTheme.colors.onPrimary,
-                    placeholderColor = GetcontactTheme.colors.onPrimary,
-                )
-            )
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Module Name") },
-                placeholder = { Text(Constants.DEFAULT_MODULE_NAME) },
-                value = moduleNameState.value,
-                onValueChange = { moduleNameState.value = it },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedLabelColor = GetcontactTheme.colors.onPrimary,
-                    unfocusedLabelColor = GetcontactTheme.colors.onPrimary,
-                    cursorColor = GetcontactTheme.colors.onPrimary,
-                    textColor = GetcontactTheme.colors.onPrimary,
-                    unfocusedBorderColor = GetcontactTheme.colors.onPrimary,
-                    focusedBorderColor = GetcontactTheme.colors.onPrimary,
-                    placeholderColor = GetcontactTheme.colors.onPrimary,
-                )
-            )
-
-            if (existingModulesState.value.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(24.dp))
+            if (existingModules.isNotEmpty()) {
+                Spacer(modifier = Modifier.size(24.dp))
                 Text(
-                    "Existing Modules",
+                    text = "Module Dependencies",
                     color = GetcontactTheme.colors.onPrimary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
-
-                Box(
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(
+                    text = "Select modules that your new module will depend on:",
+                    color = GetcontactTheme.colors.outline,
+                    fontSize = 14.sp,
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(4.dp)
@@ -264,42 +288,47 @@ class ModuleMakerDialogWrapper(
                             shape = RoundedCornerShape(8.dp)
                         )
                         .border(
-                            width = 2.dp,
+                            width = 1.dp,
                             color = GetcontactTheme.colors.outline,
                             shape = RoundedCornerShape(8.dp)
                         )
                         .padding(8.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        Column {
-                            existingModulesState.value.forEach { module ->
-                                Text(
-                                    text = module,
-                                    color = GetcontactTheme.colors.onPrimary,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
-                                        .clickable {
-                                            moduleNameState.value = module
-                                        }
-                                )
-                                Divider(color = GetcontactTheme.colors.outline)
-                            }
+                    existingModules.forEachIndexed { index, module ->
+                        val isChecked = module in selectedDependenciesState
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    if (isChecked) {
+                                        selectedDependenciesState.remove(module)
+                                    } else {
+                                        selectedDependenciesState.add(module)
+                                    }
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            GetcontactCheckbox(
+                                checked = isChecked,
+                                label = module,
+                                onCheckedChange = { checked ->
+                                    if (checked) {
+                                        selectedDependenciesState.add(module)
+                                    } else {
+                                        selectedDependenciesState.remove(module)
+                                    }
+                                }
+                            )
+                        }
+                        if (index < existingModules.lastIndex) {
+                            Divider(
+                                color = GetcontactTheme.colors.outline,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
                         }
                     }
                 }
-
-                Text(
-                    "Tip: Click on module name to use it",
-                    color = GetcontactTheme.colors.onPrimary.copy(alpha = 0.6f),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
             }
         }
     }
@@ -326,32 +355,38 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun create(): List<File> {
-        val settingsGradleFile = getSettingsGradleFile()
-        val moduleType = moduleTypeSelection.value
-        val currentlySelectedFile = getCurrentlySelectedFile()
-        if (settingsGradleFile != null) {
-            val filesCreated = fileWriter.createModule(
-                rootPathString = removeRootFromPath(selectedSrcValue.value),
-                settingsGradleFile = settingsGradleFile,
-                modulePathAsString = moduleName.value,
-                moduleType = moduleType,
-                showErrorDialog = { MessageDialogWrapper(it).show() },
-                showSuccessDialog = {
-                    MessageDialogWrapper("Success").show()
-                    refreshFileSystem(settingsGradleFile, currentlySelectedFile)
-                    syncProject()
-                },
-                workingDirectory = currentlySelectedFile,
-                gradleFileFollowModule = gradleFileNamedAfterModule.value,
-                packageName = packageName.value,
-                addReadme = addReadme.value,
-                addGitIgnore = addGitIgnore.value,
-            )
+        try {
+            val settingsGradleFile = getSettingsGradleFile()
+            val moduleType = moduleTypeSelection.value
+            val currentlySelectedFile = getCurrentlySelectedFile()
+            if (settingsGradleFile != null) {
+                val filesCreated = fileWriter.createModule(
+                    settingsGradleFile = settingsGradleFile,
+                    modulePathAsString = moduleName.value,
+                    moduleType = moduleType,
+                    showErrorDialog = { MessageDialogWrapper(it).show() },
+                    showSuccessDialog = {
+                        MessageDialogWrapper("Success").show()
+                        refreshFileSystem(settingsGradleFile, currentlySelectedFile)
+                        syncProject()
+                    },
+                    workingDirectory = currentlySelectedFile,
+                    packageName = packageName.value,
+                    addReadme = addReadme.value,
+                    addGitIgnore = addGitIgnore.value,
+                    dependencies = selectedDependencies
+                )
 
-            return filesCreated
-        } else {
-            MessageDialogWrapper("Couldn't find settings.gradle(.kts)").show()
+                return filesCreated
+            } else {
+                MessageDialogWrapper("Couldn't find settings.gradle(.kts)").show()
+                return emptyList()
+            }
+        } catch (e: Exception) {
+            MessageDialogWrapper("Error: ${e.message}").show()
             return emptyList()
+        } finally {
+            close(0)
         }
     }
 
@@ -384,8 +419,4 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun rootDirectoryString(): String = project.basePath!!
-
-    private fun removeRootFromPath(path: String): String {
-        return path.split(File.separator).drop(1).joinToString(File.separator)
-    }
 }

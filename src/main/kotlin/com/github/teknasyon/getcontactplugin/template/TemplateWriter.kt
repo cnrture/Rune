@@ -18,31 +18,29 @@ class TemplateWriter {
 
     fun createGradleFile(
         moduleFile: File,
-        moduleName: String,
         moduleType: String,
-        gradleFileFollowModule: Boolean,
         packageName: String,
+        dependencies: List<String> = emptyList(),
     ): List<File> {
         try {
             val data: MutableMap<String, Any> = HashMap()
             data["packageName"] = packageName
 
-            val gradleTemplate: Template = when (moduleType) {
-                Constants.KOTLIN -> Template(null, KotlinModuleKtsTemplate.data, cfg)
-                Constants.ANDROID -> Template(null, AndroidModuleKtsTemplate.data, cfg)
-                else -> throw IllegalArgumentException("Unknown module type")
+            val gradleTemplate = when (moduleType) {
+                Constants.ANDROID -> GradleTemplate.getAndroidModuleGradleTemplate(
+                    moduleName = moduleFile.name,
+                    dependencies = buildDependenciesBlock(dependencies)
+                )
+
+                else -> GradleTemplate.getKotlinModuleGradleTemplate()
             }
 
-            val fileName = if (gradleFileFollowModule) {
-                moduleName.plus(".gradle.kts")
-            } else {
-                "build".plus(".gradle.kts")
-            }
+            val fileName = "build".plus(".gradle")
 
             val filePath = Paths.get(moduleFile.absolutePath, fileName).toFile()
 
             val file: Writer = FileWriter(Paths.get(moduleFile.absolutePath, fileName).toFile())
-            gradleTemplate.process(data, file)
+            file.write(gradleTemplate)
             file.flush()
             file.close()
 
@@ -54,6 +52,18 @@ class TemplateWriter {
         }
 
         return emptyList()
+    }
+
+    private fun buildDependenciesBlock(dependencies: List<String>): String {
+        if (dependencies.isEmpty()) return Constants.EMPTY
+        return StringBuilder().apply {
+            append("// Module Dependencies\n")
+            dependencies.forEachIndexed { index, module ->
+                val moduleName = module.removePrefix(":").replace(":", ".")
+                append("    implementation(projects.$moduleName)")
+                if (index != dependencies.lastIndex) append("\n")
+            }
+        }.toString()
     }
 
     fun createReadmeFile(moduleFile: File, moduleName: String): List<File> {
