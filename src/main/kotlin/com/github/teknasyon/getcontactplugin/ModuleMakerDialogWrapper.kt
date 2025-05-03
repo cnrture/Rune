@@ -4,6 +4,8 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,13 +38,16 @@ import javax.swing.JComponent
 
 class ModuleMakerDialogWrapper(
     private val project: Project,
-    startingLocation: VirtualFile?,
+    private val startingLocation: VirtualFile?,
 ) : DialogWrapper(true) {
 
     private val fileWriter = FileWriter()
 
     private var existingModules = listOf<String>()
-    private val selectedDependencies = mutableStateListOf<String>()
+    private var selectedDependencies = mutableStateListOf<String>()
+    private var detectedDependencies = mutableStateListOf<String>()
+
+    private val shouldMoveFiles = mutableStateOf(false)
 
     private var selectedSrcValue = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
     private val addReadme = mutableStateOf(false)
@@ -66,6 +71,32 @@ class ModuleMakerDialogWrapper(
         }
     }
 
+    private fun analyzeSelectedDirectory(directory: File) {
+        try {
+            if (!directory.exists() || !directory.isDirectory) {
+                MessageDialogWrapper("Directory does not exist or is not a directory").show()
+                return
+            }
+
+            val analyzer = ImportAnalyzer()
+            val detectedModules = analyzer.analyzeSourceDirectory(directory)
+
+            detectedDependencies.clear()
+            detectedDependencies.addAll(detectedModules)
+
+            selectedDependencies.clear()
+            selectedDependencies.addAll(detectedModules)
+
+            MessageDialogWrapper(
+                "Detected modules: ${detectedModules.joinToString(", ")}"
+            ).show()
+
+        } catch (e: Exception) {
+            MessageDialogWrapper("Error analyzing directory: ${e.message}").show()
+            e.printStackTrace()
+        }
+    }
+
     private fun loadExistingModules() {
         val settingsFile = getSettingsGradleFile()
         if (settingsFile != null) {
@@ -73,16 +104,9 @@ class ModuleMakerDialogWrapper(
                 val content = settingsFile.readText()
 
                 val patterns = listOf(
-                    // include(":<module>") formatı (eski)
                     """include\s*\(\s*["']([^"']+)["']\s*\)""".toRegex(),
-
-                    // include ':<module>' formatı
                     """include\s+['"]([^"']+)["']""".toRegex(),
-
-                    // include ':module1', ':module2', ... formatı
                     """include\s+['"]([^"']+)["'](?:\s*,\s*['"]([^"']+)["'])*""".toRegex(),
-
-                    // çok satırlı include için özel işleme
                     """include\s+['"]([^"']+)["'](?:\s*,\s*\n\s*['"]([^"']+)["'])*""".toRegex()
                 )
 
@@ -91,7 +115,6 @@ class ModuleMakerDialogWrapper(
                 patterns.forEach { pattern ->
                     val matches = pattern.findAll(content)
                     matches.forEach { matchResult ->
-                        // Grup 1 ve sonrası tüm yakalanan modüller
                         matchResult.groupValues.drop(1).forEach { moduleValue ->
                             if (moduleValue.isNotEmpty()) {
                                 modulesSet.add(moduleValue)
@@ -196,6 +219,8 @@ class ModuleMakerDialogWrapper(
         var moduleNameState by remember { moduleName }
 
         val selectedDependenciesState = remember { selectedDependencies }
+        val detectedDependenciesState = remember { detectedDependencies }
+        val shouldMoveFilesState = remember { shouldMoveFiles }
 
         Column(
             modifier = modifier
@@ -203,12 +228,85 @@ class ModuleMakerDialogWrapper(
                 .verticalScroll(rememberScrollState())
                 .padding(8.dp),
         ) {
-            Text(
-                text = "Selected root: $selectedRootState",
-                color = GetcontactTheme.colors.onPrimary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
+            if (detectedDependenciesState.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Detected Dependencies",
+                    color = GetcontactTheme.colors.onPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                Text(
+                    "These dependencies were automatically detected based on imports in the selected directory:",
+                    color = GetcontactTheme.colors.onPrimary.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
+                        .background(
+                            color = GetcontactTheme.colors.background,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = GetcontactTheme.colors.outline,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(8.dp)
+                ) {
+                    Column {
+                        detectedDependenciesState.forEach { module ->
+                            Text(
+                                text = "• $module",
+                                color = GetcontactTheme.colors.onPrimary,
+                                modifier = Modifier.padding(vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                GetcontactCheckbox(
+                    label = "Move files to new module",
+                    checked = shouldMoveFilesState.value,
+                    onCheckedChange = { shouldMoveFilesState.value = it }
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            ) {
+                Text(
+                    modifier = Modifier
+                        .weight(1f),
+                    text = "Selected root: $selectedRootState",
+                    color = GetcontactTheme.colors.onPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(modifier = Modifier.size(24.dp))
+                Icon(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable {
+                            println("Refresh clicked")
+                            val selectedFile = getCurrentlySelectedFile()
+                            if (selectedFile.exists()) {
+                                println("Selected file: ${selectedFile.absolutePath}")
+                                analyzeSelectedDirectory(selectedFile)
+                            }
+                        },
+                    imageVector = Icons.Rounded.Refresh,
+                    tint = GetcontactTheme.colors.onPrimary,
+                    contentDescription = null,
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -333,6 +431,35 @@ class ModuleMakerDialogWrapper(
         }
     }
 
+    private fun moveFilesToNewModule(sourceDir: File, targetModulePath: String) {
+        if (!shouldMoveFiles.value) return
+
+        try {
+            val modulePath = File(project.basePath, targetModulePath.replace(":", "/"))
+            val targetSrcDir = File(modulePath, "src/main/kotlin")
+
+            val sourceFiles = sourceDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .toList()
+
+            sourceFiles.forEach { sourceFile ->
+                val relativePath = sourceFile.toRelativeString(sourceDir)
+                val targetFile = File(targetSrcDir, relativePath)
+
+                targetFile.parentFile.mkdirs()
+
+                sourceFile.copyTo(targetFile, overwrite = true)
+
+                // sourceFile.delete()
+            }
+
+            VfsUtil.markDirtyAndRefresh(false, true, true, VfsUtil.findFileByIoFile(modulePath, true))
+
+        } catch (e: Exception) {
+            MessageDialogWrapper("Error moving files: ${e.message}").show()
+        }
+    }
+
     private fun getSettingsGradleFile(): File? {
         val settingsGradleKtsCurrentlySelectedRoot =
             Path.of(getCurrentlySelectedFile().absolutePath, "settings.gradle.kts").toFile()
@@ -376,7 +503,9 @@ class ModuleMakerDialogWrapper(
                     addGitIgnore = addGitIgnore.value,
                     dependencies = selectedDependencies
                 )
-
+                if (filesCreated.isNotEmpty() && shouldMoveFiles.value && startingLocation != null) {
+                    moveFilesToNewModule(File(startingLocation.path), moduleName.value)
+                }
                 return filesCreated
             } else {
                 MessageDialogWrapper("Couldn't find settings.gradle(.kts)").show()
