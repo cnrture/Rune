@@ -3,6 +3,7 @@ package com.github.teknasyon.getcontactplugin.file
 import com.github.teknasyon.getcontactplugin.common.Constants
 import com.github.teknasyon.getcontactplugin.template.FeatureTemplate
 import com.github.teknasyon.getcontactplugin.template.GitIgnoreTemplate
+import com.github.teknasyon.getcontactplugin.template.ManifestTemplate
 import com.github.teknasyon.getcontactplugin.template.TemplateWriter
 import java.io.File
 import java.io.FileWriter
@@ -82,6 +83,11 @@ class FileWriter {
             dependencies = dependencies,
         )
 
+        if (moduleType == Constants.ANDROID) {
+            filesCreated += createAndroidManifest(moduleFile, moduleName)
+            filesCreated += createResourceDirectories(moduleFile)
+        }
+
         if (addReadme) filesCreated += templateWriter.createReadmeFile(moduleFile, moduleName)
 
         filesCreated += createDefaultPackages(moduleFile, packageName)
@@ -89,6 +95,42 @@ class FileWriter {
         if (addGitIgnore) filesCreated += createGitIgnore(moduleFile)
 
         return filesCreated
+    }
+
+    private fun createAndroidManifest(moduleFile: File, moduleName: String): List<File> {
+        val manifestDir = Paths.get(moduleFile.absolutePath, "src", "main").toFile()
+        manifestDir.mkdirs()
+
+        val manifestFile = Paths.get(manifestDir.absolutePath, "AndroidManifest.xml").toFile()
+        val writer: Writer = FileWriter(manifestFile)
+        val manifestContent = ManifestTemplate.getManifestTemplate(moduleName)
+
+        writer.write(manifestContent)
+        writer.flush()
+        writer.close()
+
+        return listOf(manifestFile)
+    }
+
+    private fun createResourceDirectories(moduleFile: File): List<File> {
+        val createdDirs = mutableListOf<File>()
+
+        val resDir = Paths.get(moduleFile.absolutePath, "src", "main", "res").toFile()
+        resDir.mkdirs()
+        createdDirs.add(resDir)
+
+        val subDirs = listOf(
+            "drawable",
+            "values",
+        )
+
+        subDirs.forEach { dirName ->
+            val dir = Paths.get(resDir.absolutePath, dirName).toFile()
+            dir.mkdirs()
+            createdDirs.add(dir)
+        }
+
+        return createdDirs
     }
 
     private fun createGitIgnore(moduleFile: File): List<File> {
@@ -286,12 +328,12 @@ class FileWriter {
     ): MutableList<String> {
         if (categoryBlocks.containsKey(moduleCategory)) {
             val (blockStart, blockEnd) = categoryBlocks[moduleCategory]!!
-            
+
             val insertPosition = blockEnd
             val lastLine = settingsFileContent[insertPosition]
-            
+
             val baseIndentation = lastLine.takeWhile { it.isWhitespace() }
-            
+
             var continuationIndentation = ""
             if (insertPosition > blockStart) {
                 for (i in blockStart + 1..insertPosition) {
@@ -302,20 +344,21 @@ class FileWriter {
                         break
                     }
                 }
-                
+
                 if (continuationIndentation.isEmpty()) {
                     continuationIndentation = baseIndentation + " ".repeat(8)
                 }
             } else {
                 continuationIndentation = baseIndentation + " ".repeat(8)
             }
-            
+
             val trimmedLastLine = lastLine.trim()
-            
+
             if (trimmedLastLine.endsWith(",")) {
                 settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
-            } else if (trimmedLastLine.contains("include") && 
-                      (trimmedLastLine.endsWith("'") || trimmedLastLine.endsWith("\""))) {
+            } else if (trimmedLastLine.contains("include") &&
+                (trimmedLastLine.endsWith("'") || trimmedLastLine.endsWith("\""))
+            ) {
                 settingsFileContent[insertPosition] = "${lastLine},"
                 settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
             } else if (trimmedLastLine.endsWith("'") || trimmedLastLine.endsWith("\"")) {
@@ -325,15 +368,15 @@ class FileWriter {
                 val includeStatement = constructIncludeStatement(modulePathAsString)
                 settingsFileContent.add(insertPosition + 1, "$baseIndentation$includeStatement")
             }
-            
+
             return settingsFileContent
         } else {
             settingsFileContent.add("")
             settingsFileContent.add("// $moduleCategory")
-            
+
             val includeStatement = constructIncludeStatement(modulePathAsString)
             settingsFileContent.add(includeStatement)
-            
+
             return settingsFileContent
         }
     }
