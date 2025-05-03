@@ -19,7 +19,7 @@ import com.github.teknasyon.getcontactplugin.components.GetcontactRadioButton
 import com.github.teknasyon.getcontactplugin.file.FileTree
 import com.github.teknasyon.getcontactplugin.file.FileWriter
 import com.github.teknasyon.getcontactplugin.file.toProjectFile
-import com.github.teknasyon.getcontactplugin.theme.WidgetTheme
+import com.github.teknasyon.getcontactplugin.theme.GetcontactTheme
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
@@ -34,7 +34,10 @@ import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.JComponent
 
-class ModuleMakerDialogWrapper(private val project: Project, startingLocation: VirtualFile?) : DialogWrapper(true) {
+class ModuleMakerDialogWrapper(
+    private val project: Project,
+    startingLocation: VirtualFile?,
+) : DialogWrapper(true) {
 
     private val fileWriter = FileWriter()
 
@@ -63,7 +66,7 @@ class ModuleMakerDialogWrapper(private val project: Project, startingLocation: V
         return ComposePanel().apply {
             setBounds(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
             setContent {
-                WidgetTheme {
+                GetcontactTheme {
                     Surface {
                         Row {
                             FileTreePanel(

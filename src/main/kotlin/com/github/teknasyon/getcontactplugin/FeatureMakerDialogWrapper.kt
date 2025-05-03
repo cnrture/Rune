@@ -17,7 +17,7 @@ import com.github.teknasyon.getcontactplugin.components.GetcontactFileTree
 import com.github.teknasyon.getcontactplugin.file.FileTree
 import com.github.teknasyon.getcontactplugin.file.FileWriter
 import com.github.teknasyon.getcontactplugin.file.toProjectFile
-import com.github.teknasyon.getcontactplugin.theme.WidgetTheme
+import com.github.teknasyon.getcontactplugin.theme.GetcontactTheme
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
@@ -29,7 +29,10 @@ import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.JComponent
 
-class FeatureMakerDialogWrapper(private val project: Project, startingLocation: VirtualFile?) : DialogWrapper(project) {
+class FeatureMakerDialogWrapper(
+    private val project: Project,
+    startingLocation: VirtualFile?,
+) : DialogWrapper(project) {
 
     private val fileWriter = FileWriter()
 
@@ -53,7 +56,7 @@ class FeatureMakerDialogWrapper(private val project: Project, startingLocation: 
         return ComposePanel().apply {
             setBounds(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
             setContent {
-                WidgetTheme {
+                GetcontactTheme {
                     Surface {
                         Row {
                             FileTreePanel(
