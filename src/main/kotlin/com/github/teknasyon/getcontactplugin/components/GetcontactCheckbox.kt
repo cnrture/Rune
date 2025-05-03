@@ -32,9 +32,12 @@ fun GetcontactCheckbox(
             onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
                 checkedColor = GetcontactTheme.colors.primary,
-                uncheckedColor = GetcontactTheme.colors.onSurface,
+                uncheckedColor = GetcontactTheme.colors.onPrimary,
             )
         )
-        Text(text = label)
+        Text(
+            text = label,
+            color = GetcontactTheme.colors.onPrimary,
+        )
     }
 }

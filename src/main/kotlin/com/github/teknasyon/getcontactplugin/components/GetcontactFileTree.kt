@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
-import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -29,11 +28,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactplugin.file.ExpandableFile
 import com.github.teknasyon.getcontactplugin.file.FileTree
+import com.github.teknasyon.getcontactplugin.theme.GetcontactTheme
 
 @Composable
 fun GetcontactFileTree(model: FileTree, height: Dp, onClick: (ExpandableFile) -> Unit, modifier: Modifier) {
     Surface(
-        modifier = modifier.height(height)
+        modifier = modifier.height(height),
+        color = Color.Transparent,
     ) {
         with(LocalDensity.current) {
             Box {
@@ -102,7 +103,7 @@ private fun FileTreeItemView(
         )
         Text(
             text = model.name,
-            color = if (active) LocalContentColor.current.copy(alpha = 0.60f) else LocalContentColor.current,
+            color = if (active) GetcontactTheme.colors.onPrimary.copy(alpha = 0.60f) else GetcontactTheme.colors.onPrimary,
             modifier = Modifier
                 .align(Alignment.CenterVertically)
                 .clipToBounds()
@@ -127,13 +128,13 @@ private fun FileItemIcon(modifier: Modifier, model: FileTree.Item) {
                 type.isExpanded -> Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = LocalContentColor.current,
+                    tint = GetcontactTheme.colors.onPrimary,
                 )
 
                 else -> Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = LocalContentColor.current,
+                    tint = GetcontactTheme.colors.onPrimary,
                 )
             }
 

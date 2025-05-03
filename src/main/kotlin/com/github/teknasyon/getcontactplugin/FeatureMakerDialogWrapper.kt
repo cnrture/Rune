@@ -6,12 +6,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactplugin.common.Constants
 import com.github.teknasyon.getcontactplugin.components.GetcontactFileTree
 import com.github.teknasyon.getcontactplugin.file.FileTree
@@ -57,7 +61,9 @@ class FeatureMakerDialogWrapper(
             setBounds(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
             setContent {
                 GetcontactTheme {
-                    Surface {
+                    Surface(
+                        color = Color.Transparent,
+                    ) {
                         Row {
                             FileTreePanel(
                                 modifier = Modifier
@@ -103,7 +109,12 @@ class FeatureMakerDialogWrapper(
                 .verticalScroll(rememberScrollState())
                 .padding(8.dp),
         ) {
-            Text("Selected root: ${selectedRootState.value}")
+            Text(
+                text = "Selected root: ${selectedRootState.value}",
+                color = GetcontactTheme.colors.onPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -111,7 +122,16 @@ class FeatureMakerDialogWrapper(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Feature Name") },
                 value = featureNameState.value,
-                onValueChange = { featureNameState.value = it }
+                onValueChange = { featureNameState.value = it },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedLabelColor = GetcontactTheme.colors.onPrimary,
+                    unfocusedLabelColor = GetcontactTheme.colors.onPrimary,
+                    cursorColor = GetcontactTheme.colors.onPrimary,
+                    textColor = GetcontactTheme.colors.onPrimary,
+                    unfocusedBorderColor = GetcontactTheme.colors.onPrimary,
+                    focusedBorderColor = GetcontactTheme.colors.onPrimary,
+                    placeholderColor = GetcontactTheme.colors.onPrimary,
+                )
             )
         }
     }
@@ -155,12 +175,15 @@ class FeatureMakerDialogWrapper(
                     path
                 }
             }
-            
+
             // Convert file path to Java package format
             val packagePath = cleanSelectedPath
-                .replace(Regex("^.*?(/src/main/java/|/src/main/kotlin/)"), "") // Remove everything before and including src/main/java/ or kotlin/
+                .replace(
+                    Regex("^.*?(/src/main/java/|/src/main/kotlin/)"),
+                    ""
+                ) // Remove everything before and including src/main/java/ or kotlin/
                 .replace("/", ".") // Convert path separators to package dots
-            
+
             fileWriter.createFeatureFiles(
                 moduleFile = File(projectRoot, cleanSelectedPath),
                 moduleName = featureNameState.value,

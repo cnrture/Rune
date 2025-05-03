@@ -30,7 +30,7 @@ fun GetcontactRadioButton(
         RadioButton(
             colors = RadioButtonDefaults.colors(
                 selectedColor = GetcontactTheme.colors.primary,
-                unselectedColor = GetcontactTheme.colors.onSurface,
+                unselectedColor = GetcontactTheme.colors.onPrimary,
             ),
             selected = selected,
             onClick = onClick,
@@ -38,6 +38,7 @@ fun GetcontactRadioButton(
         Text(
             modifier = Modifier.padding(start = 8.dp),
             text = text,
+            color = GetcontactTheme.colors.onPrimary,
         )
     }
 }

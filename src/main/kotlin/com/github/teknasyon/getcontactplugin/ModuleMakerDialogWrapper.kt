@@ -6,12 +6,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactplugin.common.Constants
 import com.github.teknasyon.getcontactplugin.components.GetcontactCheckbox
 import com.github.teknasyon.getcontactplugin.components.GetcontactFileTree
@@ -67,7 +71,9 @@ class ModuleMakerDialogWrapper(
             setBounds(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
             setContent {
                 GetcontactTheme {
-                    Surface {
+                    Surface(
+                        color = Color.Transparent,
+                    ) {
                         Row {
                             FileTreePanel(
                                 modifier = Modifier
@@ -139,7 +145,12 @@ class ModuleMakerDialogWrapper(
                 .verticalScroll(rememberScrollState())
                 .padding(8.dp),
         ) {
-            Text("Selected root: ${selectedRootState.value}")
+            Text(
+                text = "Selected root: ${selectedRootState.value}",
+                color = GetcontactTheme.colors.onPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -163,7 +174,12 @@ class ModuleMakerDialogWrapper(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Module Type")
+            Text(
+                text = "Module Type",
+                color = GetcontactTheme.colors.onPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
 
             radioOptions.forEach { text ->
                 GetcontactRadioButton(
@@ -179,7 +195,16 @@ class ModuleMakerDialogWrapper(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Package Name") },
                 value = packageNameState.value,
-                onValueChange = { packageNameState.value = it }
+                onValueChange = { packageNameState.value = it },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedLabelColor = GetcontactTheme.colors.onPrimary,
+                    unfocusedLabelColor = GetcontactTheme.colors.onPrimary,
+                    cursorColor = GetcontactTheme.colors.onPrimary,
+                    textColor = GetcontactTheme.colors.onPrimary,
+                    unfocusedBorderColor = GetcontactTheme.colors.onPrimary,
+                    focusedBorderColor = GetcontactTheme.colors.onPrimary,
+                    placeholderColor = GetcontactTheme.colors.onPrimary,
+                )
             )
 
             OutlinedTextField(
@@ -187,7 +212,16 @@ class ModuleMakerDialogWrapper(
                 label = { Text("Module Name") },
                 placeholder = { Text(Constants.DEFAULT_MODULE_NAME) },
                 value = moduleNameState.value,
-                onValueChange = { moduleNameState.value = it }
+                onValueChange = { moduleNameState.value = it },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedLabelColor = GetcontactTheme.colors.onPrimary,
+                    unfocusedLabelColor = GetcontactTheme.colors.onPrimary,
+                    cursorColor = GetcontactTheme.colors.onPrimary,
+                    textColor = GetcontactTheme.colors.onPrimary,
+                    unfocusedBorderColor = GetcontactTheme.colors.onPrimary,
+                    focusedBorderColor = GetcontactTheme.colors.onPrimary,
+                    placeholderColor = GetcontactTheme.colors.onPrimary,
+                )
             )
         }
     }
