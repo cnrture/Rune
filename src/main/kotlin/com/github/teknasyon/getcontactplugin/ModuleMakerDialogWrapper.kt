@@ -1,12 +1,13 @@
 package com.github.teknasyon.getcontactplugin
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,8 @@ class ModuleMakerDialogWrapper(
 
     private val fileWriter = FileWriter()
 
+    private val existingModules = mutableStateOf<List<String>>(emptyList())
+
     private var selectedSrcValue = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
     private val gradleFileNamedAfterModule = mutableStateOf(false)
     private val addReadme = mutableStateOf(false)
@@ -57,12 +60,29 @@ class ModuleMakerDialogWrapper(
         title = "Module Maker"
         init()
 
+        loadExistingModules()
+
         selectedSrcValue.value = if (startingLocation != null) {
             File(startingLocation.path).absolutePath.removePrefix(rootDirectoryStringDropLast())
                 .removePrefix(File.separator)
         } else {
             File(rootDirectoryString()).absolutePath.removePrefix(rootDirectoryStringDropLast())
                 .removePrefix(File.separator)
+        }
+    }
+
+    private fun loadExistingModules() {
+        val settingsFile = getSettingsGradleFile()
+        if (settingsFile != null) {
+            try {
+                val content = settingsFile.readText()
+                val modulePattern = """include\s*\(\s*["']([^"']+)["']\s*\)""".toRegex()
+                val matches = modulePattern.findAll(content)
+                val modules = matches.map { it.groupValues[1] }.toList()
+                existingModules.value = modules
+            } catch (e: Exception) {
+                existingModules.value = emptyList()
+            }
         }
     }
 
@@ -138,6 +158,8 @@ class ModuleMakerDialogWrapper(
         val moduleTypeSelectionState = remember { moduleTypeSelection }
         val packageNameState = remember { packageName }
         val moduleNameState = remember { moduleName }
+
+        val existingModulesState = remember { existingModules }
 
         Column(
             modifier = modifier
@@ -223,6 +245,62 @@ class ModuleMakerDialogWrapper(
                     placeholderColor = GetcontactTheme.colors.onPrimary,
                 )
             )
+
+            if (existingModulesState.value.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    "Existing Modules",
+                    color = GetcontactTheme.colors.onPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
+                        .background(
+                            color = Color.Transparent,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .border(
+                            width = 2.dp,
+                            color = GetcontactTheme.colors.outline,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Column {
+                            existingModulesState.value.forEach { module ->
+                                Text(
+                                    text = module,
+                                    color = GetcontactTheme.colors.onPrimary,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clickable {
+                                            moduleNameState.value = module
+                                        }
+                                )
+                                Divider(color = GetcontactTheme.colors.outline)
+                            }
+                        }
+                    }
+                }
+
+                Text(
+                    "Tip: Click on module name to use it",
+                    color = GetcontactTheme.colors.onPrimary.copy(alpha = 0.6f),
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 
