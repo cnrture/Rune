@@ -115,7 +115,7 @@ class FeatureMakerDialogWrapper(
             Spacer(modifier = Modifier.weight(1f))
 
             GetcontactDialogActions(
-                onCancelClick = { close(2) },
+                onCancelClick = { close(Constants.DEFAULT_EXIT_CODE) },
                 onCreateClick = {
                     if (validateInput()) {
                         createFeature()
