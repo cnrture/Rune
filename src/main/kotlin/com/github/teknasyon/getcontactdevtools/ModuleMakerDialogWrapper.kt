@@ -164,7 +164,7 @@ class ModuleMakerDialogWrapper(
 
                 existingModules = modulesSet.toList().sorted()
             } catch (e: Exception) {
-                println("Error loading modules: ${e.message}")
+                e.printStackTrace()
                 existingModules = emptyList()
             }
         }
@@ -239,9 +239,6 @@ class ModuleMakerDialogWrapper(
                     .removePrefix(File.separator)
                 if (fileTreeNode.file.isDirectory) {
                     selectedSrc.value = relativePath
-                    println("Selected in FileTree: $relativePath")
-                    println("Absolute path: ${fileTreeNode.file.absolutePath}")
-                    println("Is directory: ${fileTreeNode.file.isDirectory}")
                 }
             }
         )
@@ -568,8 +565,6 @@ class ModuleMakerDialogWrapper(
                 .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
                 .toList()
 
-            sourceFiles.forEach { println("- ${it.name}") }
-
             if (sourceFiles.isEmpty()) {
                 MessageDialogWrapper("No source files found to move in ${sourceDir.absolutePath}").show()
                 return
@@ -647,7 +642,6 @@ class ModuleMakerDialogWrapper(
 
             val selectedSrcPath = selectedSrc.value
             val sourceFile = getSourceDirectoryFromSelected(selectedSrcPath)
-            println("Selected source directory: ${sourceFile.absolutePath}")
 
             if (settingsGradleFile != null) {
                 val moduleName = moduleName.value.trim()
