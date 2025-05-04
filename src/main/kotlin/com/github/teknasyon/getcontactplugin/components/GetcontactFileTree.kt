@@ -31,9 +31,9 @@ import com.github.teknasyon.getcontactplugin.file.FileTree
 import com.github.teknasyon.getcontactplugin.theme.GetcontactTheme
 
 @Composable
-fun GetcontactFileTree(model: FileTree, height: Dp, onClick: (ExpandableFile) -> Unit, modifier: Modifier) {
+fun GetcontactFileTree(model: FileTree, onClick: (ExpandableFile) -> Unit, modifier: Modifier) {
     Surface(
-        modifier = modifier.height(height),
+        modifier = modifier,
         color = Color.Transparent,
     ) {
         with(LocalDensity.current) {
@@ -103,7 +103,7 @@ private fun FileTreeItemView(
         )
         Text(
             text = model.name,
-            color = if (active) GetcontactTheme.colors.onPrimary.copy(alpha = 0.60f) else GetcontactTheme.colors.onPrimary,
+            color = if (active) GetcontactTheme.colors.white.copy(alpha = 0.60f) else GetcontactTheme.colors.white,
             modifier = Modifier
                 .align(Alignment.CenterVertically)
                 .clipToBounds()
@@ -128,13 +128,13 @@ private fun FileItemIcon(modifier: Modifier, model: FileTree.Item) {
                 type.isExpanded -> Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = GetcontactTheme.colors.onPrimary,
+                    tint = GetcontactTheme.colors.white,
                 )
 
                 else -> Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = GetcontactTheme.colors.onPrimary,
+                    tint = GetcontactTheme.colors.white,
                 )
             }
 
