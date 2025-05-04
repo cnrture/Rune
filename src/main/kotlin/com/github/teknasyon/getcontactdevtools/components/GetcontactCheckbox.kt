@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -36,10 +35,10 @@ fun GetcontactCheckbox(
                 onClick = { onCheckedChange(checked.not()) }
             )
             .then(
-                if (isBackgroundEnable) {
+                if (isBackgroundEnable && checked) {
                     Modifier.background(
-                        color = GetcontactTheme.colors.orange,
-                        shape = RoundedCornerShape(12.dp),
+                        color = GetcontactTheme.colors.blue,
+                        shape = RoundedCornerShape(12.dp)
                     )
                 } else {
                     Modifier
@@ -56,17 +55,25 @@ fun GetcontactCheckbox(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
-                    checkedColor = if (isBackgroundEnable) GetcontactTheme.colors.gray else GetcontactTheme.colors.orange,
-                    uncheckedColor = if (isBackgroundEnable) GetcontactTheme.colors.gray else GetcontactTheme.colors.white,
+                    checkedColor = if (isBackgroundEnable && checked) {
+                        GetcontactTheme.colors.white
+                    } else {
+                        GetcontactTheme.colors.blue
+                    },
+                    uncheckedColor = GetcontactTheme.colors.white,
+                    checkmarkColor = if (isBackgroundEnable && checked) {
+                        GetcontactTheme.colors.blue
+                    } else {
+                        GetcontactTheme.colors.white
+                    },
                 )
             )
         }
         Spacer(modifier = Modifier.size(8.dp))
         Text(
             text = label,
-            color = if (isBackgroundEnable) GetcontactTheme.colors.gray else GetcontactTheme.colors.white,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
+            color = GetcontactTheme.colors.white,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }

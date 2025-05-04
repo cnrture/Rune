@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -35,10 +34,10 @@ fun GetcontactRadioButton(
                 onClick = onClick,
             )
             .then(
-                if (isBackgroundEnable) {
+                if (isBackgroundEnable && selected) {
                     Modifier.background(
-                        color = GetcontactTheme.colors.orange,
-                        shape = RoundedCornerShape(12.dp),
+                        color = GetcontactTheme.colors.blue,
+                        shape = RoundedCornerShape(12.dp)
                     )
                 } else {
                     Modifier
@@ -53,8 +52,8 @@ fun GetcontactRadioButton(
         ) {
             RadioButton(
                 colors = RadioButtonDefaults.colors(
-                    selectedColor = if (isBackgroundEnable) GetcontactTheme.colors.gray else GetcontactTheme.colors.white,
-                    unselectedColor = if (isBackgroundEnable) GetcontactTheme.colors.gray else GetcontactTheme.colors.white,
+                    selectedColor = GetcontactTheme.colors.white,
+                    unselectedColor = GetcontactTheme.colors.white,
                 ),
                 selected = selected,
                 onClick = onClick,
@@ -63,9 +62,8 @@ fun GetcontactRadioButton(
         Spacer(modifier = Modifier.size(8.dp))
         Text(
             text = text,
-            color = if (isBackgroundEnable) GetcontactTheme.colors.gray else GetcontactTheme.colors.white,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
+            color = GetcontactTheme.colors.white,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
