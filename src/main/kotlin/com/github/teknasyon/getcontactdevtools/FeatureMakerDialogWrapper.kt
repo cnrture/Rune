@@ -7,7 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.common.*
@@ -26,7 +30,6 @@ class FeatureMakerDialogWrapper(
     private val project: Project,
     startingLocation: VirtualFile?,
 ) : GetcontactDialogWrapper(
-    titleText = "Create New Feature",
     width = Constants.FEATURE_MAKER_WINDOW_WIDTH,
     height = Constants.FEATURE_MAKER_WINDOW_HEIGHT,
 ) {
@@ -37,9 +40,6 @@ class FeatureMakerDialogWrapper(
     private var featureName = mutableStateOf("")
 
     init {
-        title = "Create New Feature"
-        init()
-
         selectedSrc.value = if (startingLocation != null) {
             File(startingLocation.path).absolutePath.removePrefix(project.rootDirectoryStringDropLast())
                 .removePrefix(File.separator)
@@ -55,28 +55,47 @@ class FeatureMakerDialogWrapper(
             modifier = Modifier.fillMaxSize(),
             color = GetcontactTheme.colors.gray,
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(24.dp),
             ) {
-                FileTreePanel(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(0.5f),
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "Feature Creator",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                GetcontactTheme.colors.blue,
+                                GetcontactTheme.colors.purple,
+                            ),
+                            tileMode = TileMode.Mirror,
+                        ),
+                    )
                 )
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(end = 32.dp)
-                        .background(GetcontactTheme.colors.white)
-                        .width(2.dp)
-                )
-                ConfigurationPanel(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(0.5f),
-                )
+                Spacer(modifier = Modifier.size(24.dp))
+                Row {
+                    FileTreePanel(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(0.5f),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(end = 32.dp)
+                            .background(GetcontactTheme.colors.white)
+                            .width(2.dp)
+                    )
+                    ConfigurationPanel(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(0.5f),
+                    )
+                }
             }
         }
     }
@@ -125,7 +144,7 @@ class FeatureMakerDialogWrapper(
             ) {
                 Text(
                     text = "Selected root: ${selectedSrc.value}",
-                    color = GetcontactTheme.colors.white,
+                    color = GetcontactTheme.colors.orange,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                 )

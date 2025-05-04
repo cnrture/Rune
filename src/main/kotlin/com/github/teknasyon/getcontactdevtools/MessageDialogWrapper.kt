@@ -14,7 +14,7 @@ import com.github.teknasyon.getcontactdevtools.components.GetcontactButton
 import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogWrapper
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 
-class MessageDialogWrapper(private val message: String) : GetcontactDialogWrapper(Constants.EMPTY) {
+class MessageDialogWrapper(private val message: String) : GetcontactDialogWrapper() {
 
     @Composable
     override fun createDesign() {

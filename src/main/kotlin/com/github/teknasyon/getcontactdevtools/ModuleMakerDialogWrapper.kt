@@ -10,7 +10,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.common.*
@@ -34,7 +38,6 @@ class ModuleMakerDialogWrapper(
     private val project: Project,
     private val startingLocation: VirtualFile?,
 ) : GetcontactDialogWrapper(
-    titleText = "Create New Module",
     width = Constants.MODULE_MAKER_WINDOW_WIDTH,
     height = Constants.MODULE_MAKER_WINDOW_HEIGHT,
 ) {
@@ -169,28 +172,50 @@ class ModuleMakerDialogWrapper(
             modifier = Modifier.fillMaxSize(),
             color = GetcontactTheme.colors.gray,
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(24.dp),
             ) {
-                FileTreePanel(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(0.3f),
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "Module Creator",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                GetcontactTheme.colors.blue,
+                                GetcontactTheme.colors.purple,
+                            ),
+                            tileMode = TileMode.Mirror,
+                        ),
+                    )
                 )
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(horizontal = 16.dp)
-                        .background(GetcontactTheme.colors.white)
-                        .width(2.dp)
-                )
-                ConfigurationPanel(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(0.7f),
-                )
+                Spacer(modifier = Modifier.size(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    FileTreePanel(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(0.3f)
+                            .padding(16.dp),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(horizontal = 16.dp)
+                            .background(GetcontactTheme.colors.white)
+                            .width(2.dp)
+                    )
+                    ConfigurationPanel(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(0.7f),
+                    )
+                }
             }
         }
     }
@@ -257,6 +282,7 @@ class ModuleMakerDialogWrapper(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp,
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 DetectModulesContent(
@@ -424,14 +450,18 @@ class ModuleMakerDialogWrapper(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
-
+                Spacer(modifier = Modifier.size(16.dp))
                 Row {
                     radioOptions.forEach { text ->
                         GetcontactRadioButton(
                             text = text,
                             selected = text == moduleTypeSelectionState,
+                            isBackgroundEnable = true,
                             onClick = { onModuleTypeSelected(text) },
                         )
+                        if (text != radioOptions.last()) {
+                            Spacer(modifier = Modifier.size(8.dp))
+                        }
                     }
                 }
             }
@@ -503,6 +533,7 @@ class ModuleMakerDialogWrapper(
                         GetcontactCheckbox(
                             checked = isChecked,
                             label = module,
+                            isBackgroundEnable = true,
                             onCheckedChange = { onCheckedModule(module) },
                         )
                     }
