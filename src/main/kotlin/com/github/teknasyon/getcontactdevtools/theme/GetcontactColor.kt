@@ -9,7 +9,6 @@ import androidx.compose.ui.graphics.Color
 fun lightColors(
     white: Color = Color(0xffecedee),
     black: Color = Color(0xff000000),
-    lightBlack: Color = Color(0xff121214),
     gray: Color = Color(0xff18181b),
     lightGray: Color = Color(0xffa1a1aa),
     blue: Color = Color(0xff006fee),
@@ -18,7 +17,6 @@ fun lightColors(
 ): GetcontactColor = GetcontactColor(
     white = white,
     black = black,
-    lightBlack = lightBlack,
     gray = gray,
     lightGray = lightGray,
     blue = blue,
@@ -29,7 +27,6 @@ fun lightColors(
 class GetcontactColor(
     white: Color,
     black: Color,
-    lightBlack: Color,
     gray: Color,
     lightGray: Color,
     blue: Color,
@@ -41,9 +38,6 @@ class GetcontactColor(
 
     private var _black: Color by mutableStateOf(black)
     val black: Color = _black
-
-    private var _lightBlack: Color by mutableStateOf(lightBlack)
-    val lightBlack: Color = _lightBlack
 
     private var _gray: Color by mutableStateOf(gray)
     val gray: Color = _gray
