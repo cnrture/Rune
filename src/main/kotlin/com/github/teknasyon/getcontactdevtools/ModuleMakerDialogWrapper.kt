@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin
+package com.github.teknasyon.getcontactdevtools
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -14,14 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.github.teknasyon.getcontactplugin.common.Constants
-import com.github.teknasyon.getcontactplugin.components.GetcontactCheckbox
-import com.github.teknasyon.getcontactplugin.components.GetcontactFileTree
-import com.github.teknasyon.getcontactplugin.components.GetcontactRadioButton
-import com.github.teknasyon.getcontactplugin.file.FileTree
-import com.github.teknasyon.getcontactplugin.file.FileWriter
-import com.github.teknasyon.getcontactplugin.file.toProjectFile
-import com.github.teknasyon.getcontactplugin.theme.GetcontactTheme
+import com.github.teknasyon.getcontactdevtools.common.Constants
+import com.github.teknasyon.getcontactdevtools.components.GetcontactCheckbox
+import com.github.teknasyon.getcontactdevtools.components.GetcontactFileTree
+import com.github.teknasyon.getcontactdevtools.components.GetcontactRadioButton
+import com.github.teknasyon.getcontactdevtools.file.FileTree
+import com.github.teknasyon.getcontactdevtools.file.FileWriter
+import com.github.teknasyon.getcontactdevtools.file.toProjectFile
+import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil

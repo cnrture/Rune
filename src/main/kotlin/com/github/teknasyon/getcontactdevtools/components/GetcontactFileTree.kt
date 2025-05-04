@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.components
+package com.github.teknasyon.getcontactdevtools.components
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,9 +26,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.github.teknasyon.getcontactplugin.file.ExpandableFile
-import com.github.teknasyon.getcontactplugin.file.FileTree
-import com.github.teknasyon.getcontactplugin.theme.GetcontactTheme
+import com.github.teknasyon.getcontactdevtools.file.ExpandableFile
+import com.github.teknasyon.getcontactdevtools.file.FileTree
+import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 
 @Composable
 fun GetcontactFileTree(model: FileTree, onClick: (ExpandableFile) -> Unit, modifier: Modifier) {

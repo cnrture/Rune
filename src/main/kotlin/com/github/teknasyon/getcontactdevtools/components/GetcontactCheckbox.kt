@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.components
+package com.github.teknasyon.getcontactdevtools.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.github.teknasyon.getcontactplugin.theme.GetcontactTheme
+import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 
 @Composable
 fun GetcontactCheckbox(

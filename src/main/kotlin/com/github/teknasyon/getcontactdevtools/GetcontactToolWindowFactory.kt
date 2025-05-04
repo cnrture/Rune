@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin
+package com.github.teknasyon.getcontactdevtools
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,7 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.github.teknasyon.getcontactplugin.theme.GetcontactTheme
+import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -73,7 +73,7 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(24.dp),
-                            text = "Getcontact Studio",
+                            text = "Getcontact DevTools",
                             fontSize = 30.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,

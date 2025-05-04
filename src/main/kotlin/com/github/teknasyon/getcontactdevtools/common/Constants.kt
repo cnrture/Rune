@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.common
+package com.github.teknasyon.getcontactdevtools.common
 
 import freemarker.template.Configuration
 import freemarker.template.Version

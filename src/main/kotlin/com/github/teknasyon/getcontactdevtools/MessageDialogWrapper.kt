@@ -1,6 +1,6 @@
-package com.github.teknasyon.getcontactplugin
+package com.github.teknasyon.getcontactdevtools
 
-import com.github.teknasyon.getcontactplugin.common.Constants
+import com.github.teknasyon.getcontactdevtools.common.Constants
 import com.intellij.openapi.ui.DialogWrapper
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout

@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.template
+package com.github.teknasyon.getcontactdevtools.template
 
 object FeatureTemplate {
     fun getScreen(packageName: String, featureName: String) = """

@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin
+package com.github.teknasyon.getcontactdevtools
 
 import java.io.File
 

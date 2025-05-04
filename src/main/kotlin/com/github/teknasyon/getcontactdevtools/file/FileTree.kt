@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.file
+package com.github.teknasyon.getcontactdevtools.file
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

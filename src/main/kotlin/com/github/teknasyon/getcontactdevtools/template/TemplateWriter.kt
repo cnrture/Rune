@@ -1,6 +1,6 @@
-package com.github.teknasyon.getcontactplugin.template
+package com.github.teknasyon.getcontactdevtools.template
 
-import com.github.teknasyon.getcontactplugin.common.Constants
+import com.github.teknasyon.getcontactdevtools.common.Constants
 import freemarker.template.Configuration
 import freemarker.template.Template
 import freemarker.template.TemplateException

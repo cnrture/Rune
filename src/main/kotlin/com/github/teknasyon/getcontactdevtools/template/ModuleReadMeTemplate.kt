@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.template
+package com.github.teknasyon.getcontactdevtools.template
 
 object ModuleReadMeTemplate {
     val data = """

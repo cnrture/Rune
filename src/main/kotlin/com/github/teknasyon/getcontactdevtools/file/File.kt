@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.file
+package com.github.teknasyon.getcontactdevtools.file
 
 interface File {
     val name: String

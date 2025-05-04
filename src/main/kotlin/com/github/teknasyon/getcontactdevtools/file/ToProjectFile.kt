@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.file
+package com.github.teknasyon.getcontactdevtools.file
 
 fun java.io.File.toProjectFile(): File = object : File {
     override val name: String

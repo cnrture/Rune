@@ -1,10 +1,10 @@
-package com.github.teknasyon.getcontactplugin.file
+package com.github.teknasyon.getcontactdevtools.file
 
-import com.github.teknasyon.getcontactplugin.common.Constants
-import com.github.teknasyon.getcontactplugin.template.FeatureTemplate
-import com.github.teknasyon.getcontactplugin.template.GitIgnoreTemplate
-import com.github.teknasyon.getcontactplugin.template.ManifestTemplate
-import com.github.teknasyon.getcontactplugin.template.TemplateWriter
+import com.github.teknasyon.getcontactdevtools.common.Constants
+import com.github.teknasyon.getcontactdevtools.template.FeatureTemplate
+import com.github.teknasyon.getcontactdevtools.template.GitIgnoreTemplate
+import com.github.teknasyon.getcontactdevtools.template.ManifestTemplate
+import com.github.teknasyon.getcontactdevtools.template.TemplateWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException

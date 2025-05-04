@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.theme
+package com.github.teknasyon.getcontactdevtools.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider

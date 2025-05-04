@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactplugin.template
+package com.github.teknasyon.getcontactdevtools.template
 
 object ManifestTemplate {
     fun getManifestTemplate(moduleName: String) = """
