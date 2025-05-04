@@ -17,20 +17,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.github.teknasyon.getcontactdevtools.common.*
+import com.github.teknasyon.getcontactdevtools.common.Constants
+import com.github.teknasyon.getcontactdevtools.common.getCurrentlySelectedFile
+import com.github.teknasyon.getcontactdevtools.common.rootDirectoryString
+import com.github.teknasyon.getcontactdevtools.common.rootDirectoryStringDropLast
 import com.github.teknasyon.getcontactdevtools.components.*
 import com.github.teknasyon.getcontactdevtools.file.FileTree
 import com.github.teknasyon.getcontactdevtools.file.FileWriter
 import com.github.teknasyon.getcontactdevtools.file.toProjectFile
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
-import java.nio.file.Path
 import javax.swing.SwingUtilities
 import kotlin.concurrent.thread
 
@@ -233,7 +237,12 @@ class ModuleMakerDialogWrapper(
                 val absolutePathAtNode = fileTreeNode.file.absolutePath
                 val relativePath = absolutePathAtNode.removePrefix(project.rootDirectoryStringDropLast())
                     .removePrefix(File.separator)
-                if (fileTreeNode.file.isDirectory) selectedSrc.value = relativePath
+                if (fileTreeNode.file.isDirectory) {
+                    selectedSrc.value = relativePath
+                    println("Selected in FileTree: $relativePath")
+                    println("Absolute path: ${fileTreeNode.file.absolutePath}")
+                    println("Is directory: ${fileTreeNode.file.isDirectory}")
+                }
             }
         )
     }
@@ -546,83 +555,138 @@ class ModuleMakerDialogWrapper(
         if (!isMoveFiles.value) return
 
         try {
+            if (!sourceDir.exists() || !sourceDir.isDirectory) {
+                MessageDialogWrapper("Source directory does not exist or is not a directory").show()
+                return
+            }
+
             val modulePath = File(project.basePath, targetModulePath.replace(":", "/"))
             val targetSrcDir = File(modulePath, "src/main/kotlin")
+            targetSrcDir.mkdirs()
 
             val sourceFiles = sourceDir.walkTopDown()
                 .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
                 .toList()
 
-            sourceFiles.forEach { sourceFile ->
-                val relativePath = sourceFile.toRelativeString(sourceDir)
-                val targetFile = File(targetSrcDir, relativePath)
+            sourceFiles.forEach { println("- ${it.name}") }
 
-                targetFile.parentFile.mkdirs()
-
-                sourceFile.copyTo(targetFile, overwrite = true)
-
-                // sourceFile.delete()
+            if (sourceFiles.isEmpty()) {
+                MessageDialogWrapper("No source files found to move in ${sourceDir.absolutePath}").show()
+                return
             }
 
-            VfsUtil.markDirtyAndRefresh(
-                false,
-                true,
-                true,
-                VfsUtil.findFileByIoFile(modulePath, true)
-            )
+            val movedFiles = mutableListOf<VirtualFile>()
 
+            sourceFiles.forEach { sourceFile ->
+                try {
+                    val relativePath = getRelativePath(sourceFile, sourceDir)
+
+                    val targetFile = File(targetSrcDir, relativePath)
+                    targetFile.parentFile.mkdirs()
+
+                    sourceFile.copyTo(targetFile, overwrite = true)
+
+                    VfsUtil.findFileByIoFile(targetFile, true)?.let { vFile ->
+                        movedFiles.add(vFile)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            val moduleVirtualFile = VfsUtil.findFileByIoFile(modulePath, true)
+            VfsUtil.markDirtyAndRefresh(false, true, true, moduleVirtualFile)
+
+            ApplicationManager.getApplication().invokeLater {
+                openNewModule(modulePath, movedFiles)
+            }
+
+            MessageDialogWrapper("Moved ${movedFiles.size} files to new module").show()
         } catch (e: Exception) {
             MessageDialogWrapper("Error moving files: ${e.message}").show()
+            e.printStackTrace()
+        }
+    }
+
+    private fun openNewModule(modulePath: File, filesToOpen: List<VirtualFile>) {
+        try {
+            val moduleRootDir = VfsUtil.findFileByIoFile(modulePath, true)
+            if (moduleRootDir != null) {
+                val buildGradleFile = moduleRootDir.findChild("build.gradle")
+                    ?: moduleRootDir.findChild("build.gradle.kts")
+
+                if (buildGradleFile != null) {
+                    FileEditorManager.getInstance(project).openFile(buildGradleFile, true)
+                }
+
+                filesToOpen.take(5).forEach { file ->
+                    FileEditorManager.getInstance(project).openFile(file, true)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     private fun getSettingsGradleFile(): File? {
-        val settingsGradleKtsCurrentlySelectedRoot =
-            Path.of(project.getCurrentlySelectedFile(selectedSrc.value).absolutePath, "settings.gradle.kts")
-                .toFile()
-        val settingsGradleCurrentlySelectedRoot =
-            Path.of(project.getCurrentlySelectedFile(selectedSrc.value).absolutePath, "settings.gradle").toFile()
-        val settingsGradleKtsPath = Path.of(project.rootDirectoryString(), "settings.gradle.kts").toFile()
-        val settingsGradlePath = Path.of(project.rootDirectoryString(), "settings.gradle").toFile()
+        val settingsGradleKtsPath = File(project.basePath, "settings.gradle.kts")
+        val settingsGradlePath = File(project.basePath, "settings.gradle")
 
-        return listOf(
-            settingsGradleKtsCurrentlySelectedRoot,
-            settingsGradleCurrentlySelectedRoot,
-            settingsGradleKtsPath,
-            settingsGradlePath
-        ).firstOrNull {
-            it.exists()
-        } ?: run {
-            MessageDialogWrapper("Can't find settings.gradle(.kts) file")
-            null
-        }
+        return listOf(settingsGradleKtsPath, settingsGradlePath)
+            .firstOrNull { it.exists() }
+            ?: run {
+                MessageDialogWrapper("Can't find settings.gradle(.kts) file")
+                null
+            }
     }
 
     private fun createModule(): List<File> {
         try {
             val settingsGradleFile = getSettingsGradleFile()
             val moduleType = moduleType.value
-            val currentlySelectedFile = project.getCurrentlySelectedFile(selectedSrc.value)
+
+            val selectedSrcPath = selectedSrc.value
+            val sourceFile = getSourceDirectoryFromSelected(selectedSrcPath)
+            println("Selected source directory: ${sourceFile.absolutePath}")
+
             if (settingsGradleFile != null) {
+                val moduleName = moduleName.value.trim()
+                if (!moduleName.startsWith(":")) {
+                    MessageDialogWrapper("Module name must start with ':' (e.g. ':home' or ':feature:home')").show()
+                    return emptyList()
+                }
+
                 val filesCreated = fileWriter.createModule(
                     settingsGradleFile = settingsGradleFile,
-                    modulePathAsString = moduleName.value,
+                    modulePathAsString = moduleName,
                     moduleType = moduleType,
                     showErrorDialog = { MessageDialogWrapper(it).show() },
                     showSuccessDialog = {
-                        MessageDialogWrapper("Success").show()
-                        listOf(settingsGradleFile, currentlySelectedFile).refreshFileSystem()
+                        MessageDialogWrapper("Module '$moduleName' created successfully").show()
+
+                        VfsUtil.markDirtyAndRefresh(
+                            false, true, true,
+                            VfsUtil.findFileByIoFile(settingsGradleFile, true),
+                            VfsUtil.findFileByIoFile(sourceFile, true)
+                        )
+
+                        if (isMoveFiles.value) {
+                            moveFilesToNewModule(sourceFile, moduleName)
+                        } else {
+                            val modulePath = File(project.basePath, moduleName.replace(":", "/"))
+                            ApplicationManager.getApplication().invokeLater {
+                                openNewModule(modulePath, emptyList())
+                            }
+                        }
+
                         syncProject()
                     },
-                    workingDirectory = currentlySelectedFile,
+                    workingDirectory = File(project.basePath.orEmpty()),
                     dependencies = selectedModules
                 )
-                if (filesCreated.isNotEmpty() && isMoveFiles.value && startingLocation != null) {
-                    moveFilesToNewModule(File(startingLocation.path), moduleName.value)
-                }
                 return filesCreated
             } else {
-                MessageDialogWrapper("Couldn't find settings.gradle(.kts)").show()
+                MessageDialogWrapper("Couldn't find settings.gradle(.kts) file").show()
                 return emptyList()
             }
         } catch (e: Exception) {
@@ -641,5 +705,48 @@ class ModuleMakerDialogWrapper(
             false,
             ProgressExecutionMode.START_IN_FOREGROUND_ASYNC
         )
+    }
+
+    private fun getRelativePath(sourceFile: File, sourceDir: File): String {
+        val sourceFilePath = sourceFile.absolutePath
+        val sourceDirPath = sourceDir.absolutePath
+
+        if (sourceFilePath.startsWith(sourceDirPath)) {
+            val relPath = sourceFilePath.substring(sourceDirPath.length)
+            return if (relPath.startsWith(File.separator)) relPath.substring(1) else relPath
+        }
+
+        return sourceFile.name
+    }
+
+    private fun getSourceDirectoryFromSelected(selectedPath: String): File {
+        if (selectedPath.isBlank()) {
+            val projectRoot = File(project.basePath.orEmpty())
+            return projectRoot
+        }
+
+        val projectBasePath = project.basePath.orEmpty()
+
+        val pathOptions = mutableListOf<File>()
+
+        pathOptions.add(File(projectBasePath, selectedPath))
+        pathOptions.add(File(selectedPath))
+
+        if (startingLocation != null) {
+            pathOptions.add(File(startingLocation.path))
+        }
+
+        val pathParts = selectedPath.split(File.separator)
+        if (pathParts.size > 1) {
+            val reducedPath = pathParts.drop(1).joinToString(File.separator)
+            pathOptions.add(File(projectBasePath, reducedPath))
+        }
+
+        for (option in pathOptions) {
+            if (option.exists() && option.isDirectory) {
+                return option
+            }
+        }
+        return pathOptions.first()
     }
 }
