@@ -78,7 +78,7 @@ class FileWriter {
         )
 
         if (moduleType == Constants.ANDROID) {
-            filesCreated += createAndroidManifest(moduleFile, moduleName, packageName)
+            filesCreated += createAndroidManifest(moduleFile, packageName)
             filesCreated += createResourceDirectories(moduleFile)
         }
 
@@ -89,13 +89,13 @@ class FileWriter {
         return filesCreated
     }
 
-    private fun createAndroidManifest(moduleFile: File, moduleName: String, packageName: String): List<File> {
+    private fun createAndroidManifest(moduleFile: File, packageName: String): List<File> {
         val manifestDir = Paths.get(moduleFile.absolutePath, "src", "main").toFile()
         manifestDir.mkdirs()
 
         val manifestFile = Paths.get(manifestDir.absolutePath, "AndroidManifest.xml").toFile()
         val writer: Writer = FileWriter(manifestFile)
-        val manifestContent = ManifestTemplate.getManifestTemplate(moduleName, packageName)
+        val manifestContent = ManifestTemplate.getManifestTemplate(packageName)
 
         writer.write(manifestContent)
         writer.flush()
