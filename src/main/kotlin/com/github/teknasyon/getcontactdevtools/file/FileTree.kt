@@ -4,10 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
-class ExpandableFile(
-    val file: File,
-    val level: Int,
-) {
+class ExpandableFile(val file: File, val level: Int) {
+
     var children: List<ExpandableFile> by mutableStateOf(emptyList())
     val canExpand: Boolean get() = file.hasChildren
 
@@ -53,9 +51,7 @@ class FileTree(root: File) {
     private fun ExpandableFile.toItems(): List<Item> {
         fun ExpandableFile.addTo(list: MutableList<Item>) {
             list.add(Item(this))
-            children.forEach {
-                it.addTo(list)
-            }
+            children.forEach { it.addTo(list) }
         }
 
         val list = mutableListOf<Item>()

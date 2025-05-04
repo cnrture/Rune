@@ -135,13 +135,13 @@ class FileWriter {
     }
 
     fun createFeatureFiles(
-        moduleFile: File,
-        moduleName: String,
+        file: File,
+        featureName: String,
         packageName: String,
         showErrorDialog: (String) -> Unit,
         showSuccessDialog: () -> Unit,
     ): List<File> {
-        val featureFile = Paths.get(moduleFile.absolutePath, moduleName.lowercase()).toFile()
+        val featureFile = Paths.get(file.absolutePath, featureName.lowercase()).toFile()
 
         val commonDir = Paths.get(featureFile.absolutePath, "common").toFile()
         val dataDir = Paths.get(featureFile.absolutePath, "data").toFile()
@@ -151,7 +151,7 @@ class FileWriter {
 
         listOf(commonDir, dataDir, diDir, domainDir, presentationDir).forEach { it.mkdirs() }
 
-        val capitalizedModuleName = moduleName.replaceFirstChar { it.uppercase() }
+        val capitalizedModuleName = featureName.replaceFirstChar { it.uppercase() }
 
         val filePaths = listOf(
             Paths.get(presentationDir.absolutePath, "${capitalizedModuleName}Screen.kt").toFile(),
@@ -166,10 +166,10 @@ class FileWriter {
         filePaths.forEach { file ->
             try {
                 val writer: Writer = FileWriter(file)
-                val extendedPackageName = if (packageName.endsWith(".$moduleName")) {
+                val extendedPackageName = if (packageName.endsWith(".$featureName")) {
                     "$packageName.presentation"
                 } else {
-                    "$packageName.$moduleName.presentation"
+                    "$packageName.$featureName.presentation"
                 }
                 val dataToWrite = when (file.name) {
                     "${capitalizedModuleName}Screen.kt" -> {
