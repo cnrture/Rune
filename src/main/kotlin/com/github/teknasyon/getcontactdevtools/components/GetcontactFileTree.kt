@@ -1,11 +1,18 @@
 package com.github.teknasyon.getcontactdevtools.components
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.HorizontalScrollbar
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.defaultScrollbarStyle
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -22,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -38,46 +46,55 @@ fun GetcontactFileTree(
 ) {
     Surface(
         modifier = modifier,
-        color = Color.Transparent,
+        color = GetcontactTheme.colors.gray,
     ) {
-        with(LocalDensity.current) {
-            Box {
-                val lazyListState = rememberLazyListState()
-                val scrollState = rememberScrollState()
+        Column {
+            Text(
+                text = "Project File Tree",
+                color = GetcontactTheme.colors.orange,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(modifier = Modifier.size(16.dp))
+            with(LocalDensity.current) {
+                Box {
+                    val lazyListState = rememberLazyListState()
+                    val scrollState = rememberScrollState()
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().horizontalScroll(scrollState),
-                    state = lazyListState
-                ) {
-                    items(model.items.size) {
-                        FileTreeItemView(
-                            model = model.items[it],
-                            height = 14.sp.toDp() * 1.5f,
-                            showBottomPadding = it == model.items.size - 1 &&
-                                (lazyListState.canScrollForward || lazyListState.canScrollBackward),
-                            showEndPadding = scrollState.canScrollForward || scrollState.canScrollBackward,
-                            onClick = onClick,
-                        )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().horizontalScroll(scrollState),
+                        state = lazyListState
+                    ) {
+                        items(model.items.size) {
+                            FileTreeItemView(
+                                model = model.items[it],
+                                height = 14.sp.toDp() * 1.5f,
+                                showBottomPadding = it == model.items.size - 1 &&
+                                    (lazyListState.canScrollForward || lazyListState.canScrollBackward),
+                                showEndPadding = scrollState.canScrollForward || scrollState.canScrollBackward,
+                                onClick = onClick,
+                            )
+                        }
                     }
+
+                    VerticalScrollbar(
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        adapter = rememberScrollbarAdapter(lazyListState),
+                        style = defaultScrollbarStyle().copy(
+                            unhoverColor = GetcontactTheme.colors.white.copy(alpha = 0.2f),
+                            hoverColor = GetcontactTheme.colors.white.copy(alpha = 0.6f),
+                        )
+                    )
+
+                    HorizontalScrollbar(
+                        modifier = Modifier.align(Alignment.BottomStart),
+                        adapter = rememberScrollbarAdapter(scrollState),
+                        style = defaultScrollbarStyle().copy(
+                            unhoverColor = GetcontactTheme.colors.white.copy(alpha = 0.2f),
+                            hoverColor = GetcontactTheme.colors.white.copy(alpha = 0.6f),
+                        )
+                    )
                 }
-
-                VerticalScrollbar(
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    adapter = rememberScrollbarAdapter(lazyListState),
-                    style = defaultScrollbarStyle().copy(
-                        unhoverColor = GetcontactTheme.colors.white.copy(alpha = 0.2f),
-                        hoverColor = GetcontactTheme.colors.white.copy(alpha = 0.6f),
-                    )
-                )
-
-                HorizontalScrollbar(
-                    modifier = Modifier.align(Alignment.BottomStart),
-                    adapter = rememberScrollbarAdapter(scrollState),
-                    style = defaultScrollbarStyle().copy(
-                        unhoverColor = GetcontactTheme.colors.white.copy(alpha = 0.2f),
-                        hoverColor = GetcontactTheme.colors.white.copy(alpha = 0.6f),
-                    )
-                )
             }
         }
     }
