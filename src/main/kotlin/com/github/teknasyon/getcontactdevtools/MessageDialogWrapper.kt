@@ -4,7 +4,6 @@ import com.github.teknasyon.getcontactdevtools.common.Constants
 import com.intellij.openapi.ui.DialogWrapper
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
-import java.awt.Dimension
 import javax.swing.Action
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -19,7 +18,6 @@ class MessageDialogWrapper(private val message: String) : DialogWrapper(true) {
     @Nullable
     override fun createCenterPanel(): JComponent {
         val dialogPanel = JPanel(BorderLayout())
-        dialogPanel.preferredSize = Dimension(120, 100)
 
         JTextArea(message).apply {
             isEditable = false
