@@ -31,7 +31,11 @@ import com.github.teknasyon.getcontactdevtools.file.FileTree
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 
 @Composable
-fun GetcontactFileTree(model: FileTree, onClick: (ExpandableFile) -> Unit, modifier: Modifier) {
+fun GetcontactFileTree(
+    modifier: Modifier = Modifier,
+    model: FileTree,
+    onClick: (ExpandableFile) -> Unit,
+) {
     Surface(
         modifier = modifier,
         color = Color.Transparent,
@@ -60,11 +64,19 @@ fun GetcontactFileTree(model: FileTree, onClick: (ExpandableFile) -> Unit, modif
                 VerticalScrollbar(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     adapter = rememberScrollbarAdapter(lazyListState),
+                    style = defaultScrollbarStyle().copy(
+                        unhoverColor = GetcontactTheme.colors.white.copy(alpha = 0.2f),
+                        hoverColor = GetcontactTheme.colors.white.copy(alpha = 0.6f),
+                    )
                 )
 
                 HorizontalScrollbar(
                     modifier = Modifier.align(Alignment.BottomStart),
                     adapter = rememberScrollbarAdapter(scrollState),
+                    style = defaultScrollbarStyle().copy(
+                        unhoverColor = GetcontactTheme.colors.white.copy(alpha = 0.2f),
+                        hoverColor = GetcontactTheme.colors.white.copy(alpha = 0.6f),
+                    )
                 )
             }
         }
@@ -87,7 +99,7 @@ private fun FileTreeItemView(
                 onClick(model.file)
             }
             .padding(
-                start = 24.dp * model.level,
+                start = 12.dp * model.level,
                 end = if (showEndPadding) 8.dp else 0.dp,
                 bottom = if (showBottomPadding) 8.dp else 0.dp
             )
