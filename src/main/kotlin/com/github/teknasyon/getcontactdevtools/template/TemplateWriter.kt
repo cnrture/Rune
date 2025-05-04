@@ -17,24 +17,29 @@ class TemplateWriter {
     }
 
     fun createGradleFile(
+        packageName: String,
         moduleFile: File,
         moduleType: String,
         dependencies: List<String> = emptyList(),
     ): List<File> {
         try {
             val data: MutableMap<String, Any> = HashMap()
-            data["packageName"] = Constants.DEFAULT_BASE_PACKAGE_NAME
+            data["packageName"] = packageName
 
             val gradleTemplate = when (moduleType) {
                 Constants.ANDROID -> GradleTemplate.getAndroidModuleGradleTemplate(
-                    moduleName = moduleFile.name,
+                    packageName = packageName,
                     dependencies = buildDependenciesBlock(dependencies)
                 )
 
                 else -> GradleTemplate.getKotlinModuleGradleTemplate()
             }
 
-            val fileName = "build".plus(".gradle")
+            val fileName = if (moduleFile.absolutePath.endsWith("build.gradle")) {
+                "build.gradle"
+            } else {
+                "build.gradle.kts"
+            }
 
             val filePath = Paths.get(moduleFile.absolutePath, fileName).toFile()
 

@@ -1,7 +1,7 @@
 package com.github.teknasyon.getcontactdevtools.template
 
 object GradleTemplate {
-    fun getAndroidModuleGradleTemplate(moduleName: String, dependencies: String) = """
+    fun getAndroidModuleGradleTemplate(packageName: String, dependencies: String) = """
 plugins {
     id 'com.android.library'
     alias(libs.plugins.kotlin.android)
@@ -17,7 +17,7 @@ apply from: '../../gradle/config/keyhider/config.gradle'
 def configuration = rootProject.ext.configuration
 
 android {
-    namespace 'app.source.getcontact.$moduleName'
+    namespace '$packageName'
     compileSdkVersion configuration.compileSdkVersion
 
     defaultConfig {

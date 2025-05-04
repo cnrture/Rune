@@ -17,6 +17,7 @@ class FileWriter {
     private val templateWriter = TemplateWriter()
 
     fun createModule(
+        packageName: String,
         settingsGradleFile: File,
         workingDirectory: File,
         modulePathAsString: String,
@@ -48,6 +49,7 @@ class FileWriter {
         )
 
         filesCreated += createDefaultModuleStructure(
+            packageName = packageName,
             moduleFile = moduleFile,
             moduleName = moduleName,
             moduleType = moduleType,
@@ -60,6 +62,7 @@ class FileWriter {
     }
 
     private fun createDefaultModuleStructure(
+        packageName: String,
         moduleFile: File,
         moduleName: String,
         moduleType: String,
@@ -68,6 +71,7 @@ class FileWriter {
         val filesCreated = mutableListOf<File>()
 
         filesCreated += templateWriter.createGradleFile(
+            packageName = packageName,
             moduleFile = moduleFile,
             moduleType = moduleType,
             dependencies = dependencies,
@@ -351,7 +355,7 @@ class FileWriter {
                 settingsFileContent[insertPosition] = "${lastLine},"
                 settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
             } else {
-                val includeStatement = constructIncludeStatement(modulePathAsString)
+                val includeStatement = constructIncludeStatement(modulePathAsString, settingsFileContent)
                 settingsFileContent.add(insertPosition + 1, "$baseIndentation$includeStatement")
             }
 
@@ -360,14 +364,19 @@ class FileWriter {
             settingsFileContent.add("")
             settingsFileContent.add("// $moduleCategory")
 
-            val includeStatement = constructIncludeStatement(modulePathAsString)
+            val includeStatement = constructIncludeStatement(modulePathAsString, settingsFileContent)
             settingsFileContent.add(includeStatement)
 
             return settingsFileContent
         }
     }
 
-    private fun constructIncludeStatement(modulePathAsString: String): String {
-        return "include '$modulePathAsString'"
+    private fun constructIncludeStatement(modulePathAsString: String, settingsFileContent: List<String>): String {
+        val firstIncludeStatement = settingsFileContent.firstOrNull { it.contains("include") }
+        return if (firstIncludeStatement != null && firstIncludeStatement.contains("'")) {
+            "include '$modulePathAsString'"
+        } else {
+            "include(\"$modulePathAsString\")"
+        }
     }
 }

@@ -650,7 +650,17 @@ class ModuleMakerDialogWrapper(
                     return emptyList()
                 }
 
+                val moduleNameTrimmed = moduleName.removePrefix(":").replace(":", ".")
+                val basePackageName = getBasePackageName()
+                val finalPackageName = if (moduleNameTrimmed.isNotEmpty()) {
+                    "$basePackageName.$moduleNameTrimmed"
+                } else {
+                    basePackageName
+                }
+                println("Package name: $finalPackageName")
+
                 val filesCreated = fileWriter.createModule(
+                    packageName = finalPackageName,
                     settingsGradleFile = settingsGradleFile,
                     modulePathAsString = moduleName,
                     moduleType = moduleType,
@@ -689,6 +699,44 @@ class ModuleMakerDialogWrapper(
         } finally {
             close(0)
         }
+    }
+
+    private fun getBasePackageName(): String {
+        val gradleFiles = listOf(
+            File(project.basePath, "app/build.gradle"),
+            File(project.basePath, "app/build.gradle.kts")
+        )
+
+        for (gradleFile in gradleFiles) {
+            if (gradleFile.exists()) {
+                try {
+                    val content = gradleFile.readText()
+                    val applicationIdPattern = """applicationId\s*=?\s*['"]([^'"]+)['"]""".toRegex()
+                    val match = applicationIdPattern.find(content)
+                    match?.groupValues?.getOrNull(1)?.let { return it }
+
+                    val namespacePattern = """namespace\s*=?\s*['"]([^'"]+)['"]""".toRegex()
+                    val namespaceMatch = namespacePattern.find(content)
+                    namespaceMatch?.groupValues?.getOrNull(1)?.let { return it }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        val manifestFile = File(project.basePath, "app/src/main/AndroidManifest.xml")
+        if (manifestFile.exists()) {
+            try {
+                val content = manifestFile.readText()
+                val packagePattern = """package\s*=\s*["']([^"']+)["']""".toRegex()
+                val match = packagePattern.find(content)
+                match?.groupValues?.getOrNull(1)?.let { return it }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        return Constants.DEFAULT_BASE_PACKAGE_NAME
     }
 
     private fun syncProject() {
