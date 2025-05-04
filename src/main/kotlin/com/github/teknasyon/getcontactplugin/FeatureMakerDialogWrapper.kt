@@ -58,7 +58,6 @@ class FeatureMakerDialogWrapper(
 
     override fun createCenterPanel(): JComponent {
         return ComposePanel().apply {
-            setBounds(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
             setContent {
                 GetcontactTheme {
                     Surface(
@@ -87,7 +86,6 @@ class FeatureMakerDialogWrapper(
         GetcontactFileTree(
             modifier = modifier,
             model = FileTree(root = File(rootDirectoryString()).toProjectFile()),
-            height = Constants.WINDOW_HEIGHT.dp,
             onClick = { fileTreeNode ->
                 val absolutePathAtNode = fileTreeNode.file.absolutePath
                 val relativePath = absolutePathAtNode.removePrefix(rootDirectoryStringDropLast())
@@ -111,7 +109,7 @@ class FeatureMakerDialogWrapper(
         ) {
             Text(
                 text = "Selected root: ${selectedRootState.value}",
-                color = GetcontactTheme.colors.onPrimary,
+                color = GetcontactTheme.colors.white,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -124,13 +122,13 @@ class FeatureMakerDialogWrapper(
                 value = featureNameState.value,
                 onValueChange = { featureNameState.value = it },
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedLabelColor = GetcontactTheme.colors.onPrimary,
-                    unfocusedLabelColor = GetcontactTheme.colors.onPrimary,
-                    cursorColor = GetcontactTheme.colors.onPrimary,
-                    textColor = GetcontactTheme.colors.onPrimary,
-                    unfocusedBorderColor = GetcontactTheme.colors.onPrimary,
-                    focusedBorderColor = GetcontactTheme.colors.onPrimary,
-                    placeholderColor = GetcontactTheme.colors.onPrimary,
+                    focusedLabelColor = GetcontactTheme.colors.white,
+                    unfocusedLabelColor = GetcontactTheme.colors.white,
+                    cursorColor = GetcontactTheme.colors.white,
+                    textColor = GetcontactTheme.colors.white,
+                    unfocusedBorderColor = GetcontactTheme.colors.white,
+                    focusedBorderColor = GetcontactTheme.colors.white,
+                    placeholderColor = GetcontactTheme.colors.white,
                 )
             )
         }
