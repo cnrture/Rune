@@ -78,24 +78,24 @@ class FileWriter {
         )
 
         if (moduleType == Constants.ANDROID) {
-            filesCreated += createAndroidManifest(moduleFile, moduleName)
+            filesCreated += createAndroidManifest(moduleFile, moduleName, packageName)
             filesCreated += createResourceDirectories(moduleFile)
         }
 
         filesCreated += templateWriter.createReadmeFile(moduleFile, moduleName)
-        filesCreated += createDefaultPackages(moduleFile)
+        filesCreated += createDefaultPackages(moduleFile, packageName)
         filesCreated += createGitIgnore(moduleFile)
 
         return filesCreated
     }
 
-    private fun createAndroidManifest(moduleFile: File, moduleName: String): List<File> {
+    private fun createAndroidManifest(moduleFile: File, moduleName: String, packageName: String): List<File> {
         val manifestDir = Paths.get(moduleFile.absolutePath, "src", "main").toFile()
         manifestDir.mkdirs()
 
         val manifestFile = Paths.get(manifestDir.absolutePath, "AndroidManifest.xml").toFile()
         val writer: Writer = FileWriter(manifestFile)
-        val manifestContent = ManifestTemplate.getManifestTemplate(moduleName)
+        val manifestContent = ManifestTemplate.getManifestTemplate(moduleName, packageName)
 
         writer.write(manifestContent)
         writer.flush()
@@ -217,21 +217,19 @@ class FileWriter {
         return successfullyCreatedFiles
     }
 
-    private fun createDefaultPackages(moduleFile: File): List<File> {
-        fun makePath(srcPath: File): File {
-            val packagePath = Paths.get(
+    private fun createDefaultPackages(moduleFile: File, packageName: String): List<File> {
+        fun makePath(srcPath: File, packagePath: String): File {
+            val packagePathFile = Paths.get(
                 srcPath.path,
-                Constants.DEFAULT_BASE_PACKAGE_NAME.split(".").joinToString(File.separator)
+                packagePath.split(".").joinToString(File.separator)
             ).toFile()
-            val stringBuilder = StringBuilder()
-            val filePath = Paths.get(srcPath.absolutePath, stringBuilder.toString()).toFile()
-            packagePath.mkdirs()
-            filePath.mkdirs()
-            return packagePath
+            packagePathFile.mkdirs()
+            return packagePathFile
         }
 
         val srcPath = Paths.get(moduleFile.absolutePath, "src/main/kotlin").toFile()
-        val packagePath = makePath(srcPath)
+        val packagePath = makePath(srcPath, packageName)
+
         return listOf(packagePath)
     }
 
@@ -329,7 +327,6 @@ class FileWriter {
                 for (i in blockStart + 1..insertPosition) {
                     val line = settingsFileContent[i].trim()
                     if (line.startsWith("':") && !line.startsWith("include")) {
-                        // Continuation satırı bulduk, girintiyi al
                         continuationIndentation = settingsFileContent[i].takeWhile { it.isWhitespace() }
                         break
                     }

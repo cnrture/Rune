@@ -56,7 +56,8 @@ class ModuleMakerDialogWrapper(
 
     private var selectedSrc = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
     private val moduleType = mutableStateOf(Constants.ANDROID)
-    private val moduleName = mutableStateOf("")
+    private val packageName = mutableStateOf(Constants.EMPTY)
+    private val moduleName = mutableStateOf(Constants.EMPTY)
 
     private val isAnalyzing = mutableStateOf(false)
     private val analysisResult = mutableStateOf<String?>(null)
@@ -225,7 +226,7 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun validateInput(): Boolean {
-        return moduleName.value.isNotEmpty() && moduleName.value != Constants.DEFAULT_MODULE_NAME
+        return packageName.value.isNotEmpty() && moduleName.value.isNotEmpty() && moduleName.value != Constants.DEFAULT_MODULE_NAME
     }
 
     @Composable
@@ -250,6 +251,7 @@ class ModuleMakerDialogWrapper(
         var selectedSrc by remember { selectedSrc }
         val radioOptions = listOf(Constants.ANDROID, Constants.KOTLIN)
         var moduleType by remember { moduleType }
+        var packageName by remember { packageName }
         var moduleNameState by remember { moduleName }
         val selectedModules = remember { selectedModules }
         var isMoveFiles by remember { isMoveFiles }
@@ -307,8 +309,10 @@ class ModuleMakerDialogWrapper(
 
                 ModuleTypeNameContent(
                     moduleTypeSelectionState = moduleType,
+                    packageName = packageName,
                     moduleNameState = moduleNameState,
                     radioOptions = radioOptions,
+                    onPackageNameChanged = { packageName = it },
                     onModuleTypeSelected = { moduleType = it },
                     onModuleNameChanged = { moduleNameState = it },
                 )
@@ -430,8 +434,10 @@ class ModuleMakerDialogWrapper(
     @Composable
     private fun ModuleTypeNameContent(
         moduleTypeSelectionState: String,
+        packageName: String,
         moduleNameState: String,
         radioOptions: List<String>,
+        onPackageNameChanged: (String) -> Unit,
         onModuleTypeSelected: (String) -> Unit,
         onModuleNameChanged: (String) -> Unit,
     ) {
@@ -446,7 +452,7 @@ class ModuleMakerDialogWrapper(
                     color = GetcontactTheme.colors.white,
                     shape = RoundedCornerShape(8.dp)
                 )
-                .padding(16.dp),
+                .padding(24.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
@@ -457,7 +463,7 @@ class ModuleMakerDialogWrapper(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(modifier = Modifier.size(16.dp))
-                Row {
+                Column {
                     radioOptions.forEach { text ->
                         GetcontactRadioButton(
                             text = text,
@@ -472,22 +478,41 @@ class ModuleMakerDialogWrapper(
                 }
             }
             Spacer(modifier = Modifier.size(24.dp))
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Module Name") },
-                placeholder = { Text(Constants.DEFAULT_MODULE_NAME) },
-                value = moduleNameState,
-                onValueChange = { onModuleNameChanged(it) },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedLabelColor = GetcontactTheme.colors.white,
-                    unfocusedLabelColor = GetcontactTheme.colors.white,
-                    cursorColor = GetcontactTheme.colors.white,
-                    textColor = GetcontactTheme.colors.white,
-                    unfocusedBorderColor = GetcontactTheme.colors.white,
-                    focusedBorderColor = GetcontactTheme.colors.white,
-                    placeholderColor = GetcontactTheme.colors.white,
+            Column {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Package Name") },
+                    placeholder = { Text("Package Name") },
+                    value = packageName,
+                    onValueChange = { onPackageNameChanged(it) },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedLabelColor = GetcontactTheme.colors.white,
+                        unfocusedLabelColor = GetcontactTheme.colors.white,
+                        cursorColor = GetcontactTheme.colors.white,
+                        textColor = GetcontactTheme.colors.white,
+                        unfocusedBorderColor = GetcontactTheme.colors.white,
+                        focusedBorderColor = GetcontactTheme.colors.white,
+                        placeholderColor = GetcontactTheme.colors.white,
+                    )
                 )
-            )
+                Spacer(modifier = Modifier.size(16.dp))
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Module Name") },
+                    placeholder = { Text(Constants.DEFAULT_MODULE_NAME) },
+                    value = moduleNameState,
+                    onValueChange = { onModuleNameChanged(it) },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedLabelColor = GetcontactTheme.colors.white,
+                        unfocusedLabelColor = GetcontactTheme.colors.white,
+                        cursorColor = GetcontactTheme.colors.white,
+                        textColor = GetcontactTheme.colors.white,
+                        unfocusedBorderColor = GetcontactTheme.colors.white,
+                        focusedBorderColor = GetcontactTheme.colors.white,
+                        placeholderColor = GetcontactTheme.colors.white,
+                    )
+                )
+            }
         }
     }
 
@@ -548,7 +573,7 @@ class ModuleMakerDialogWrapper(
         }
     }
 
-    private fun moveFilesToNewModule(sourceDir: File, targetModulePath: String) {
+    private fun moveFilesToNewModule(sourceDir: File, targetModulePath: String, packageName: String) {
         if (!isMoveFiles.value) return
 
         try {
@@ -560,6 +585,10 @@ class ModuleMakerDialogWrapper(
             val modulePath = File(project.basePath, targetModulePath.replace(":", "/"))
             val targetSrcDir = File(modulePath, "src/main/kotlin")
             targetSrcDir.mkdirs()
+
+            val packagePath = packageName.split(".").joinToString(File.separator)
+            val targetPackageDir = File(targetSrcDir, packagePath)
+            targetPackageDir.mkdirs()
 
             val sourceFiles = sourceDir.walkTopDown()
                 .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
@@ -576,7 +605,7 @@ class ModuleMakerDialogWrapper(
                 try {
                     val relativePath = getRelativePath(sourceFile, sourceDir)
 
-                    val targetFile = File(targetSrcDir, relativePath)
+                    val targetFile = File(targetPackageDir, relativePath)
                     targetFile.parentFile.mkdirs()
 
                     sourceFile.copyTo(targetFile, overwrite = true)
@@ -651,13 +680,7 @@ class ModuleMakerDialogWrapper(
                 }
 
                 val moduleNameTrimmed = moduleName.removePrefix(":").replace(":", ".")
-                val basePackageName = getBasePackageName()
-                val finalPackageName = if (moduleNameTrimmed.isNotEmpty()) {
-                    "$basePackageName.$moduleNameTrimmed"
-                } else {
-                    basePackageName
-                }
-                println("Package name: $finalPackageName")
+                val finalPackageName = "${packageName.value}.$moduleNameTrimmed"
 
                 val filesCreated = fileWriter.createModule(
                     packageName = finalPackageName,
@@ -675,7 +698,7 @@ class ModuleMakerDialogWrapper(
                         )
 
                         if (isMoveFiles.value) {
-                            moveFilesToNewModule(sourceFile, moduleName)
+                            moveFilesToNewModule(sourceFile, moduleName, finalPackageName)
                         } else {
                             val modulePath = File(project.basePath, moduleName.replace(":", "/"))
                             ApplicationManager.getApplication().invokeLater {
@@ -699,44 +722,6 @@ class ModuleMakerDialogWrapper(
         } finally {
             close(0)
         }
-    }
-
-    private fun getBasePackageName(): String {
-        val gradleFiles = listOf(
-            File(project.basePath, "app/build.gradle"),
-            File(project.basePath, "app/build.gradle.kts")
-        )
-
-        for (gradleFile in gradleFiles) {
-            if (gradleFile.exists()) {
-                try {
-                    val content = gradleFile.readText()
-                    val applicationIdPattern = """applicationId\s*=?\s*['"]([^'"]+)['"]""".toRegex()
-                    val match = applicationIdPattern.find(content)
-                    match?.groupValues?.getOrNull(1)?.let { return it }
-
-                    val namespacePattern = """namespace\s*=?\s*['"]([^'"]+)['"]""".toRegex()
-                    val namespaceMatch = namespacePattern.find(content)
-                    namespaceMatch?.groupValues?.getOrNull(1)?.let { return it }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
-
-        val manifestFile = File(project.basePath, "app/src/main/AndroidManifest.xml")
-        if (manifestFile.exists()) {
-            try {
-                val content = manifestFile.readText()
-                val packagePattern = """package\s*=\s*["']([^"']+)["']""".toRegex()
-                val match = packagePattern.find(content)
-                match?.groupValues?.getOrNull(1)?.let { return it }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-
-        return Constants.DEFAULT_BASE_PACKAGE_NAME
     }
 
     private fun syncProject() {

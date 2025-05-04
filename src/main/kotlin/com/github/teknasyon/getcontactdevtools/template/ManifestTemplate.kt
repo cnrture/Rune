@@ -1,10 +1,10 @@
 package com.github.teknasyon.getcontactdevtools.template
 
 object ManifestTemplate {
-    fun getManifestTemplate(moduleName: String) = """
+    fun getManifestTemplate(moduleName: String, packageName: String) = """
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-            package="app.source.getcontact.$moduleName">
+            package="$packageName">
         </manifest>
     """.trimIndent()
 }
