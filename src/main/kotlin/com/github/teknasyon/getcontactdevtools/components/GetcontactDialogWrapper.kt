@@ -14,9 +14,11 @@ import javax.swing.border.Border
 
 abstract class GetcontactDialogWrapper(titleText: String) : DialogWrapper(true) {
 
+    private val color = Color(0xFF18181B.toInt())
+
     init {
         init()
-        UIManager.put("Panel.background", Color(30, 30, 30))
+        UIManager.put("Panel.background", color)
         title = titleText
     }
 
@@ -37,10 +39,10 @@ abstract class GetcontactDialogWrapper(titleText: String) : DialogWrapper(true) 
 
     override fun createSouthPanel(): JComponent {
         val southPanel = super.createSouthPanel()
-        southPanel.background = Color(30, 30, 30)
+        southPanel.background = color
 
         for (component in southPanel.components) {
-            component.background = Color(30, 30, 30)
+            component.background = color
             if (component is JComponent) {
                 component.isOpaque = true
             }
@@ -51,7 +53,7 @@ abstract class GetcontactDialogWrapper(titleText: String) : DialogWrapper(true) 
 
     override fun getRootPane(): JRootPane? {
         val rootPane = super.getRootPane()
-        rootPane.background = Color(30, 30, 30)
+        rootPane.background = color
         return rootPane
     }
 
