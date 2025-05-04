@@ -1,5 +1,6 @@
 package com.github.teknasyon.getcontactdevtools
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
@@ -52,14 +53,21 @@ class FeatureMakerDialogWrapper(
         Surface(
             modifier = Modifier
                 .width(Constants.FEATURE_MAKER_WINDOW_WIDTH.dp)
-                .height(Constants.WINDOW_HEIGHT.dp),
-            color = GetcontactTheme.colors.black,
+                .height(Constants.FEATURE_MAKER_WINDOW_HEIGHT.dp),
+            color = GetcontactTheme.colors.gray,
         ) {
             Row(
                 modifier = Modifier.padding(24.dp),
             ) {
-                FileTreePanel(modifier = Modifier.weight(0.4f))
-                ConfigurationPanel(modifier = Modifier.weight(0.6f))
+                FileTreePanel(modifier = Modifier.weight(0.5f))
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(end = 32.dp)
+                        .background(GetcontactTheme.colors.white)
+                        .width(2.dp)
+                )
+                ConfigurationPanel(modifier = Modifier.weight(0.5f))
             }
         }
     }
