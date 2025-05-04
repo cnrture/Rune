@@ -54,7 +54,6 @@ class ModuleMakerDialogWrapper(
     private val addGitIgnore = mutableStateOf(false)
     private val moduleTypeSelection = mutableStateOf(Constants.ANDROID)
     private val moduleName = mutableStateOf("")
-    private val packageName = mutableStateOf(Constants.DEFAULT_BASE_PACKAGE_NAME)
 
     init {
         title = "Module Maker"
@@ -189,8 +188,7 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun validateInput(): Boolean {
-        return packageName.value.isNotEmpty() && selectedSrcValue.value != Constants.DEFAULT_SRC_VALUE &&
-            moduleName.value.isNotEmpty() && moduleName.value != Constants.DEFAULT_MODULE_NAME
+        return moduleName.value.isNotEmpty() && moduleName.value != Constants.DEFAULT_MODULE_NAME
     }
 
     @Composable
@@ -198,7 +196,6 @@ class ModuleMakerDialogWrapper(
         GetcontactFileTree(
             modifier = modifier,
             model = FileTree(root = File(rootDirectoryString()).toProjectFile()),
-            height = Constants.WINDOW_HEIGHT.dp,
             onClick = { fileTreeNode ->
                 val absolutePathAtNode = fileTreeNode.file.absolutePath
                 val relativePath = absolutePathAtNode.removePrefix(rootDirectoryStringDropLast())
@@ -223,25 +220,15 @@ class ModuleMakerDialogWrapper(
         val shouldMoveFilesState = remember { shouldMoveFiles }
 
         Column(
-            modifier = modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(8.dp),
+            modifier = modifier.padding(16.dp),
         ) {
             if (detectedDependenciesState.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "Detected Dependencies",
-                    color = GetcontactTheme.colors.onPrimary,
+                    "Detected Modules",
+                    color = GetcontactTheme.colors.white,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                )
-
-                Text(
-                    "These dependencies were automatically detected based on imports in the selected directory:",
-                    color = GetcontactTheme.colors.onPrimary.copy(alpha = 0.7f),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
                 )
 
                 Box(
@@ -249,22 +236,22 @@ class ModuleMakerDialogWrapper(
                         .fillMaxWidth()
                         .padding(4.dp)
                         .background(
-                            color = GetcontactTheme.colors.background,
+                            color = Color.Transparent,
                             shape = RoundedCornerShape(8.dp)
                         )
                         .border(
                             width = 1.dp,
-                            color = GetcontactTheme.colors.outline,
+                            color = GetcontactTheme.colors.lightGray,
                             shape = RoundedCornerShape(8.dp)
                         )
                         .padding(8.dp)
                 ) {
-                    Column {
+                    Row {
                         detectedDependenciesState.forEach { module ->
                             Text(
                                 text = "• $module",
-                                color = GetcontactTheme.colors.onPrimary,
-                                modifier = Modifier.padding(vertical = 2.dp)
+                                color = GetcontactTheme.colors.white,
+                                modifier = Modifier.padding(horizontal = 2.dp)
                             )
                         }
                     }
@@ -286,7 +273,7 @@ class ModuleMakerDialogWrapper(
                     modifier = Modifier
                         .weight(1f),
                     text = "Selected root: $selectedRootState",
-                    color = GetcontactTheme.colors.onPrimary,
+                    color = GetcontactTheme.colors.white,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -303,7 +290,7 @@ class ModuleMakerDialogWrapper(
                             }
                         },
                     imageVector = Icons.Rounded.Refresh,
-                    tint = GetcontactTheme.colors.onPrimary,
+                    tint = GetcontactTheme.colors.lightGray,
                     contentDescription = null,
                 )
             }
@@ -325,12 +312,24 @@ class ModuleMakerDialogWrapper(
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = GetcontactTheme.colors.lightGray,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
                     Text(
                         text = "Module Type",
-                        color = GetcontactTheme.colors.onPrimary,
+                        color = GetcontactTheme.colors.white,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -351,78 +350,70 @@ class ModuleMakerDialogWrapper(
                     value = moduleNameState,
                     onValueChange = { moduleNameState = it },
                     colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedLabelColor = GetcontactTheme.colors.onPrimary,
-                        unfocusedLabelColor = GetcontactTheme.colors.onPrimary,
-                        cursorColor = GetcontactTheme.colors.onPrimary,
-                        textColor = GetcontactTheme.colors.onPrimary,
-                        unfocusedBorderColor = GetcontactTheme.colors.onPrimary,
-                        focusedBorderColor = GetcontactTheme.colors.onPrimary,
-                        placeholderColor = GetcontactTheme.colors.onPrimary,
+                        focusedLabelColor = GetcontactTheme.colors.white,
+                        unfocusedLabelColor = GetcontactTheme.colors.white,
+                        cursorColor = GetcontactTheme.colors.white,
+                        textColor = GetcontactTheme.colors.white,
+                        unfocusedBorderColor = GetcontactTheme.colors.white,
+                        focusedBorderColor = GetcontactTheme.colors.white,
+                        placeholderColor = GetcontactTheme.colors.white,
                     )
                 )
             }
 
             if (existingModules.isNotEmpty()) {
-                Spacer(modifier = Modifier.size(24.dp))
-                Text(
-                    text = "Module Dependencies",
-                    color = GetcontactTheme.colors.onPrimary,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
+                Divider(
+                    color = GetcontactTheme.colors.lightGray,
+                    modifier = Modifier.padding(vertical = 24.dp)
                 )
-                Spacer(modifier = Modifier.size(8.dp))
-                Text(
-                    text = "Select modules that your new module will depend on:",
-                    color = GetcontactTheme.colors.outline,
-                    fontSize = 14.sp,
-                )
-                Spacer(modifier = Modifier.size(8.dp))
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(4.dp)
                         .background(
                             color = Color.Transparent,
                             shape = RoundedCornerShape(8.dp)
                         )
                         .border(
                             width = 1.dp,
-                            color = GetcontactTheme.colors.outline,
+                            color = GetcontactTheme.colors.lightGray,
                             shape = RoundedCornerShape(8.dp)
                         )
-                        .padding(8.dp)
+                        .padding(16.dp)
                 ) {
-                    existingModules.forEachIndexed { index, module ->
-                        val isChecked = module in selectedDependenciesState
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    if (isChecked) {
-                                        selectedDependenciesState.remove(module)
-                                    } else {
-                                        selectedDependenciesState.add(module)
-                                    }
-                                }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                    Text(
+                        text = "Module Dependencies",
+                        color = GetcontactTheme.colors.white,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = "Select modules that your new module will depend on:",
+                        color = GetcontactTheme.colors.lightGray,
+                        fontSize = 14.sp,
+                    )
+                    Spacer(modifier = Modifier.size(16.dp))
+                    Divider(color = GetcontactTheme.colors.lightGray)
+                    Spacer(modifier = Modifier.size(16.dp))
+                    FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        existingModules.forEachIndexed { index, module ->
+                            val isChecked = module in selectedDependenciesState
                             GetcontactCheckbox(
                                 checked = isChecked,
                                 label = module,
-                                onCheckedChange = { checked ->
-                                    if (checked) {
+                                onCheckedChange = {
+                                    if (it) {
                                         selectedDependenciesState.add(module)
                                     } else {
                                         selectedDependenciesState.remove(module)
                                     }
                                 }
-                            )
-                        }
-                        if (index < existingModules.lastIndex) {
-                            Divider(
-                                color = GetcontactTheme.colors.outline,
-                                modifier = Modifier.padding(horizontal = 8.dp)
                             )
                         }
                     }
@@ -498,7 +489,6 @@ class ModuleMakerDialogWrapper(
                         syncProject()
                     },
                     workingDirectory = currentlySelectedFile,
-                    packageName = packageName.value,
                     addReadme = addReadme.value,
                     addGitIgnore = addGitIgnore.value,
                     dependencies = selectedDependencies
