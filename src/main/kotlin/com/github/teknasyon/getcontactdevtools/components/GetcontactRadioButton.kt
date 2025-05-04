@@ -36,7 +36,6 @@ fun GetcontactRadioButton(
             onClick = onClick,
         )
         Text(
-            modifier = Modifier.padding(start = 8.dp),
             text = text,
             color = GetcontactTheme.colors.white,
         )
