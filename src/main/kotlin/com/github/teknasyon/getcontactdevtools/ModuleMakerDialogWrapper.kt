@@ -1,8 +1,11 @@
 package com.github.teknasyon.getcontactdevtools
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -10,12 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.common.Constants
 import com.github.teknasyon.getcontactdevtools.components.GetcontactCheckbox
+import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogActions
 import com.github.teknasyon.getcontactdevtools.components.GetcontactFileTree
 import com.github.teknasyon.getcontactdevtools.components.GetcontactRadioButton
 import com.github.teknasyon.getcontactdevtools.file.FileTree
@@ -29,13 +33,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import java.awt.event.ActionEvent
+import com.intellij.util.ui.JBUI
+import java.awt.Color
 import java.io.File
 import java.nio.file.Path
-import javax.swing.AbstractAction
-import javax.swing.Action
-import javax.swing.JComponent
-import javax.swing.SwingUtilities
+import javax.swing.*
+import javax.swing.border.Border
 import kotlin.concurrent.thread
 
 class ModuleMakerDialogWrapper(
@@ -60,6 +63,9 @@ class ModuleMakerDialogWrapper(
 
     init {
         title = "Module Maker"
+
+        UIManager.put("Panel.background", Color(30, 30, 30))
+
         init()
 
         loadExistingModules()
@@ -170,46 +176,26 @@ class ModuleMakerDialogWrapper(
         }
     }
 
-
     override fun createCenterPanel(): JComponent {
         return ComposePanel().apply {
-            setBounds(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT)
             setContent {
                 GetcontactTheme {
                     Surface(
-                        color = Color.Transparent,
+                        modifier = Modifier
+                            .width(Constants.WINDOW_WIDTH.dp)
+                            .height(Constants.WINDOW_HEIGHT.dp),
+                        color = GetcontactTheme.colors.black,
                     ) {
-                        Row {
-                            FileTreePanel(
-                                modifier = Modifier
-                                    .height(Constants.WINDOW_HEIGHT.dp)
-                                    .width(Constants.FILE_TREE_WIDTH.dp)
-                            )
-                            ConfigurationPanel(
-                                modifier = Modifier
-                                    .height(Constants.WINDOW_HEIGHT.dp)
-                                    .width(Constants.CONFIGURATION_PANEL_WIDTH.dp)
-                            )
+                        Row(
+                            modifier = Modifier.padding(24.dp),
+                        ) {
+                            FileTreePanel(modifier = Modifier.weight(0.4f))
+                            ConfigurationPanel(modifier = Modifier.weight(0.6f))
                         }
                     }
                 }
             }
         }
-    }
-
-    override fun createActions(): Array<Action> {
-        return arrayOf(
-            DialogWrapperExitAction("Cancel", 2),
-            object : AbstractAction("Create") {
-                override fun actionPerformed(e: ActionEvent?) {
-                    if (validateInput()) {
-                        create()
-                    } else {
-                        MessageDialogWrapper("Please fill out required values").show()
-                    }
-                }
-            }
-        )
     }
 
     private fun validateInput(): Boolean {
@@ -238,222 +224,287 @@ class ModuleMakerDialogWrapper(
         var moduleTypeSelectionState by remember { moduleTypeSelection }
         var moduleNameState by remember { moduleName }
         val selectedDependenciesState = remember { selectedDependencies }
-        val shouldMoveFilesState = remember { shouldMoveFiles }
-        val isAnalyzingState = remember { isAnalyzing }
+        var shouldMoveFilesState by remember { shouldMoveFiles }
+        val isAnalyzingState by remember { isAnalyzing }
         val analysisResultState by remember { analysisResult }
 
         Column(
-            modifier = modifier.padding(16.dp),
+            modifier = modifier,
         ) {
             Text(
                 text = "Selected root: $selectedRootState",
-                color = GetcontactTheme.colors.white,
+                color = GetcontactTheme.colors.orange,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color.Transparent,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .border(
-                        width = 2.dp,
-                        color = GetcontactTheme.colors.white,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(16.dp),
-            ) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = "Detect Modules",
-                            color = GetcontactTheme.colors.white,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Spacer(modifier = Modifier.size(8.dp))
-                        Box {
-                            if (isAnalyzingState.value) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = GetcontactTheme.colors.orange,
-                                    strokeWidth = 2.dp,
-                                )
-                            } else {
-                                Icon(
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clickable {
-                                            val selectedFile = getCurrentlySelectedFile()
-                                            if (selectedFile.exists()) {
-                                                analyzeSelectedDirectory(selectedFile)
-                                            }
-                                        },
-                                    imageVector = Icons.Rounded.PlayArrow,
-                                    tint = GetcontactTheme.colors.orange,
-                                    contentDescription = null,
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        text = "These modules will be added to the new module's build.gradle file.",
-                        color = GetcontactTheme.colors.lightGray,
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    analysisResultState?.let { result ->
-                        Text(
-                            text = result,
-                            color = GetcontactTheme.colors.orange,
-                        )
+
+            DetectModulesContent(
+                isAnalyzingState = isAnalyzingState,
+                analysisResultState = analysisResultState,
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            MoveFilesContent(
+                isChecked = shouldMoveFilesState,
+                onCheckedChange = { shouldMoveFilesState = it },
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ModuleTypeNameContent(
+                moduleTypeSelectionState = moduleTypeSelectionState,
+                moduleNameState = moduleNameState,
+                radioOptions = radioOptions,
+                onModuleTypeSelected = { moduleTypeSelectionState = it },
+                onModuleNameChanged = { moduleNameState = it },
+            )
+
+            ExistingModulesContent(
+                existingModules = existingModules,
+                selectedDependencies = selectedDependenciesState,
+                onCheckedModule = { module ->
+                    if (selectedDependenciesState.contains(module)) {
+                        selectedDependenciesState.remove(module)
+                    } else {
+                        selectedDependenciesState.add(module)
                     }
                 }
-                Divider(
-                    color = GetcontactTheme.colors.lightGray,
-                    modifier = Modifier.padding(vertical = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            GetcontactDialogActions(
+                onCancelClick = { close(2) },
+                onCreateClick = {
+                    if (validateInput()) {
+                        create()
+                    } else {
+                        MessageDialogWrapper("Please fill out required values").show()
+                    }
+                }
+            )
+        }
+    }
+
+    @Composable
+    private fun DetectModulesContent(
+        isAnalyzingState: Boolean,
+        analysisResultState: String?,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(
+                    shape = RoundedCornerShape(8.dp)
                 )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color.Transparent,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .border(
-                        width = 2.dp,
-                        color = GetcontactTheme.colors.white,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(8.dp),
-            ) {
-                GetcontactCheckbox(
-                    label = "Move selected files to new module",
-                    checked = shouldMoveFilesState.value,
-                    onCheckedChange = { shouldMoveFilesState.value = it }
+                .border(
+                    width = 2.dp,
+                    color = GetcontactTheme.colors.white,
+                    shape = RoundedCornerShape(8.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
-                    text = "This will move files from the selected directory to the new module.",
-                    color = GetcontactTheme.colors.lightGray,
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color.Transparent,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .border(
-                        width = 2.dp,
-                        color = GetcontactTheme.colors.white,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column {
+                .padding(16.dp),
+        ) {
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        text = "Module Type",
+                        text = "Detect Modules",
                         color = GetcontactTheme.colors.white,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Box {
+                        if (isAnalyzingState) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = GetcontactTheme.colors.orange,
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            Icon(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clickable {
+                                        val selectedFile = getCurrentlySelectedFile()
+                                        if (selectedFile.exists()) {
+                                            analyzeSelectedDirectory(selectedFile)
+                                        }
+                                    },
+                                imageVector = Icons.Rounded.PlayArrow,
+                                tint = GetcontactTheme.colors.orange,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(
+                    text = "These modules will be added to the new module's build.gradle file.",
+                    color = GetcontactTheme.colors.lightGray,
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                analysisResultState?.let { result ->
+                    Text(
+                        text = result,
+                        color = GetcontactTheme.colors.orange,
+                    )
+                }
+            }
+            Divider(
+                color = GetcontactTheme.colors.lightGray,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        }
+    }
 
+    @Composable
+    private fun MoveFilesContent(
+        isChecked: Boolean,
+        onCheckedChange: (Boolean) -> Unit,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .border(
+                    width = 2.dp,
+                    color = GetcontactTheme.colors.white,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(8.dp),
+        ) {
+            GetcontactCheckbox(
+                label = "Move selected files to new module",
+                checked = isChecked,
+                onCheckedChange = { onCheckedChange(it) },
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
+                text = "This will move files from the selected directory to the new module.",
+                color = GetcontactTheme.colors.lightGray,
+            )
+        }
+    }
+
+    @Composable
+    private fun ModuleTypeNameContent(
+        moduleTypeSelectionState: String,
+        moduleNameState: String,
+        radioOptions: List<String>,
+        onModuleTypeSelected: (String) -> Unit,
+        onModuleNameChanged: (String) -> Unit,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .border(
+                    width = 2.dp,
+                    color = GetcontactTheme.colors.white,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text(
+                    text = "Module Type",
+                    color = GetcontactTheme.colors.white,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                Row {
                     radioOptions.forEach { text ->
                         GetcontactRadioButton(
                             text = text,
                             selected = text == moduleTypeSelectionState,
-                            onClick = { moduleTypeSelectionState = text },
+                            onClick = { onModuleTypeSelected(text) },
                         )
                     }
                 }
-                Spacer(modifier = Modifier.size(24.dp))
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Module Name") },
-                    placeholder = { Text(Constants.DEFAULT_MODULE_NAME) },
-                    value = moduleNameState,
-                    onValueChange = { moduleNameState = it },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedLabelColor = GetcontactTheme.colors.white,
-                        unfocusedLabelColor = GetcontactTheme.colors.white,
-                        cursorColor = GetcontactTheme.colors.white,
-                        textColor = GetcontactTheme.colors.white,
-                        unfocusedBorderColor = GetcontactTheme.colors.white,
-                        focusedBorderColor = GetcontactTheme.colors.white,
-                        placeholderColor = GetcontactTheme.colors.white,
-                    )
-                )
             }
+            Spacer(modifier = Modifier.size(24.dp))
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Module Name") },
+                placeholder = { Text(Constants.DEFAULT_MODULE_NAME) },
+                value = moduleNameState,
+                onValueChange = { onModuleNameChanged(it) },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedLabelColor = GetcontactTheme.colors.white,
+                    unfocusedLabelColor = GetcontactTheme.colors.white,
+                    cursorColor = GetcontactTheme.colors.white,
+                    textColor = GetcontactTheme.colors.white,
+                    unfocusedBorderColor = GetcontactTheme.colors.white,
+                    focusedBorderColor = GetcontactTheme.colors.white,
+                    placeholderColor = GetcontactTheme.colors.white,
+                )
+            )
+        }
+    }
 
-            if (existingModules.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Column(
+    @OptIn(ExperimentalLayoutApi::class)
+    @Composable
+    private fun ExistingModulesContent(
+        existingModules: List<String>,
+        selectedDependencies: List<String>,
+        onCheckedModule: (String) -> Unit,
+    ) {
+        if (existingModules.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .border(
+                        width = 2.dp,
+                        color = GetcontactTheme.colors.white,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Module Dependencies",
+                    color = GetcontactTheme.colors.white,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(
+                    text = "Select modules that your new module will depend on:",
+                    color = GetcontactTheme.colors.lightGray,
+                    fontSize = 14.sp,
+                )
+                Divider(
+                    color = GetcontactTheme.colors.lightGray,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+                FlowRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            color = Color.Transparent,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .border(
-                            width = 2.dp,
-                            color = GetcontactTheme.colors.white,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(
-                        text = "Module Dependencies",
-                        color = GetcontactTheme.colors.white,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        text = "Select modules that your new module will depend on:",
-                        color = GetcontactTheme.colors.lightGray,
-                        fontSize = 14.sp,
-                    )
-                    Divider(
-                        color = GetcontactTheme.colors.lightGray,
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
-                    FlowRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        existingModules.forEachIndexed { index, module ->
-                            val isChecked = module in selectedDependenciesState
-                            GetcontactCheckbox(
-                                checked = isChecked,
-                                label = module,
-                                onCheckedChange = {
-                                    if (it) {
-                                        selectedDependenciesState.add(module)
-                                    } else {
-                                        selectedDependenciesState.remove(module)
-                                    }
-                                }
-                            )
-                        }
+                    existingModules.forEachIndexed { index, module ->
+                        val isChecked = module in selectedDependencies
+                        GetcontactCheckbox(
+                            checked = isChecked,
+                            label = module,
+                            onCheckedChange = { onCheckedModule(module) },
+                        )
                     }
                 }
             }
@@ -574,4 +625,30 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun rootDirectoryString(): String = project.basePath!!
+
+    override fun createActions(): Array<Action> = emptyArray()
+
+    override fun createSouthPanel(): JComponent {
+        val southPanel = super.createSouthPanel()
+        southPanel.background = Color(30, 30, 30)
+
+        for (component in southPanel.components) {
+            component.background = Color(30, 30, 30)
+            if (component is JComponent) {
+                component.isOpaque = true
+            }
+        }
+
+        return southPanel
+    }
+
+    override fun getRootPane(): JRootPane? {
+        val rootPane = super.getRootPane()
+        rootPane.background = Color(30, 30, 30)
+        return rootPane
+    }
+
+    override fun createContentPaneBorder(): Border {
+        return JBUI.Borders.empty()
+    }
 }
