@@ -19,12 +19,11 @@ class TemplateWriter {
     fun createGradleFile(
         moduleFile: File,
         moduleType: String,
-        packageName: String,
         dependencies: List<String> = emptyList(),
     ): List<File> {
         try {
             val data: MutableMap<String, Any> = HashMap()
-            data["packageName"] = packageName
+            data["packageName"] = Constants.DEFAULT_BASE_PACKAGE_NAME
 
             val gradleTemplate = when (moduleType) {
                 Constants.ANDROID -> GradleTemplate.getAndroidModuleGradleTemplate(
