@@ -1,0 +1,61 @@
+package com.github.teknasyon.getcontactdevtools.components
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.awt.ComposePanel
+import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
+import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.util.ui.JBUI
+import java.awt.Color
+import javax.swing.Action
+import javax.swing.JComponent
+import javax.swing.JRootPane
+import javax.swing.UIManager
+import javax.swing.border.Border
+
+abstract class GetcontactDialogWrapper(titleText: String) : DialogWrapper(true) {
+
+    init {
+        init()
+        UIManager.put("Panel.background", Color(30, 30, 30))
+        title = titleText
+    }
+
+    @Composable
+    abstract fun createDesign()
+
+    override fun createCenterPanel(): JComponent {
+        return ComposePanel().apply {
+            setContent {
+                GetcontactTheme {
+                    createDesign()
+                }
+            }
+        }
+    }
+
+    override fun createActions(): Array<Action> = emptyArray()
+
+    override fun createSouthPanel(): JComponent {
+        val southPanel = super.createSouthPanel()
+        southPanel.background = Color(30, 30, 30)
+
+        for (component in southPanel.components) {
+            component.background = Color(30, 30, 30)
+            if (component is JComponent) {
+                component.isOpaque = true
+            }
+        }
+
+        return southPanel
+    }
+
+    override fun getRootPane(): JRootPane? {
+        val rootPane = super.getRootPane()
+        rootPane.background = Color(30, 30, 30)
+        return rootPane
+    }
+
+    override fun createContentPaneBorder(): Border {
+        return JBUI.Borders.empty()
+    }
+}
