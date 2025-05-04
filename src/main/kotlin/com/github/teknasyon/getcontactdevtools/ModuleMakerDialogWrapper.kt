@@ -12,16 +12,12 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.common.Constants
-import com.github.teknasyon.getcontactdevtools.components.GetcontactCheckbox
-import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogActions
-import com.github.teknasyon.getcontactdevtools.components.GetcontactFileTree
-import com.github.teknasyon.getcontactdevtools.components.GetcontactRadioButton
+import com.github.teknasyon.getcontactdevtools.components.*
 import com.github.teknasyon.getcontactdevtools.file.FileTree
 import com.github.teknasyon.getcontactdevtools.file.FileWriter
 import com.github.teknasyon.getcontactdevtools.file.toProjectFile
@@ -30,21 +26,17 @@ import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.util.ui.JBUI
-import java.awt.Color
 import java.io.File
 import java.nio.file.Path
-import javax.swing.*
-import javax.swing.border.Border
+import javax.swing.SwingUtilities
 import kotlin.concurrent.thread
 
 class ModuleMakerDialogWrapper(
     private val project: Project,
     private val startingLocation: VirtualFile?,
-) : DialogWrapper(true) {
+) : GetcontactDialogWrapper("Create New Module") {
 
     private val fileWriter = FileWriter()
 
@@ -62,12 +54,6 @@ class ModuleMakerDialogWrapper(
     private val analysisResult = mutableStateOf<String?>(null)
 
     init {
-        title = "Module Maker"
-
-        UIManager.put("Panel.background", Color(30, 30, 30))
-
-        init()
-
         loadExistingModules()
 
         selectedSrcValue.value = if (startingLocation != null) {
@@ -176,24 +162,19 @@ class ModuleMakerDialogWrapper(
         }
     }
 
-    override fun createCenterPanel(): JComponent {
-        return ComposePanel().apply {
-            setContent {
-                GetcontactTheme {
-                    Surface(
-                        modifier = Modifier
-                            .width(Constants.WINDOW_WIDTH.dp)
-                            .height(Constants.WINDOW_HEIGHT.dp),
-                        color = GetcontactTheme.colors.black,
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(24.dp),
-                        ) {
-                            FileTreePanel(modifier = Modifier.weight(0.4f))
-                            ConfigurationPanel(modifier = Modifier.weight(0.6f))
-                        }
-                    }
-                }
+    @Composable
+    override fun createDesign() {
+        Surface(
+            modifier = Modifier
+                .width(Constants.WINDOW_WIDTH.dp)
+                .height(Constants.WINDOW_HEIGHT.dp),
+            color = GetcontactTheme.colors.black,
+        ) {
+            Row(
+                modifier = Modifier.padding(24.dp),
+            ) {
+                FileTreePanel(modifier = Modifier.weight(0.4f))
+                ConfigurationPanel(modifier = Modifier.weight(0.6f))
             }
         }
     }
@@ -625,30 +606,4 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun rootDirectoryString(): String = project.basePath!!
-
-    override fun createActions(): Array<Action> = emptyArray()
-
-    override fun createSouthPanel(): JComponent {
-        val southPanel = super.createSouthPanel()
-        southPanel.background = Color(30, 30, 30)
-
-        for (component in southPanel.components) {
-            component.background = Color(30, 30, 30)
-            if (component is JComponent) {
-                component.isOpaque = true
-            }
-        }
-
-        return southPanel
-    }
-
-    override fun getRootPane(): JRootPane? {
-        val rootPane = super.getRootPane()
-        rootPane.background = Color(30, 30, 30)
-        return rootPane
-    }
-
-    override fun createContentPaneBorder(): Border {
-        return JBUI.Borders.empty()
-    }
 }

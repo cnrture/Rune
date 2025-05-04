@@ -9,32 +9,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.common.Constants
 import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogActions
+import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogWrapper
 import com.github.teknasyon.getcontactdevtools.components.GetcontactFileTree
 import com.github.teknasyon.getcontactdevtools.file.FileTree
 import com.github.teknasyon.getcontactdevtools.file.FileWriter
 import com.github.teknasyon.getcontactdevtools.file.toProjectFile
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.util.ui.JBUI
 import java.io.File
-import javax.swing.Action
-import javax.swing.JComponent
-import javax.swing.JRootPane
-import javax.swing.border.Border
 
 class FeatureMakerDialogWrapper(
     private val project: Project,
     startingLocation: VirtualFile?,
-) : DialogWrapper(project) {
+) : GetcontactDialogWrapper("Create New Feature") {
 
     private val fileWriter = FileWriter()
 
@@ -54,24 +48,19 @@ class FeatureMakerDialogWrapper(
         }
     }
 
-    override fun createCenterPanel(): JComponent {
-        return ComposePanel().apply {
-            setContent {
-                GetcontactTheme {
-                    Surface(
-                        modifier = Modifier
-                            .width(Constants.WINDOW_WIDTH.dp)
-                            .height(Constants.WINDOW_HEIGHT.dp),
-                        color = GetcontactTheme.colors.black,
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(24.dp),
-                        ) {
-                            FileTreePanel(modifier = Modifier.weight(0.4f))
-                            ConfigurationPanel(modifier = Modifier.weight(0.6f))
-                        }
-                    }
-                }
+    @Composable
+    override fun createDesign() {
+        Surface(
+            modifier = Modifier
+                .width(Constants.WINDOW_WIDTH.dp)
+                .height(Constants.WINDOW_HEIGHT.dp),
+            color = GetcontactTheme.colors.black,
+        ) {
+            Row(
+                modifier = Modifier.padding(24.dp),
+            ) {
+                FileTreePanel(modifier = Modifier.weight(0.4f))
+                ConfigurationPanel(modifier = Modifier.weight(0.6f))
             }
         }
     }
@@ -197,31 +186,5 @@ class FeatureMakerDialogWrapper(
             true,
             currentlySelectedFile
         )
-    }
-
-    override fun createActions(): Array<Action> = emptyArray()
-
-    override fun createSouthPanel(): JComponent {
-        val southPanel = super.createSouthPanel()
-        southPanel.background = java.awt.Color(30, 30, 30)
-
-        for (component in southPanel.components) {
-            component.background = java.awt.Color(30, 30, 30)
-            if (component is JComponent) {
-                component.isOpaque = true
-            }
-        }
-
-        return southPanel
-    }
-
-    override fun getRootPane(): JRootPane? {
-        val rootPane = super.getRootPane()
-        rootPane.background = java.awt.Color(30, 30, 30)
-        return rootPane
-    }
-
-    override fun createContentPaneBorder(): Border {
-        return JBUI.Borders.empty()
     }
 }
