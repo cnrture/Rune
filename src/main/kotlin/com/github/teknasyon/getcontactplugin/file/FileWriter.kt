@@ -23,7 +23,6 @@ class FileWriter {
         moduleType: String,
         showErrorDialog: (String) -> Unit,
         showSuccessDialog: () -> Unit,
-        packageName: String,
         addReadme: Boolean,
         addGitIgnore: Boolean,
         dependencies: List<String> = emptyList(),
@@ -54,7 +53,6 @@ class FileWriter {
             moduleFile = moduleFile,
             moduleName = moduleName,
             moduleType = moduleType,
-            packageName = packageName,
             addReadme = addReadme,
             addGitIgnore = addGitIgnore,
             dependencies = dependencies,
@@ -69,7 +67,6 @@ class FileWriter {
         moduleFile: File,
         moduleName: String,
         moduleType: String,
-        packageName: String,
         addReadme: Boolean,
         addGitIgnore: Boolean,
         dependencies: List<String> = emptyList(),
@@ -79,7 +76,6 @@ class FileWriter {
         filesCreated += templateWriter.createGradleFile(
             moduleFile = moduleFile,
             moduleType = moduleType,
-            packageName = packageName,
             dependencies = dependencies,
         )
 
@@ -90,7 +86,7 @@ class FileWriter {
 
         if (addReadme) filesCreated += templateWriter.createReadmeFile(moduleFile, moduleName)
 
-        filesCreated += createDefaultPackages(moduleFile, packageName)
+        filesCreated += createDefaultPackages(moduleFile)
 
         if (addGitIgnore) filesCreated += createGitIgnore(moduleFile)
 
@@ -225,13 +221,11 @@ class FileWriter {
         return successfullyCreatedFiles
     }
 
-    private fun createDefaultPackages(
-        moduleFile: File,
-        packageName: String,
-    ): List<File> {
+    private fun createDefaultPackages(moduleFile: File): List<File> {
         fun makePath(srcPath: File): File {
             val packagePath = Paths.get(
-                srcPath.path, packageName.split(".").joinToString(File.separator)
+                srcPath.path,
+                Constants.DEFAULT_BASE_PACKAGE_NAME.split(".").joinToString(File.separator)
             ).toFile()
             val stringBuilder = StringBuilder()
             val filePath = Paths.get(srcPath.absolutePath, stringBuilder.toString()).toFile()
