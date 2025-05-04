@@ -7,7 +7,7 @@ object Constants {
     const val EMPTY = ""
 
     const val MODULE_MAKER_WINDOW_WIDTH = 1200
-    const val FEATURE_MAKER_WINDOW_WIDTH = 600
+    const val FEATURE_MAKER_WINDOW_WIDTH = 700
     const val MODULE_MAKER_WINDOW_HEIGHT = 800
     const val FEATURE_MAKER_WINDOW_HEIGHT = 500
 

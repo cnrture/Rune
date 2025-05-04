@@ -2,10 +2,7 @@ package com.github.teknasyon.getcontactdevtools
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,7 +25,11 @@ import java.io.File
 class FeatureMakerDialogWrapper(
     private val project: Project,
     startingLocation: VirtualFile?,
-) : GetcontactDialogWrapper("Create New Feature") {
+) : GetcontactDialogWrapper(
+    titleText = "Create New Feature",
+    width = Constants.FEATURE_MAKER_WINDOW_WIDTH,
+    height = Constants.FEATURE_MAKER_WINDOW_HEIGHT,
+) {
 
     private val fileWriter = FileWriter()
 
@@ -51,15 +52,19 @@ class FeatureMakerDialogWrapper(
     @Composable
     override fun createDesign() {
         Surface(
-            modifier = Modifier
-                .width(Constants.FEATURE_MAKER_WINDOW_WIDTH.dp)
-                .height(Constants.FEATURE_MAKER_WINDOW_HEIGHT.dp),
+            modifier = Modifier.fillMaxSize(),
             color = GetcontactTheme.colors.gray,
         ) {
             Row(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
             ) {
-                FileTreePanel(modifier = Modifier.weight(0.5f))
+                FileTreePanel(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(0.5f),
+                )
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -67,7 +72,11 @@ class FeatureMakerDialogWrapper(
                         .background(GetcontactTheme.colors.white)
                         .width(2.dp)
                 )
-                ConfigurationPanel(modifier = Modifier.weight(0.5f))
+                ConfigurationPanel(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(0.5f),
+                )
             }
         }
     }
@@ -92,46 +101,53 @@ class FeatureMakerDialogWrapper(
         val selectedSrc = remember { selectedSrc }
         val featureName = remember { featureName }
 
-        Column(
+        Scaffold(
             modifier = modifier,
-        ) {
-            Text(
-                text = "Selected root: ${selectedSrc.value}",
-                color = GetcontactTheme.colors.white,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Feature Name") },
-                value = featureName.value,
-                onValueChange = { featureName.value = it },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedLabelColor = GetcontactTheme.colors.white,
-                    unfocusedLabelColor = GetcontactTheme.colors.white,
-                    cursorColor = GetcontactTheme.colors.white,
-                    textColor = GetcontactTheme.colors.white,
-                    unfocusedBorderColor = GetcontactTheme.colors.white,
-                    focusedBorderColor = GetcontactTheme.colors.white,
-                    placeholderColor = GetcontactTheme.colors.white,
-                )
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            GetcontactDialogActions(
-                onCancelClick = { close(Constants.DEFAULT_EXIT_CODE) },
-                onCreateClick = {
-                    if (validateInput()) {
-                        createFeature()
-                    } else {
-                        MessageDialogWrapper("Please fill out required values").show()
+            backgroundColor = GetcontactTheme.colors.gray,
+            bottomBar = {
+                GetcontactDialogActions(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(GetcontactTheme.colors.gray),
+                    onCancelClick = { close(Constants.DEFAULT_EXIT_CODE) },
+                    onCreateClick = {
+                        if (validateInput()) {
+                            createFeature()
+                        } else {
+                            MessageDialogWrapper("Please fill out required values").show()
+                        }
                     }
-                }
-            )
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = modifier,
+            ) {
+                Text(
+                    text = "Selected root: ${selectedSrc.value}",
+                    color = GetcontactTheme.colors.white,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Feature Name") },
+                    value = featureName.value,
+                    onValueChange = { featureName.value = it },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedLabelColor = GetcontactTheme.colors.white,
+                        unfocusedLabelColor = GetcontactTheme.colors.white,
+                        cursorColor = GetcontactTheme.colors.white,
+                        textColor = GetcontactTheme.colors.white,
+                        unfocusedBorderColor = GetcontactTheme.colors.white,
+                        focusedBorderColor = GetcontactTheme.colors.white,
+                        placeholderColor = GetcontactTheme.colors.white,
+                    )
+                )
+            }
         }
     }
 

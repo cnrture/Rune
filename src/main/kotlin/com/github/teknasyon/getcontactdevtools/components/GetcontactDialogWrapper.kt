@@ -12,7 +12,11 @@ import javax.swing.JRootPane
 import javax.swing.UIManager
 import javax.swing.border.Border
 
-abstract class GetcontactDialogWrapper(titleText: String) : DialogWrapper(true) {
+abstract class GetcontactDialogWrapper(
+    titleText: String,
+    width: Int = 0,
+    height: Int = 0,
+) : DialogWrapper(true) {
 
     private val color = Color(0xFF18181B.toInt())
 
@@ -20,6 +24,11 @@ abstract class GetcontactDialogWrapper(titleText: String) : DialogWrapper(true) 
         init()
         UIManager.put("Panel.background", color)
         title = titleText
+
+        if (width > 0 && height > 0) {
+            setSize(width, height)
+        }
+        window?.setLocationRelativeTo(null)
     }
 
     @Composable

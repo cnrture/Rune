@@ -1,12 +1,8 @@
 package com.github.teknasyon.getcontactdevtools
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -37,7 +33,11 @@ import kotlin.concurrent.thread
 class ModuleMakerDialogWrapper(
     private val project: Project,
     private val startingLocation: VirtualFile?,
-) : GetcontactDialogWrapper("Create New Module") {
+) : GetcontactDialogWrapper(
+    titleText = "Create New Module",
+    width = Constants.MODULE_MAKER_WINDOW_WIDTH,
+    height = Constants.MODULE_MAKER_WINDOW_HEIGHT,
+) {
 
     private val fileWriter = FileWriter()
 
@@ -166,23 +166,31 @@ class ModuleMakerDialogWrapper(
     @Composable
     override fun createDesign() {
         Surface(
-            modifier = Modifier
-                .width(Constants.MODULE_MAKER_WINDOW_WIDTH.dp)
-                .height(Constants.MODULE_MAKER_WINDOW_HEIGHT.dp),
+            modifier = Modifier.fillMaxSize(),
             color = GetcontactTheme.colors.gray,
         ) {
             Row(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
             ) {
-                FileTreePanel(modifier = Modifier.weight(0.3f))
+                FileTreePanel(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(0.3f),
+                )
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .padding(end = 32.dp)
+                        .padding(horizontal = 16.dp)
                         .background(GetcontactTheme.colors.white)
                         .width(2.dp)
                 )
-                ConfigurationPanel(modifier = Modifier.weight(0.7f))
+                ConfigurationPanel(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(0.7f),
+                )
             }
         }
     }
@@ -217,63 +225,74 @@ class ModuleMakerDialogWrapper(
         val isAnalyzingState by remember { isAnalyzing }
         val analysisResultState by remember { analysisResult }
 
-        Column(
+        Scaffold(
             modifier = modifier,
-        ) {
-            Text(
-                text = "Selected root: $selectedSrc",
-                color = GetcontactTheme.colors.orange,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            DetectModulesContent(
-                isAnalyzingState = isAnalyzingState,
-                analysisResultState = analysisResultState,
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            MoveFilesContent(
-                isChecked = isMoveFiles,
-                onCheckedChange = { isMoveFiles = it },
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            ModuleTypeNameContent(
-                moduleTypeSelectionState = moduleType,
-                moduleNameState = moduleNameState,
-                radioOptions = radioOptions,
-                onModuleTypeSelected = { moduleType = it },
-                onModuleNameChanged = { moduleNameState = it },
-            )
-
-            ExistingModulesContent(
-                existingModules = existingModules,
-                selectedDependencies = selectedModules,
-                onCheckedModule = { module ->
-                    if (selectedModules.contains(module)) {
-                        selectedModules.remove(module)
-                    } else {
-                        selectedModules.add(module)
+            backgroundColor = GetcontactTheme.colors.gray,
+            bottomBar = {
+                GetcontactDialogActions(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(GetcontactTheme.colors.gray),
+                    onCancelClick = { close(Constants.DEFAULT_EXIT_CODE) },
+                    onCreateClick = {
+                        if (validateInput()) {
+                            createModule()
+                        } else {
+                            MessageDialogWrapper("Please fill out required values").show()
+                        }
                     }
-                }
-            )
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Text(
+                    text = "Selected root: $selectedSrc",
+                    color = GetcontactTheme.colors.orange,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.weight(1f))
+                DetectModulesContent(
+                    isAnalyzingState = isAnalyzingState,
+                    analysisResultState = analysisResultState,
+                )
 
-            GetcontactDialogActions(
-                onCancelClick = { close(Constants.DEFAULT_EXIT_CODE) },
-                onCreateClick = {
-                    if (validateInput()) {
-                        createModule()
-                    } else {
-                        MessageDialogWrapper("Please fill out required values").show()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                MoveFilesContent(
+                    isChecked = isMoveFiles,
+                    onCheckedChange = { isMoveFiles = it },
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                ModuleTypeNameContent(
+                    moduleTypeSelectionState = moduleType,
+                    moduleNameState = moduleNameState,
+                    radioOptions = radioOptions,
+                    onModuleTypeSelected = { moduleType = it },
+                    onModuleNameChanged = { moduleNameState = it },
+                )
+
+                ExistingModulesContent(
+                    existingModules = existingModules,
+                    selectedDependencies = selectedModules,
+                    onCheckedModule = { module ->
+                        if (selectedModules.contains(module)) {
+                            selectedModules.remove(module)
+                        } else {
+                            selectedModules.add(module)
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     }
 
@@ -475,9 +494,7 @@ class ModuleMakerDialogWrapper(
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
                 FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
