@@ -6,10 +6,8 @@ import freemarker.template.Version
 object Constants {
     const val EMPTY = ""
 
-    const val WINDOW_WIDTH = 840
+    const val WINDOW_WIDTH = 1200
     const val WINDOW_HEIGHT = 800
-    const val FILE_TREE_WIDTH = 300
-    const val CONFIGURATION_PANEL_WIDTH = 540
 
     const val ANDROID = "Android"
     const val KOTLIN = "Kotlin / JVM"
