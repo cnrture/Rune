@@ -16,7 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.github.teknasyon.getcontactdevtools.common.Constants
+import com.github.teknasyon.getcontactdevtools.common.*
 import com.github.teknasyon.getcontactdevtools.components.*
 import com.github.teknasyon.getcontactdevtools.file.FileTree
 import com.github.teknasyon.getcontactdevtools.file.FileWriter
@@ -41,13 +41,13 @@ class ModuleMakerDialogWrapper(
     private val fileWriter = FileWriter()
 
     private var existingModules = listOf<String>()
-    private var selectedDependencies = mutableStateListOf<String>()
-    private var detectedDependencies = mutableStateListOf<String>()
+    private var selectedModules = mutableStateListOf<String>()
+    private var detectedModules = mutableStateListOf<String>()
 
-    private val shouldMoveFiles = mutableStateOf(false)
+    private val isMoveFiles = mutableStateOf(false)
 
-    private var selectedSrcValue = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
-    private val moduleTypeSelection = mutableStateOf(Constants.ANDROID)
+    private var selectedSrc = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
+    private val moduleType = mutableStateOf(Constants.ANDROID)
     private val moduleName = mutableStateOf("")
 
     private val isAnalyzing = mutableStateOf(false)
@@ -56,11 +56,11 @@ class ModuleMakerDialogWrapper(
     init {
         loadExistingModules()
 
-        selectedSrcValue.value = if (startingLocation != null) {
-            File(startingLocation.path).absolutePath.removePrefix(rootDirectoryStringDropLast())
+        selectedSrc.value = if (startingLocation != null) {
+            File(startingLocation.path).absolutePath.removePrefix(project.rootDirectoryStringDropLast())
                 .removePrefix(File.separator)
         } else {
-            File(rootDirectoryString()).absolutePath.removePrefix(rootDirectoryStringDropLast())
+            File(project.rootDirectoryString()).absolutePath.removePrefix(project.rootDirectoryStringDropLast())
                 .removePrefix(File.separator)
         }
     }
@@ -82,12 +82,12 @@ class ModuleMakerDialogWrapper(
                     if (projectRoot != null && projectRoot.exists()) {
                         analyzer.discoverProjectModules(projectRoot)
                     }
-                    val detectedModules = analyzer.analyzeSourceDirectory(directory)
+                    val findModules = analyzer.analyzeSourceDirectory(directory)
                     SwingUtilities.invokeLater {
-                        detectedDependencies.clear()
-                        detectedDependencies.addAll(detectedModules)
-                        selectedDependencies.clear()
-                        selectedDependencies.addAll(detectedModules)
+                        detectedModules.clear()
+                        detectedModules.addAll(findModules)
+                        selectedModules.clear()
+                        selectedModules.addAll(findModules)
 
                         if (detectedModules.isEmpty()) {
                             analysisResult.value = "No dependencies detected"
@@ -166,7 +166,7 @@ class ModuleMakerDialogWrapper(
     override fun createDesign() {
         Surface(
             modifier = Modifier
-                .width(Constants.WINDOW_WIDTH.dp)
+                .width(Constants.MODULE_MAKER_WINDOW_WIDTH.dp)
                 .height(Constants.WINDOW_HEIGHT.dp),
             color = GetcontactTheme.colors.black,
         ) {
@@ -187,12 +187,12 @@ class ModuleMakerDialogWrapper(
     private fun FileTreePanel(modifier: Modifier = Modifier) {
         GetcontactFileTree(
             modifier = modifier,
-            model = FileTree(root = File(rootDirectoryString()).toProjectFile()),
+            model = FileTree(root = File(project.rootDirectoryString()).toProjectFile()),
             onClick = { fileTreeNode ->
                 val absolutePathAtNode = fileTreeNode.file.absolutePath
-                val relativePath = absolutePathAtNode.removePrefix(rootDirectoryStringDropLast())
+                val relativePath = absolutePathAtNode.removePrefix(project.rootDirectoryStringDropLast())
                     .removePrefix(File.separator)
-                if (fileTreeNode.file.isDirectory) selectedSrcValue.value = relativePath
+                if (fileTreeNode.file.isDirectory) selectedSrc.value = relativePath
             }
         )
     }
@@ -200,12 +200,12 @@ class ModuleMakerDialogWrapper(
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
     private fun ConfigurationPanel(modifier: Modifier = Modifier) {
-        var selectedRootState by remember { selectedSrcValue }
+        var selectedSrc by remember { selectedSrc }
         val radioOptions = listOf(Constants.ANDROID, Constants.KOTLIN)
-        var moduleTypeSelectionState by remember { moduleTypeSelection }
+        var moduleType by remember { moduleType }
         var moduleNameState by remember { moduleName }
-        val selectedDependenciesState = remember { selectedDependencies }
-        var shouldMoveFilesState by remember { shouldMoveFiles }
+        val selectedModules = remember { selectedModules }
+        var isMoveFiles by remember { isMoveFiles }
         val isAnalyzingState by remember { isAnalyzing }
         val analysisResultState by remember { analysisResult }
 
@@ -213,7 +213,7 @@ class ModuleMakerDialogWrapper(
             modifier = modifier,
         ) {
             Text(
-                text = "Selected root: $selectedRootState",
+                text = "Selected root: $selectedSrc",
                 color = GetcontactTheme.colors.orange,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
@@ -228,28 +228,28 @@ class ModuleMakerDialogWrapper(
             Spacer(modifier = Modifier.height(16.dp))
 
             MoveFilesContent(
-                isChecked = shouldMoveFilesState,
-                onCheckedChange = { shouldMoveFilesState = it },
+                isChecked = isMoveFiles,
+                onCheckedChange = { isMoveFiles = it },
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             ModuleTypeNameContent(
-                moduleTypeSelectionState = moduleTypeSelectionState,
+                moduleTypeSelectionState = moduleType,
                 moduleNameState = moduleNameState,
                 radioOptions = radioOptions,
-                onModuleTypeSelected = { moduleTypeSelectionState = it },
+                onModuleTypeSelected = { moduleType = it },
                 onModuleNameChanged = { moduleNameState = it },
             )
 
             ExistingModulesContent(
                 existingModules = existingModules,
-                selectedDependencies = selectedDependenciesState,
+                selectedDependencies = selectedModules,
                 onCheckedModule = { module ->
-                    if (selectedDependenciesState.contains(module)) {
-                        selectedDependenciesState.remove(module)
+                    if (selectedModules.contains(module)) {
+                        selectedModules.remove(module)
                     } else {
-                        selectedDependenciesState.add(module)
+                        selectedModules.add(module)
                     }
                 }
             )
@@ -260,7 +260,7 @@ class ModuleMakerDialogWrapper(
                 onCancelClick = { close(2) },
                 onCreateClick = {
                     if (validateInput()) {
-                        create()
+                        createModule()
                     } else {
                         MessageDialogWrapper("Please fill out required values").show()
                     }
@@ -287,58 +287,52 @@ class ModuleMakerDialogWrapper(
                 )
                 .padding(16.dp),
         ) {
-            Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Detect Modules",
-                        color = GetcontactTheme.colors.white,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Box {
-                        if (isAnalyzingState) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = GetcontactTheme.colors.orange,
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Icon(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clickable {
-                                        val selectedFile = getCurrentlySelectedFile()
-                                        if (selectedFile.exists()) {
-                                            analyzeSelectedDirectory(selectedFile)
-                                        }
-                                    },
-                                imageVector = Icons.Rounded.PlayArrow,
-                                tint = GetcontactTheme.colors.orange,
-                                contentDescription = null,
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.size(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    text = "These modules will be added to the new module's build.gradle file.",
-                    color = GetcontactTheme.colors.lightGray,
+                    text = "Detect Modules",
+                    color = GetcontactTheme.colors.white,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(modifier = Modifier.size(8.dp))
-                analysisResultState?.let { result ->
-                    Text(
-                        text = result,
-                        color = GetcontactTheme.colors.orange,
-                    )
+                Box {
+                    if (isAnalyzingState) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = GetcontactTheme.colors.orange,
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Icon(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable {
+                                    val selectedFile = project.getCurrentlySelectedFile(selectedSrc.value)
+                                    if (selectedFile.exists()) {
+                                        analyzeSelectedDirectory(selectedFile)
+                                    }
+                                },
+                            imageVector = Icons.Rounded.PlayArrow,
+                            tint = GetcontactTheme.colors.orange,
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
-            Divider(
+            Spacer(modifier = Modifier.size(8.dp))
+            Text(
+                text = "These modules will be added to the new module's build.gradle file.",
                 color = GetcontactTheme.colors.lightGray,
-                modifier = Modifier.padding(vertical = 16.dp)
             )
+            Spacer(modifier = Modifier.size(8.dp))
+            analysisResultState?.let { result ->
+                Text(
+                    text = result,
+                    color = GetcontactTheme.colors.orange,
+                )
+            }
         }
     }
 
@@ -493,7 +487,7 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun moveFilesToNewModule(sourceDir: File, targetModulePath: String) {
-        if (!shouldMoveFiles.value) return
+        if (!isMoveFiles.value) return
 
         try {
             val modulePath = File(project.basePath, targetModulePath.replace(":", "/"))
@@ -514,7 +508,12 @@ class ModuleMakerDialogWrapper(
                 // sourceFile.delete()
             }
 
-            VfsUtil.markDirtyAndRefresh(false, true, true, VfsUtil.findFileByIoFile(modulePath, true))
+            VfsUtil.markDirtyAndRefresh(
+                false,
+                true,
+                true,
+                VfsUtil.findFileByIoFile(modulePath, true)
+            )
 
         } catch (e: Exception) {
             MessageDialogWrapper("Error moving files: ${e.message}").show()
@@ -523,11 +522,12 @@ class ModuleMakerDialogWrapper(
 
     private fun getSettingsGradleFile(): File? {
         val settingsGradleKtsCurrentlySelectedRoot =
-            Path.of(getCurrentlySelectedFile().absolutePath, "settings.gradle.kts").toFile()
+            Path.of(project.getCurrentlySelectedFile(selectedSrc.value).absolutePath, "settings.gradle.kts")
+                .toFile()
         val settingsGradleCurrentlySelectedRoot =
-            Path.of(getCurrentlySelectedFile().absolutePath, "settings.gradle").toFile()
-        val settingsGradleKtsPath = Path.of(rootDirectoryString(), "settings.gradle.kts").toFile()
-        val settingsGradlePath = Path.of(rootDirectoryString(), "settings.gradle").toFile()
+            Path.of(project.getCurrentlySelectedFile(selectedSrc.value).absolutePath, "settings.gradle").toFile()
+        val settingsGradleKtsPath = Path.of(project.rootDirectoryString(), "settings.gradle.kts").toFile()
+        val settingsGradlePath = Path.of(project.rootDirectoryString(), "settings.gradle").toFile()
 
         return listOf(
             settingsGradleKtsCurrentlySelectedRoot,
@@ -542,11 +542,11 @@ class ModuleMakerDialogWrapper(
         }
     }
 
-    private fun create(): List<File> {
+    private fun createModule(): List<File> {
         try {
             val settingsGradleFile = getSettingsGradleFile()
-            val moduleType = moduleTypeSelection.value
-            val currentlySelectedFile = getCurrentlySelectedFile()
+            val moduleType = moduleType.value
+            val currentlySelectedFile = project.getCurrentlySelectedFile(selectedSrc.value)
             if (settingsGradleFile != null) {
                 val filesCreated = fileWriter.createModule(
                     settingsGradleFile = settingsGradleFile,
@@ -555,13 +555,13 @@ class ModuleMakerDialogWrapper(
                     showErrorDialog = { MessageDialogWrapper(it).show() },
                     showSuccessDialog = {
                         MessageDialogWrapper("Success").show()
-                        refreshFileSystem(settingsGradleFile, currentlySelectedFile)
+                        listOf(settingsGradleFile, currentlySelectedFile).refreshFileSystem()
                         syncProject()
                     },
                     workingDirectory = currentlySelectedFile,
-                    dependencies = selectedDependencies
+                    dependencies = selectedModules
                 )
-                if (filesCreated.isNotEmpty() && shouldMoveFiles.value && startingLocation != null) {
+                if (filesCreated.isNotEmpty() && isMoveFiles.value && startingLocation != null) {
                     moveFilesToNewModule(File(startingLocation.path), moduleName.value)
                 }
                 return filesCreated
@@ -581,29 +581,9 @@ class ModuleMakerDialogWrapper(
         ExternalSystemUtil.refreshProject(
             project,
             ProjectSystemId("GRADLE"),
-            rootDirectoryString(),
+            project.rootDirectoryString(),
             false,
             ProgressExecutionMode.START_IN_FOREGROUND_ASYNC
         )
     }
-
-    private fun refreshFileSystem(settingsGradleFile: File, currentlySelectedFile: File) {
-        VfsUtil.markDirtyAndRefresh(
-            false,
-            true,
-            true,
-            settingsGradleFile,
-            currentlySelectedFile
-        )
-    }
-
-    private fun getCurrentlySelectedFile(): File {
-        return File(rootDirectoryStringDropLast() + File.separator + selectedSrcValue.value)
-    }
-
-    private fun rootDirectoryStringDropLast(): String {
-        return project.basePath!!.split(File.separator).dropLast(1).joinToString(File.separator)
-    }
-
-    private fun rootDirectoryString(): String = project.basePath!!
 }

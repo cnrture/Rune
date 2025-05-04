@@ -6,7 +6,8 @@ import freemarker.template.Version
 object Constants {
     const val EMPTY = ""
 
-    const val WINDOW_WIDTH = 1200
+    const val MODULE_MAKER_WINDOW_WIDTH = 1200
+    const val FEATURE_MAKER_WINDOW_WIDTH = 800
     const val WINDOW_HEIGHT = 800
 
     const val ANDROID = "Android"

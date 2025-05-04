@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.github.teknasyon.getcontactdevtools.common.Constants
+import com.github.teknasyon.getcontactdevtools.common.*
 import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogActions
 import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogWrapper
 import com.github.teknasyon.getcontactdevtools.components.GetcontactFileTree
@@ -21,7 +21,6 @@ import com.github.teknasyon.getcontactdevtools.file.FileWriter
 import com.github.teknasyon.getcontactdevtools.file.toProjectFile
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
 
@@ -32,18 +31,18 @@ class FeatureMakerDialogWrapper(
 
     private val fileWriter = FileWriter()
 
-    private var selectedSrcValue = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
-    private var featureNameState = mutableStateOf("")
+    private var selectedSrc = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
+    private var featureName = mutableStateOf("")
 
     init {
         title = "Create New Feature"
         init()
 
-        selectedSrcValue.value = if (startingLocation != null) {
-            File(startingLocation.path).absolutePath.removePrefix(rootDirectoryStringDropLast())
+        selectedSrc.value = if (startingLocation != null) {
+            File(startingLocation.path).absolutePath.removePrefix(project.rootDirectoryStringDropLast())
                 .removePrefix(File.separator)
         } else {
-            File(rootDirectoryString()).absolutePath.removePrefix(rootDirectoryStringDropLast())
+            File(project.rootDirectoryString()).absolutePath.removePrefix(project.rootDirectoryStringDropLast())
                 .removePrefix(File.separator)
         }
     }
@@ -52,7 +51,7 @@ class FeatureMakerDialogWrapper(
     override fun createDesign() {
         Surface(
             modifier = Modifier
-                .width(Constants.WINDOW_WIDTH.dp)
+                .width(Constants.FEATURE_MAKER_WINDOW_WIDTH.dp)
                 .height(Constants.WINDOW_HEIGHT.dp),
             color = GetcontactTheme.colors.black,
         ) {
@@ -69,12 +68,12 @@ class FeatureMakerDialogWrapper(
     private fun FileTreePanel(modifier: Modifier = Modifier) {
         GetcontactFileTree(
             modifier = modifier,
-            model = FileTree(root = File(rootDirectoryString()).toProjectFile()),
+            model = FileTree(root = File(project.rootDirectoryString()).toProjectFile()),
             onClick = { fileTreeNode ->
                 val absolutePathAtNode = fileTreeNode.file.absolutePath
-                val relativePath = absolutePathAtNode.removePrefix(rootDirectoryStringDropLast())
+                val relativePath = absolutePathAtNode.removePrefix(project.rootDirectoryStringDropLast())
                     .removePrefix(File.separator)
-                if (fileTreeNode.file.isDirectory) selectedSrcValue.value = relativePath
+                if (fileTreeNode.file.isDirectory) selectedSrc.value = relativePath
             }
         )
     }
@@ -82,14 +81,14 @@ class FeatureMakerDialogWrapper(
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
     private fun ConfigurationPanel(modifier: Modifier = Modifier) {
-        val selectedRootState = remember { selectedSrcValue }
-        val featureNameState = remember { featureNameState }
+        val selectedSrc = remember { selectedSrc }
+        val featureName = remember { featureName }
 
         Column(
             modifier = modifier,
         ) {
             Text(
-                text = "Selected root: ${selectedRootState.value}",
+                text = "Selected root: ${selectedSrc.value}",
                 color = GetcontactTheme.colors.white,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -100,8 +99,8 @@ class FeatureMakerDialogWrapper(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Feature Name") },
-                value = featureNameState.value,
-                onValueChange = { featureNameState.value = it },
+                value = featureName.value,
+                onValueChange = { featureName.value = it },
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedLabelColor = GetcontactTheme.colors.white,
                     unfocusedLabelColor = GetcontactTheme.colors.white,
@@ -129,20 +128,14 @@ class FeatureMakerDialogWrapper(
     }
 
     private fun validateInput(): Boolean {
-        return featureNameState.value.isNotEmpty() && selectedSrcValue.value != Constants.DEFAULT_SRC_VALUE
-    }
-
-    private fun rootDirectoryString(): String = project.basePath!!
-
-    private fun rootDirectoryStringDropLast(): String {
-        return project.basePath!!.split(File.separator).dropLast(1).joinToString(File.separator)
+        return featureName.value.isNotEmpty() && selectedSrc.value != Constants.DEFAULT_SRC_VALUE
     }
 
     private fun createFeature() {
         try {
-            val projectRoot = rootDirectoryString()
+            val projectRoot = project.rootDirectoryString()
 
-            val cleanSelectedPath = selectedSrcValue.value.let { path ->
+            val cleanSelectedPath = selectedSrc.value.let { path ->
                 val projectName = projectRoot.split(File.separator).last()
                 if (path.startsWith(projectName + File.separator)) {
                     path.substring(projectName.length + 1)
@@ -159,13 +152,14 @@ class FeatureMakerDialogWrapper(
                 .replace("/", ".")
 
             fileWriter.createFeatureFiles(
-                moduleFile = File(projectRoot, cleanSelectedPath),
-                moduleName = featureNameState.value,
-                packageName = packagePath.plus(".${featureNameState.value}"),
+                file = File(projectRoot, cleanSelectedPath),
+                featureName = featureName.value,
+                packageName = packagePath.plus(".${featureName.value.lowercase()}"),
                 showErrorDialog = { MessageDialogWrapper("Error: $it").show() },
                 showSuccessDialog = {
                     MessageDialogWrapper("Success").show()
-                    refreshFileSystem(getCurrentlySelectedFile())
+                    val currentlySelectedFile = project.getCurrentlySelectedFile(selectedSrc.value)
+                    listOf(currentlySelectedFile).refreshFileSystem()
                 }
             )
         } catch (e: Exception) {
@@ -173,18 +167,5 @@ class FeatureMakerDialogWrapper(
         } finally {
             close(0)
         }
-    }
-
-    private fun getCurrentlySelectedFile(): File {
-        return File(rootDirectoryStringDropLast() + File.separator + selectedSrcValue.value)
-    }
-
-    private fun refreshFileSystem(currentlySelectedFile: File) {
-        VfsUtil.markDirtyAndRefresh(
-            false,
-            true,
-            true,
-            currentlySelectedFile
-        )
     }
 }
