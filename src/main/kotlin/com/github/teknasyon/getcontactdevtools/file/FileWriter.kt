@@ -23,8 +23,6 @@ class FileWriter {
         moduleType: String,
         showErrorDialog: (String) -> Unit,
         showSuccessDialog: () -> Unit,
-        addReadme: Boolean,
-        addGitIgnore: Boolean,
         dependencies: List<String> = emptyList(),
     ): List<File> {
         val filesCreated = mutableListOf<File>()
@@ -53,8 +51,6 @@ class FileWriter {
             moduleFile = moduleFile,
             moduleName = moduleName,
             moduleType = moduleType,
-            addReadme = addReadme,
-            addGitIgnore = addGitIgnore,
             dependencies = dependencies,
         )
 
@@ -67,8 +63,6 @@ class FileWriter {
         moduleFile: File,
         moduleName: String,
         moduleType: String,
-        addReadme: Boolean,
-        addGitIgnore: Boolean,
         dependencies: List<String> = emptyList(),
     ): List<File> {
         val filesCreated = mutableListOf<File>()
@@ -84,11 +78,9 @@ class FileWriter {
             filesCreated += createResourceDirectories(moduleFile)
         }
 
-        if (addReadme) filesCreated += templateWriter.createReadmeFile(moduleFile, moduleName)
-
+        filesCreated += templateWriter.createReadmeFile(moduleFile, moduleName)
         filesCreated += createDefaultPackages(moduleFile)
-
-        if (addGitIgnore) filesCreated += createGitIgnore(moduleFile)
+        filesCreated += createGitIgnore(moduleFile)
 
         return filesCreated
     }

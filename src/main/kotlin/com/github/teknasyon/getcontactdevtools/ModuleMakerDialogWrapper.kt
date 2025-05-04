@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +35,8 @@ import java.nio.file.Path
 import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.JComponent
+import javax.swing.SwingUtilities
+import kotlin.concurrent.thread
 
 class ModuleMakerDialogWrapper(
     private val project: Project,
@@ -50,10 +52,11 @@ class ModuleMakerDialogWrapper(
     private val shouldMoveFiles = mutableStateOf(false)
 
     private var selectedSrcValue = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
-    private val addReadme = mutableStateOf(false)
-    private val addGitIgnore = mutableStateOf(false)
     private val moduleTypeSelection = mutableStateOf(Constants.ANDROID)
     private val moduleName = mutableStateOf("")
+
+    private val isAnalyzing = mutableStateOf(false)
+    private val analysisResult = mutableStateOf<String?>(null)
 
     init {
         title = "Module Maker"
@@ -73,25 +76,47 @@ class ModuleMakerDialogWrapper(
     private fun analyzeSelectedDirectory(directory: File) {
         try {
             if (!directory.exists() || !directory.isDirectory) {
-                MessageDialogWrapper("Directory does not exist or is not a directory").show()
+                analysisResult.value = "Directory does not exist or is not a directory"
                 return
             }
 
-            val analyzer = ImportAnalyzer()
-            val detectedModules = analyzer.analyzeSourceDirectory(directory)
+            isAnalyzing.value = true
+            analysisResult.value = null
 
-            detectedDependencies.clear()
-            detectedDependencies.addAll(detectedModules)
+            thread {
+                try {
+                    val analyzer = ImportAnalyzer()
+                    val projectRoot = project.basePath?.let { File(it) }
+                    if (projectRoot != null && projectRoot.exists()) {
+                        analyzer.discoverProjectModules(projectRoot)
+                    }
+                    val detectedModules = analyzer.analyzeSourceDirectory(directory)
+                    SwingUtilities.invokeLater {
+                        detectedDependencies.clear()
+                        detectedDependencies.addAll(detectedModules)
+                        selectedDependencies.clear()
+                        selectedDependencies.addAll(detectedModules)
 
-            selectedDependencies.clear()
-            selectedDependencies.addAll(detectedModules)
+                        if (detectedModules.isEmpty()) {
+                            analysisResult.value = "No dependencies detected"
+                        } else {
+                            analysisResult.value = "Detected ${detectedModules.size} dependencies"
+                        }
 
-            MessageDialogWrapper(
-                "Detected modules: ${detectedModules.joinToString(", ")}"
-            ).show()
+                        isAnalyzing.value = false
+                    }
+                } catch (e: Exception) {
+                    SwingUtilities.invokeLater {
+                        analysisResult.value = "Error analyzing directory: ${e.message}"
+                        isAnalyzing.value = false
+                        e.printStackTrace()
+                    }
+                }
+            }
 
         } catch (e: Exception) {
-            MessageDialogWrapper("Error analyzing directory: ${e.message}").show()
+            analysisResult.value = "Error analyzing directory: ${e.message}"
+            isAnalyzing.value = false
             e.printStackTrace()
         }
     }
@@ -209,105 +234,120 @@ class ModuleMakerDialogWrapper(
     @Composable
     private fun ConfigurationPanel(modifier: Modifier = Modifier) {
         var selectedRootState by remember { selectedSrcValue }
-        var addReadmeState by remember { addReadme }
-        var addGitIgnoreState by remember { addGitIgnore }
         val radioOptions = listOf(Constants.ANDROID, Constants.KOTLIN)
         var moduleTypeSelectionState by remember { moduleTypeSelection }
         var moduleNameState by remember { moduleName }
-
         val selectedDependenciesState = remember { selectedDependencies }
-        val detectedDependenciesState = remember { detectedDependencies }
         val shouldMoveFilesState = remember { shouldMoveFiles }
+        val isAnalyzingState = remember { isAnalyzing }
+        val analysisResultState by remember { analysisResult }
 
         Column(
             modifier = modifier.padding(16.dp),
         ) {
-            if (detectedDependenciesState.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "Detected Modules",
-                    color = GetcontactTheme.colors.white,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp)
-                        .background(
-                            color = Color.Transparent,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = GetcontactTheme.colors.lightGray,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(8.dp)
-                ) {
-                    Row {
-                        detectedDependenciesState.forEach { module ->
-                            Text(
-                                text = "• $module",
-                                color = GetcontactTheme.colors.white,
-                                modifier = Modifier.padding(horizontal = 2.dp)
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                GetcontactCheckbox(
-                    label = "Move files to new module",
-                    checked = shouldMoveFilesState.value,
-                    onCheckedChange = { shouldMoveFilesState.value = it }
-                )
-            }
-
-            Row(
+            Text(
+                text = "Selected root: $selectedRootState",
+                color = GetcontactTheme.colors.white,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .border(
+                        width = 2.dp,
+                        color = GetcontactTheme.colors.white,
+                        shape = RoundedCornerShape(8.dp)
+                    )
                     .padding(16.dp),
             ) {
-                Text(
-                    modifier = Modifier
-                        .weight(1f),
-                    text = "Selected root: $selectedRootState",
-                    color = GetcontactTheme.colors.white,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Spacer(modifier = Modifier.size(24.dp))
-                Icon(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
-                            println("Refresh clicked")
-                            val selectedFile = getCurrentlySelectedFile()
-                            if (selectedFile.exists()) {
-                                println("Selected file: ${selectedFile.absolutePath}")
-                                analyzeSelectedDirectory(selectedFile)
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Detect Modules",
+                            color = GetcontactTheme.colors.white,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Box {
+                            if (isAnalyzingState.value) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = GetcontactTheme.colors.orange,
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Icon(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clickable {
+                                            val selectedFile = getCurrentlySelectedFile()
+                                            if (selectedFile.exists()) {
+                                                analyzeSelectedDirectory(selectedFile)
+                                            }
+                                        },
+                                    imageVector = Icons.Rounded.PlayArrow,
+                                    tint = GetcontactTheme.colors.orange,
+                                    contentDescription = null,
+                                )
                             }
-                        },
-                    imageVector = Icons.Rounded.Refresh,
-                    tint = GetcontactTheme.colors.lightGray,
-                    contentDescription = null,
+                        }
+                    }
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = "These modules will be added to the new module's build.gradle file.",
+                        color = GetcontactTheme.colors.lightGray,
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    analysisResultState?.let { result ->
+                        Text(
+                            text = result,
+                            color = GetcontactTheme.colors.orange,
+                        )
+                    }
+                }
+                Divider(
+                    color = GetcontactTheme.colors.lightGray,
+                    modifier = Modifier.padding(vertical = 16.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            GetcontactCheckbox(
-                label = "Add README.md",
-                checked = addReadmeState,
-                onCheckedChange = { addReadmeState = it }
-            )
-
-            GetcontactCheckbox(
-                label = "Add .gitignore",
-                checked = addGitIgnoreState,
-                onCheckedChange = { addGitIgnoreState = it }
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .border(
+                        width = 2.dp,
+                        color = GetcontactTheme.colors.white,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(8.dp),
+            ) {
+                GetcontactCheckbox(
+                    label = "Move selected files to new module",
+                    checked = shouldMoveFilesState.value,
+                    onCheckedChange = { shouldMoveFilesState.value = it }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
+                    text = "This will move files from the selected directory to the new module.",
+                    color = GetcontactTheme.colors.lightGray,
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -319,8 +359,8 @@ class ModuleMakerDialogWrapper(
                         shape = RoundedCornerShape(8.dp)
                     )
                     .border(
-                        width = 1.dp,
-                        color = GetcontactTheme.colors.lightGray,
+                        width = 2.dp,
+                        color = GetcontactTheme.colors.white,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .padding(16.dp),
@@ -362,10 +402,7 @@ class ModuleMakerDialogWrapper(
             }
 
             if (existingModules.isNotEmpty()) {
-                Divider(
-                    color = GetcontactTheme.colors.lightGray,
-                    modifier = Modifier.padding(vertical = 24.dp)
-                )
+                Spacer(modifier = Modifier.height(16.dp))
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -374,8 +411,8 @@ class ModuleMakerDialogWrapper(
                             shape = RoundedCornerShape(8.dp)
                         )
                         .border(
-                            width = 1.dp,
-                            color = GetcontactTheme.colors.lightGray,
+                            width = 2.dp,
+                            color = GetcontactTheme.colors.white,
                             shape = RoundedCornerShape(8.dp)
                         )
                         .padding(16.dp)
@@ -392,9 +429,10 @@ class ModuleMakerDialogWrapper(
                         color = GetcontactTheme.colors.lightGray,
                         fontSize = 14.sp,
                     )
-                    Spacer(modifier = Modifier.size(16.dp))
-                    Divider(color = GetcontactTheme.colors.lightGray)
-                    Spacer(modifier = Modifier.size(16.dp))
+                    Divider(
+                        color = GetcontactTheme.colors.lightGray,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
                     FlowRow(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -489,8 +527,6 @@ class ModuleMakerDialogWrapper(
                         syncProject()
                     },
                     workingDirectory = currentlySelectedFile,
-                    addReadme = addReadme.value,
-                    addGitIgnore = addGitIgnore.value,
                     dependencies = selectedDependencies
                 )
                 if (filesCreated.isNotEmpty() && shouldMoveFiles.value && startingLocation != null) {
