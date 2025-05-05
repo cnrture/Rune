@@ -4,8 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ViewModule
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -129,18 +129,26 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
         ) {
             ActionCard(
                 modifier = Modifier.weight(1f),
-                title = "Module Creator",
-                icon = Icons.Filled.ViewModule,
+                title = "Module",
+                icon = Icons.Rounded.Add,
                 actionColor = GetcontactTheme.colors.orange,
                 onClick = { ModuleMakerDialogWrapper(project, null).apply { showAndGet() } },
             )
 
             ActionCard(
                 modifier = Modifier.weight(1f),
-                title = "Feature Creator",
-                icon = Icons.Filled.Add,
+                title = "Feature",
+                icon = Icons.Rounded.Add,
                 actionColor = GetcontactTheme.colors.purple,
                 onClick = { FeatureMakerDialogWrapper(project, null).apply { showAndGet() } },
+            )
+
+            ActionCard(
+                modifier = Modifier.weight(1f),
+                title = "Settings",
+                icon = Icons.Rounded.Settings,
+                actionColor = GetcontactTheme.colors.lightGray,
+                onClick = { },
             )
         }
     }

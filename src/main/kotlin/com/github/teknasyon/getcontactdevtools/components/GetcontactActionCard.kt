@@ -34,11 +34,11 @@ fun ActionCard(
             )
             .border(
                 width = 3.dp,
-                color = actionColor.copy(alpha = 0.5f),
+                color = actionColor,
                 shape = RoundedCornerShape(12.dp)
             )
             .clickable { onClick() }
-            .padding(24.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -57,7 +57,7 @@ fun ActionCard(
             )
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         GetcontactText(
             text = title,
