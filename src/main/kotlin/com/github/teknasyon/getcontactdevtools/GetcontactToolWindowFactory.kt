@@ -2,16 +2,11 @@ package com.github.teknasyon.getcontactdevtools
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Tab
-import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
@@ -35,15 +30,6 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 
 class GetcontactToolWindowFactory : ToolWindowFactory {
-
-    private var selectedTabIndex by mutableStateOf(0)
-
-    private val links = listOf(
-        "https://gtc-zoo.test.mobylonia.com/tools/json-viewer",
-        "https://gtc-rag.test.mobylonia.com/"
-    )
-
-    private var browser: JBCefBrowser? = null
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val contentFactory = ContentFactory.getInstance()
@@ -84,13 +70,6 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
                                 textAlign = TextAlign.Center,
                             )
                         )
-                        JungleTabs(
-                            selectedTabIndex = selectedTabIndex,
-                            onTabSelected = { index ->
-                                selectedTabIndex = index
-                                browser?.loadURL(links[index])
-                            }
-                        )
                     }
                 }
             }
@@ -99,8 +78,8 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
         }
 
         try {
-            browser = JBCefBrowser().apply {
-                loadURL(links[selectedTabIndex])
+            JBCefBrowser().apply {
+                loadURL("https://gtc-zoo.test.mobylonia.com/")
                 panel.add(this.component, BorderLayout.CENTER)
             }
         } catch (e: Exception) {
@@ -163,35 +142,6 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
                 actionColor = GetcontactTheme.colors.purple,
                 onClick = { FeatureMakerDialogWrapper(project, null).apply { showAndGet() } },
             )
-        }
-    }
-
-    @Composable
-    private fun JungleTabs(
-        selectedTabIndex: Int,
-        onTabSelected: (Int) -> Unit,
-    ) {
-        val tabs = listOf("JSON Viewer", "RAG Assistant")
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            modifier = Modifier.fillMaxWidth(),
-            backgroundColor = GetcontactTheme.colors.gray,
-            contentColor = GetcontactTheme.colors.white,
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { onTabSelected(index) },
-                    text = {
-                        Text(
-                            text = title,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = GetcontactTheme.colors.white,
-                        )
-                    }
-                )
-            }
         }
     }
 }
