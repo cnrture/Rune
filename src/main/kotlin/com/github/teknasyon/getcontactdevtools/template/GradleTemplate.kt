@@ -1,7 +1,14 @@
 package com.github.teknasyon.getcontactdevtools.template
 
 object GradleTemplate {
-    fun getAndroidModuleGradleTemplate(packageName: String, dependencies: String) = """
+    fun getAndroidModuleGradleTemplate(packageName: String, dependencies: String, moduleName: String): String {
+        val cdCount = moduleName.split(".").size
+        val cd = StringBuilder().apply {
+            repeat(cdCount) {
+                append("../")
+            }
+        }
+        return """
 plugins {
     id 'com.android.library'
     alias(libs.plugins.kotlin.android)
@@ -11,8 +18,8 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-apply from: '../../gradle/config/flavorConfig.gradle'
-apply from: '../../gradle/config/keyhider/config.gradle'
+apply from: '${cd}gradle/config/flavorConfig.gradle'
+apply from: '${cd}gradle/config/keyhider/config.gradle'
 
 def configuration = rootProject.ext.configuration
 
@@ -40,6 +47,7 @@ android {
 dependencies {
     $dependencies
 }""".trimIndent()
+    }
 
     fun getKotlinModuleGradleTemplate() = """
 plugins {

@@ -610,6 +610,26 @@ class ModuleMakerDialogWrapper(
 
                     sourceFile.copyTo(targetFile, overwrite = true)
 
+                    val relativeDir = targetFile.parentFile.absolutePath
+                        .removePrefix(targetPackageDir.absolutePath)
+                        .trim(File.separatorChar)
+
+                    val subPackage = if (relativeDir.isNotEmpty()) {
+                        "." + relativeDir.replace(File.separator, ".")
+                    } else {
+                        ""
+                    }
+
+                    val fullPackageName = packageName + subPackage
+
+                    val content = targetFile.readText()
+                    val packagePattern = """package\s+([a-zA-Z0-9_.]+)""".toRegex()
+                    val updatedContent = packagePattern.replace(content, "package $fullPackageName")
+
+                    if (content != updatedContent) {
+                        targetFile.writeText(updatedContent)
+                    }
+
                     VfsUtil.findFileByIoFile(targetFile, true)?.let { vFile ->
                         movedFiles.add(vFile)
                     }
@@ -618,8 +638,8 @@ class ModuleMakerDialogWrapper(
                 }
             }
 
-            val moduleVirtualFile = VfsUtil.findFileByIoFile(modulePath, true)
-            VfsUtil.markDirtyAndRefresh(false, true, true, moduleVirtualFile)
+            val projectDir = File(project.basePath.orEmpty())
+            VfsUtil.markDirtyAndRefresh(false, true, true, VfsUtil.findFileByIoFile(projectDir, true))
 
             ApplicationManager.getApplication().invokeLater {
                 openNewModule(modulePath, movedFiles)
@@ -680,7 +700,7 @@ class ModuleMakerDialogWrapper(
                 }
 
                 val moduleNameTrimmed = moduleName.removePrefix(":").replace(":", ".")
-                val finalPackageName = "${packageName.value}.$moduleNameTrimmed"
+                val finalPackageName = "${packageName.value}.${moduleNameTrimmed.split(".").last()}"
 
                 val filesCreated = fileWriter.createModule(
                     packageName = finalPackageName,
@@ -691,11 +711,8 @@ class ModuleMakerDialogWrapper(
                     showSuccessDialog = {
                         MessageDialogWrapper("Module '$moduleName' created successfully").show()
 
-                        VfsUtil.markDirtyAndRefresh(
-                            false, true, true,
-                            VfsUtil.findFileByIoFile(settingsGradleFile, true),
-                            VfsUtil.findFileByIoFile(sourceFile, true)
-                        )
+                        val projectDir = File(project.basePath.orEmpty())
+                        VfsUtil.markDirtyAndRefresh(false, true, true, VfsUtil.findFileByIoFile(projectDir, true))
 
                         if (isMoveFiles.value) {
                             moveFilesToNewModule(sourceFile, moduleName, finalPackageName)
@@ -725,12 +742,14 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun syncProject() {
+        val projectDir = File(project.basePath.orEmpty())
+        VfsUtil.markDirtyAndRefresh(false, true, true, VfsUtil.findFileByIoFile(projectDir, true))
         ExternalSystemUtil.refreshProject(
             project,
             ProjectSystemId("GRADLE"),
             project.rootDirectoryString(),
             false,
-            ProgressExecutionMode.START_IN_FOREGROUND_ASYNC
+            ProgressExecutionMode.IN_BACKGROUND_ASYNC
         )
     }
 

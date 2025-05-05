@@ -28,15 +28,14 @@ class FileWriter {
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
+        val moduleNameTrimmed = modulePathAsString.removePrefix(":").replace(":", ".")
         val fileReady = modulePathAsString.replace(":", "/")
 
         val path = Paths.get(workingDirectory.toURI())
         val modulePath = Paths.get(path.toString(), fileReady)
         val moduleFile = File(modulePath.absolutePathString())
 
-        val moduleName = modulePathAsString.split(":").last()
-
-        if (moduleName.isEmpty()) {
+        if (modulePathAsString.isEmpty()) {
             showErrorDialog("Module name empty / not as expected (is it formatted as :module?)")
             return emptyList()
         }
@@ -51,7 +50,7 @@ class FileWriter {
         filesCreated += createDefaultModuleStructure(
             packageName = packageName,
             moduleFile = moduleFile,
-            moduleName = moduleName,
+            moduleName = modulePathAsString,
             moduleType = moduleType,
             dependencies = dependencies,
         )
@@ -75,6 +74,7 @@ class FileWriter {
             moduleFile = moduleFile,
             moduleType = moduleType,
             dependencies = dependencies,
+            moduleName = moduleName,
         )
 
         if (moduleType == Constants.ANDROID) {

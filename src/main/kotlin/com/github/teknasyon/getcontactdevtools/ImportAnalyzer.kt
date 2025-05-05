@@ -43,7 +43,7 @@ class ImportAnalyzer() {
                 }
             }
         } catch (e: Exception) {
-            println("Error reading file ${file.absolutePath}: ${e.message}")
+            e.printStackTrace()
         }
 
         return imports

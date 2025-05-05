@@ -20,6 +20,7 @@ class TemplateWriter {
         packageName: String,
         moduleFile: File,
         moduleType: String,
+        moduleName: String,
         dependencies: List<String> = emptyList(),
     ): List<File> {
         try {
@@ -29,7 +30,8 @@ class TemplateWriter {
             val gradleTemplate = when (moduleType) {
                 Constants.ANDROID -> GradleTemplate.getAndroidModuleGradleTemplate(
                     packageName = packageName,
-                    dependencies = buildDependenciesBlock(dependencies)
+                    dependencies = buildDependenciesBlock(dependencies),
+                    moduleName = moduleName,
                 )
 
                 else -> GradleTemplate.getKotlinModuleGradleTemplate()
