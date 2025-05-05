@@ -8,6 +8,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
@@ -27,10 +28,12 @@ fun GetcontactButton(
         ),
         onClick = onClick,
         content = {
-            Text(
+            GetcontactText(
                 text = text,
                 color = GetcontactTheme.colors.white,
-                fontSize = 16.sp,
+                style = TextStyle(
+                    fontSize = 16.sp,
+                ),
             )
         },
     )
@@ -55,10 +58,12 @@ fun GetcontactOutlinedButton(
         ),
         onClick = onClick,
         content = {
-            Text(
+            GetcontactText(
                 text = text,
                 color = GetcontactTheme.colors.white,
-                fontSize = 16.sp,
+                style = TextStyle(
+                    fontSize = 16.sp,
+                ),
             )
         },
     )

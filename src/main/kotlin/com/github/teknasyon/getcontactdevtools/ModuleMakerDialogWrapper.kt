@@ -182,12 +182,9 @@ class ModuleMakerDialogWrapper(
                     .fillMaxSize()
                     .padding(24.dp),
             ) {
-                Text(
+                GetcontactText(
                     modifier = Modifier.fillMaxWidth(),
                     text = "Module Creator",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
                     style = TextStyle(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
@@ -196,6 +193,9 @@ class ModuleMakerDialogWrapper(
                             ),
                             tileMode = TileMode.Mirror,
                         ),
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
                     )
                 )
                 Spacer(modifier = Modifier.size(24.dp))
@@ -284,11 +284,13 @@ class ModuleMakerDialogWrapper(
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState()),
             ) {
-                Text(
+                GetcontactText(
                     text = "Selected root: $selectedSrc",
                     color = GetcontactTheme.colors.orange,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
+                    style = TextStyle(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                    ),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -353,11 +355,13 @@ class ModuleMakerDialogWrapper(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
+                GetcontactText(
                     text = "Detect Modules",
                     color = GetcontactTheme.colors.white,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
                 )
                 Spacer(modifier = Modifier.size(8.dp))
                 Box {

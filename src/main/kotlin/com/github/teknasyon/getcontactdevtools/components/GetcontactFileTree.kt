@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -42,11 +43,13 @@ fun GetcontactFileTree(
         color = GetcontactTheme.colors.gray,
     ) {
         Column {
-            Text(
+            GetcontactText(
                 text = "Project File Tree",
                 color = GetcontactTheme.colors.orange,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                ),
             )
             Spacer(modifier = Modifier.size(16.dp))
             with(LocalDensity.current) {
@@ -123,15 +126,17 @@ private fun FileTreeItemView(
             modifier = Modifier.align(Alignment.CenterVertically),
             model = model,
         )
-        Text(
+        GetcontactText(
             text = model.name,
             color = if (active) GetcontactTheme.colors.white.copy(alpha = 0.60f) else GetcontactTheme.colors.white,
             modifier = Modifier
                 .align(Alignment.CenterVertically)
                 .clipToBounds()
                 .hoverable(interactionSource),
+            style = TextStyle(
+                fontSize = 16.sp,
+            ),
             softWrap = true,
-            fontSize = 16.sp,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
         )

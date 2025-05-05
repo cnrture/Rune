@@ -18,6 +18,7 @@ import com.github.teknasyon.getcontactdevtools.common.*
 import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogActions
 import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogWrapper
 import com.github.teknasyon.getcontactdevtools.components.GetcontactFileTree
+import com.github.teknasyon.getcontactdevtools.components.GetcontactText
 import com.github.teknasyon.getcontactdevtools.file.FileTree
 import com.github.teknasyon.getcontactdevtools.file.FileWriter
 import com.github.teknasyon.getcontactdevtools.file.toProjectFile
@@ -60,12 +61,9 @@ class FeatureMakerDialogWrapper(
                     .fillMaxSize()
                     .padding(24.dp),
             ) {
-                Text(
+                GetcontactText(
                     modifier = Modifier.fillMaxWidth(),
                     text = "Feature Creator",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
                     style = TextStyle(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
@@ -74,7 +72,10 @@ class FeatureMakerDialogWrapper(
                             ),
                             tileMode = TileMode.Mirror,
                         ),
-                    )
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    ),
                 )
                 Spacer(modifier = Modifier.size(24.dp))
                 Row {
@@ -142,11 +143,13 @@ class FeatureMakerDialogWrapper(
             Column(
                 modifier = modifier,
             ) {
-                Text(
+                GetcontactText(
                     text = "Selected root: ${selectedSrc.value}",
                     color = GetcontactTheme.colors.orange,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))

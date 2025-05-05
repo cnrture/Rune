@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
@@ -70,10 +71,12 @@ fun GetcontactCheckbox(
             )
         }
         Spacer(modifier = Modifier.size(8.dp))
-        Text(
+        GetcontactText(
             text = label,
             color = GetcontactTheme.colors.white,
-            fontWeight = FontWeight.SemiBold,
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+            ),
         )
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.components.ActionCard
+import com.github.teknasyon.getcontactdevtools.components.GetcontactText
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -65,14 +66,11 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
                             .fillMaxWidth()
                             .background(GetcontactTheme.colors.black),
                     ) {
-                        Text(
+                        GetcontactText(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(24.dp),
                             text = "Getcontact DevTools",
-                            fontSize = 30.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
                             style = TextStyle(
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
@@ -81,6 +79,9 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
                                     ),
                                     tileMode = TileMode.Mirror,
                                 ),
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
                             )
                         )
                         JungleTabs(
