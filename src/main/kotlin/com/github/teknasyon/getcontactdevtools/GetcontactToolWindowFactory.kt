@@ -47,7 +47,7 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
         ComposePanel().apply {
             setContent {
                 GetcontactTheme {
-                    Column(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(GetcontactTheme.colors.black),
