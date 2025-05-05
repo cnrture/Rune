@@ -28,7 +28,6 @@ class FileWriter {
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
-        val moduleNameTrimmed = modulePathAsString.removePrefix(":").replace(":", ".")
         val fileReady = modulePathAsString.replace(":", "/")
 
         val path = Paths.get(workingDirectory.toURI())
