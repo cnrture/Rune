@@ -443,6 +443,3 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
         }
     }
 }
-
-
-
