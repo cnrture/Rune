@@ -136,7 +136,7 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             SettingItem("Default Package Name") {
@@ -165,21 +165,23 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     GetcontactRadioButton(
+                        text = Constants.ANDROID,
                         selected = currentSettings.preferredModuleType == Constants.ANDROID,
+                        isBackgroundEnable = true,
                         onClick = {
                             currentSettings = currentSettings.copy(preferredModuleType = Constants.ANDROID)
                         },
-                        text = Constants.ANDROID,
                     )
 
                     Spacer(modifier = Modifier.width(16.dp))
 
                     GetcontactRadioButton(
+                        text = Constants.KOTLIN,
                         selected = currentSettings.preferredModuleType == Constants.KOTLIN,
+                        isBackgroundEnable = true,
                         onClick = {
                             currentSettings = currentSettings.copy(preferredModuleType = Constants.KOTLIN)
                         },
-                        text = Constants.KOTLIN,
                     )
                 }
             }
@@ -191,7 +193,7 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             SettingItem("Template Type") {
@@ -202,12 +204,13 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
                 ) {
                     templateTypes.forEach { templateType ->
                         GetcontactRadioButton(
+                            text = templateType,
                             selected = selectedTemplateType == templateType,
+                            isBackgroundEnable = true,
                             onClick = {
                                 selectedTemplateType = templateType
                                 loadTemplateContent()
                             },
-                            text = templateType,
                         )
                     }
                 }
@@ -224,7 +227,6 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
                                 .fillMaxWidth(0.8f)
                                 .clickable { showTemplateDropdown = true },
                             value = selectedTemplateName,
-                            label = "Template Name",
                             placeholder = "Enter template name",
                             onValueChange = { selectedTemplateName = it },
                         )
@@ -272,20 +274,15 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
                 GetcontactTextField(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
-                        .border(
-                            width = 1.dp,
-                            color = GetcontactTheme.colors.lightGray,
-                            shape = RoundedCornerShape(4.dp)
-                        ),
-                    label = "Template Content",
+                        .height(400.dp),
                     placeholder = "Enter template content",
                     value = templateContent,
                     onValueChange = { templateContent = it },
                     textStyle = TextStyle(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 14.sp,
-                    )
+                    ),
+                    isSingleLine = false,
                 )
             }
 

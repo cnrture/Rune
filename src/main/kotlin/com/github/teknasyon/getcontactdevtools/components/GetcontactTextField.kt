@@ -33,7 +33,7 @@ fun GetcontactTextField(
             cursorColor = GetcontactTheme.colors.white,
             textColor = GetcontactTheme.colors.white,
             unfocusedBorderColor = GetcontactTheme.colors.white,
-            focusedBorderColor = GetcontactTheme.colors.white,
+            focusedBorderColor = GetcontactTheme.colors.blue,
             placeholderColor = GetcontactTheme.colors.white,
         )
     )

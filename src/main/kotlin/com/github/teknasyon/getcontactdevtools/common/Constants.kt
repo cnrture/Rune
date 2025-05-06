@@ -10,8 +10,8 @@ object Constants {
     const val FEATURE_MAKER_WINDOW_WIDTH = 700
     const val MODULE_MAKER_WINDOW_HEIGHT = 800
     const val FEATURE_MAKER_WINDOW_HEIGHT = 500
-    const val SETTINGS_WINDOW_WIDTH = 700
-    const val SETTINGS_WINDOW_HEIGHT = 600
+    const val SETTINGS_WINDOW_WIDTH = 800
+    const val SETTINGS_WINDOW_HEIGHT = 700
 
     const val ANDROID = "Android"
     const val KOTLIN = "Kotlin / JVM"

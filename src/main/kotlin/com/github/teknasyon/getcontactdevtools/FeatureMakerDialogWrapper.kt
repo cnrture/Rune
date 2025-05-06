@@ -154,7 +154,6 @@ class FeatureMakerDialogWrapper(
 
                 GetcontactTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = "Feature Name",
                     placeholder = "Enter feature name",
                     value = featureName.value,
                     onValueChange = { featureName.value = it },
