@@ -11,6 +11,8 @@ import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 @Composable
 fun GetcontactDialogActions(
     modifier: Modifier = Modifier,
+    positiveText: String = "Create",
+    negativeText: String = "Cancel",
     onCancelClick: () -> Unit,
     onCreateClick: () -> Unit,
 ) {
@@ -19,12 +21,12 @@ fun GetcontactDialogActions(
         horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End)
     ) {
         GetcontactOutlinedButton(
-            text = "Cancel",
+            text = negativeText,
             backgroundColor = GetcontactTheme.colors.blue,
             onClick = onCancelClick,
         )
         GetcontactButton(
-            text = "Create",
+            text = positiveText,
             backgroundColor = GetcontactTheme.colors.blue,
             onClick = onCreateClick,
         )
