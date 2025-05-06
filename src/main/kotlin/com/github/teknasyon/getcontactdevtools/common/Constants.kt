@@ -10,6 +10,8 @@ object Constants {
     const val FEATURE_MAKER_WINDOW_WIDTH = 700
     const val MODULE_MAKER_WINDOW_HEIGHT = 800
     const val FEATURE_MAKER_WINDOW_HEIGHT = 500
+    const val SETTINGS_WINDOW_WIDTH = 700
+    const val SETTINGS_WINDOW_HEIGHT = 600
 
     const val ANDROID = "Android"
     const val KOTLIN = "Kotlin / JVM"
@@ -18,6 +20,8 @@ object Constants {
     const val DEFAULT_SRC_VALUE = "EMPTY"
 
     const val DEFAULT_BASE_PACKAGE_NAME = "com.example.application"
+
+    const val DEFAULT_WEB_VIEW_URL = "https://gtc-zoo.test.mobylonia.com/"
 
     const val DEFAULT_EXIT_CODE = 2
 
