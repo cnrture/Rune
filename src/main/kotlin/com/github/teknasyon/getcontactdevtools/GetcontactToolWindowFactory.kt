@@ -146,8 +146,6 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
             )
 
             ActionCard(
-                modifier = Modifier.weight(1f),
-                title = "Settings",
                 icon = Icons.Rounded.Settings,
                 actionColor = GetcontactTheme.colors.lightGray,
                 onClick = { SettingsDialogWrapper(project).apply { showAndGet() } },

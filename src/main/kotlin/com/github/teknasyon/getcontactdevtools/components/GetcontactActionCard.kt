@@ -21,7 +21,7 @@ import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 @Composable
 fun ActionCard(
     modifier: Modifier = Modifier,
-    title: String,
+    title: String? = null,
     icon: ImageVector,
     actionColor: Color,
     onClick: () -> Unit,
@@ -57,15 +57,17 @@ fun ActionCard(
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        title?.let {
+            Spacer(modifier = Modifier.width(8.dp))
 
-        GetcontactText(
-            text = title,
-            style = TextStyle(
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp,
-                color = GetcontactTheme.colors.white,
-            ),
-        )
+            GetcontactText(
+                text = it,
+                style = TextStyle(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp,
+                    color = GetcontactTheme.colors.white,
+                ),
+            )
+        }
     }
 }
