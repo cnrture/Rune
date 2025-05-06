@@ -31,7 +31,9 @@ fun GetcontactText(
         text = text,
         color = color,
         modifier = modifier.drawWithContent {
-            if (shouldDraw) { drawContent() }
+            if (shouldDraw) {
+                drawContent()
+            }
         },
         softWrap = softWrap,
         overflow = overflow,

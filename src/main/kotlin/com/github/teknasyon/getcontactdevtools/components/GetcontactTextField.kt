@@ -1,6 +1,5 @@
 package com.github.teknasyon.getcontactdevtools.components
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
