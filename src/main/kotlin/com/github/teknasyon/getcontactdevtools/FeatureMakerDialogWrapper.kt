@@ -2,7 +2,8 @@ package com.github.teknasyon.getcontactdevtools
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,10 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.common.*
-import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogActions
-import com.github.teknasyon.getcontactdevtools.components.GetcontactDialogWrapper
-import com.github.teknasyon.getcontactdevtools.components.GetcontactFileTree
-import com.github.teknasyon.getcontactdevtools.components.GetcontactText
+import com.github.teknasyon.getcontactdevtools.components.*
 import com.github.teknasyon.getcontactdevtools.file.FileTree
 import com.github.teknasyon.getcontactdevtools.file.FileWriter
 import com.github.teknasyon.getcontactdevtools.file.toProjectFile
@@ -141,7 +139,7 @@ class FeatureMakerDialogWrapper(
             }
         ) { padding ->
             Column(
-                modifier = modifier,
+                modifier = Modifier.fillMaxSize(),
             ) {
                 GetcontactText(
                     text = "Selected root: ${selectedSrc.value}",
@@ -154,20 +152,23 @@ class FeatureMakerDialogWrapper(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedTextField(
+                GetcontactTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Feature Name") },
+                    label = "Feature Name",
+                    placeholder = "Enter feature name",
                     value = featureName.value,
                     onValueChange = { featureName.value = it },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedLabelColor = GetcontactTheme.colors.white,
-                        unfocusedLabelColor = GetcontactTheme.colors.white,
-                        cursorColor = GetcontactTheme.colors.white,
-                        textColor = GetcontactTheme.colors.white,
-                        unfocusedBorderColor = GetcontactTheme.colors.white,
-                        focusedBorderColor = GetcontactTheme.colors.white,
-                        placeholderColor = GetcontactTheme.colors.white,
-                    )
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                GetcontactText(
+                    text = "Be sure to use camel case for the feature name (e.g. MyFeature)",
+                    color = GetcontactTheme.colors.lightGray,
+                    style = TextStyle(
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                    softWrap = true,
                 )
             }
         }

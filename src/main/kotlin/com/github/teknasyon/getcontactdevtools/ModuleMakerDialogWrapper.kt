@@ -22,6 +22,7 @@ import com.github.teknasyon.getcontactdevtools.common.getCurrentlySelectedFile
 import com.github.teknasyon.getcontactdevtools.common.rootDirectoryString
 import com.github.teknasyon.getcontactdevtools.common.rootDirectoryStringDropLast
 import com.github.teknasyon.getcontactdevtools.components.*
+import com.github.teknasyon.getcontactdevtools.data.SettingsService
 import com.github.teknasyon.getcontactdevtools.file.FileTree
 import com.github.teknasyon.getcontactdevtools.file.FileWriter
 import com.github.teknasyon.getcontactdevtools.file.toProjectFile
@@ -47,6 +48,7 @@ class ModuleMakerDialogWrapper(
 ) {
 
     private val fileWriter = FileWriter()
+    private val settings = project.getService(SettingsService::class.java)
 
     private var existingModules = listOf<String>()
     private var selectedModules = mutableStateListOf<String>()
@@ -54,9 +56,9 @@ class ModuleMakerDialogWrapper(
 
     private val isMoveFiles = mutableStateOf(false)
 
-    private var selectedSrc = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
-    private val moduleType = mutableStateOf(Constants.ANDROID)
-    private val packageName = mutableStateOf(Constants.EMPTY)
+    private val selectedSrc = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
+    private val moduleType = mutableStateOf(settings.state.preferredModuleType)
+    private val packageName = mutableStateOf(settings.state.defaultPackageName)
     private val moduleName = mutableStateOf(Constants.EMPTY)
 
     private val isAnalyzing = mutableStateOf(false)
@@ -460,11 +462,13 @@ class ModuleMakerDialogWrapper(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
-                Text(
+                GetcontactText(
                     text = "Module Type",
                     color = GetcontactTheme.colors.white,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
                 )
                 Spacer(modifier = Modifier.size(16.dp))
                 Column {
@@ -483,38 +487,20 @@ class ModuleMakerDialogWrapper(
             }
             Spacer(modifier = Modifier.size(24.dp))
             Column {
-                OutlinedTextField(
+                GetcontactTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Package Name") },
-                    placeholder = { Text("Package Name") },
+                    label = "Package Name",
+                    placeholder = "Package Name",
                     value = packageName,
                     onValueChange = { onPackageNameChanged(it) },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedLabelColor = GetcontactTheme.colors.white,
-                        unfocusedLabelColor = GetcontactTheme.colors.white,
-                        cursorColor = GetcontactTheme.colors.white,
-                        textColor = GetcontactTheme.colors.white,
-                        unfocusedBorderColor = GetcontactTheme.colors.white,
-                        focusedBorderColor = GetcontactTheme.colors.white,
-                        placeholderColor = GetcontactTheme.colors.white,
-                    )
                 )
                 Spacer(modifier = Modifier.size(16.dp))
-                OutlinedTextField(
+                GetcontactTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Module Name") },
-                    placeholder = { Text(Constants.DEFAULT_MODULE_NAME) },
+                    label = "Module Name",
+                    placeholder = Constants.DEFAULT_MODULE_NAME,
                     value = moduleNameState,
                     onValueChange = { onModuleNameChanged(it) },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedLabelColor = GetcontactTheme.colors.white,
-                        unfocusedLabelColor = GetcontactTheme.colors.white,
-                        cursorColor = GetcontactTheme.colors.white,
-                        textColor = GetcontactTheme.colors.white,
-                        unfocusedBorderColor = GetcontactTheme.colors.white,
-                        focusedBorderColor = GetcontactTheme.colors.white,
-                        placeholderColor = GetcontactTheme.colors.white,
-                    )
                 )
             }
         }
