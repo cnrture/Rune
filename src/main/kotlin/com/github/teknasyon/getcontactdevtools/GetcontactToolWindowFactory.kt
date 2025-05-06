@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.components.ActionCard
 import com.github.teknasyon.getcontactdevtools.components.GetcontactText
+import com.github.teknasyon.getcontactdevtools.data.SettingsService
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -42,6 +43,7 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
     }
 
     private fun createToolWindowComponent(project: Project): JComponent {
+        val settings = project.getService(SettingsService::class.java)
         val panel = JPanel(BorderLayout())
 
         ComposePanel().apply {
@@ -79,7 +81,7 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
 
         try {
             JBCefBrowser().apply {
-                loadURL("https://gtc-zoo.test.mobylonia.com/")
+                loadURL(settings.state.webViewUrl)
                 panel.add(this.component, BorderLayout.CENTER)
             }
         } catch (e: Exception) {
@@ -148,7 +150,7 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
                 title = "Settings",
                 icon = Icons.Rounded.Settings,
                 actionColor = GetcontactTheme.colors.lightGray,
-                onClick = { },
+                onClick = { SettingsDialogWrapper(project).apply { showAndGet() } },
             )
         }
     }
