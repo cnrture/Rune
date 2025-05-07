@@ -2,7 +2,7 @@ package com.github.teknasyon.getcontactdevtools.template
 
 object GradleTemplate {
     fun getAndroidModuleGradleTemplate(packageName: String, dependencies: String, moduleName: String): String {
-        val cdCount = moduleName.split(".").size
+        val cdCount = moduleName.split(":").filter { it.isNotEmpty() }.size
         val cd = StringBuilder().apply {
             repeat(cdCount) {
                 append("../")
