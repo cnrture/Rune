@@ -250,7 +250,7 @@ class LibraryDependencyFinder {
         if (libraryAliases.isEmpty()) return Constants.EMPTY
 
         return StringBuilder().apply {
-            append("// Library Dependencies\n")
+            append("    // Library Dependencies\n")
             libraryAliases.forEachIndexed { index, alias ->
                 append("    implementation(libs.${alias.replace("-", ".")})")
                 if (index != libraryAliases.lastIndex) append("\n")

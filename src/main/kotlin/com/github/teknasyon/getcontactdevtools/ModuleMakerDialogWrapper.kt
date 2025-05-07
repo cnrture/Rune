@@ -684,7 +684,6 @@ class ModuleMakerDialogWrapper(
                     var updatedContent = content
 
                     packageMappings.forEach { (oldPackage, newPackage) ->
-                        // Using a regex that captures the full path after the base package
                         val importPattern = """import\s+$oldPackage\.([a-zA-Z0-9_.]+)""".toRegex()
                         updatedContent = updatedContent.replace(importPattern) { matchResult ->
                             val subpath = matchResult.groupValues[1]
@@ -764,7 +763,6 @@ class ModuleMakerDialogWrapper(
                 val moduleNameTrimmed = moduleName.removePrefix(":").replace(":", ".")
                 val finalPackageName = "${packageName.value}.${moduleNameTrimmed.split(".").last()}"
 
-                // Get detected library dependencies if enabled
                 val libraryDependenciesString = if (isMoveFiles.value && analyzeLibraries.value) {
                     libraryDependencyFinder.formatLibraryDependencies(detectedLibraries)
                 } else {
@@ -792,6 +790,7 @@ class ModuleMakerDialogWrapper(
                             }
                         }
 
+                        addDependencyToAppModule(moduleName)
                         syncProject()
                     },
                     workingDirectory = File(project.basePath.orEmpty()),
@@ -864,5 +863,73 @@ class ModuleMakerDialogWrapper(
             }
         }
         return pathOptions.first()
+    }
+
+    private fun addDependencyToAppModule(modulePathAsString: String) {
+        try {
+            val appGradleFile = findAppGradleFile()
+            if (appGradleFile == null || !appGradleFile.exists()) {
+                return
+            }
+
+            val content = appGradleFile.readText()
+
+            val dependenciesPattern = """dependencies\s*\{([^}]*)}""".toRegex(RegexOption.DOT_MATCHES_ALL)
+            val dependenciesMatch = dependenciesPattern.find(content)
+
+            if (dependenciesMatch != null) {
+                val dependenciesBlock = dependenciesMatch.groupValues[1]
+                val moduleName = modulePathAsString.removePrefix(":").replace(":", ".")
+                val dependencyLine = "    implementation(projects.$moduleName)"
+
+                if (dependenciesBlock.contains(dependencyLine)) {
+                    return
+                }
+
+                val newDependenciesBlock = "$dependenciesBlock\n$dependencyLine\n"
+                val newContent =
+                    content.replace(dependenciesMatch.groupValues[0], "dependencies {$newDependenciesBlock}")
+
+                appGradleFile.writeText(newContent)
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun findAppGradleFile(): File? {
+        val projectBasePath = project.basePath ?: return null
+
+        val possibleAppLocations = listOf(
+            "app/build.gradle",
+            "app/build.gradle.kts",
+            "mobile/build.gradle",
+            "mobile/build.gradle.kts",
+            "androidApp/build.gradle",
+            "androidApp/build.gradle.kts"
+        )
+
+        for (location in possibleAppLocations) {
+            val file = File(projectBasePath, location)
+            if (file.exists()) {
+                return file
+            }
+        }
+
+        val rootDir = File(projectBasePath)
+        val appDir = rootDir.listFiles()?.firstOrNull {
+            it.isDirectory && (it.name == "app" || it.name == "mobile" || it.name == "androidApp")
+        }
+
+        if (appDir != null) {
+            val gradleFile = File(appDir, "build.gradle")
+            val ktsFile = File(appDir, "build.gradle.kts")
+
+            if (gradleFile.exists()) return gradleFile
+            if (ktsFile.exists()) return ktsFile
+        }
+
+        return null
     }
 }
