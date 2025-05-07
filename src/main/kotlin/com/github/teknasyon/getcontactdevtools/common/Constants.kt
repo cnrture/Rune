@@ -16,10 +16,10 @@ object Constants {
     const val ANDROID = "Android"
     const val KOTLIN = "Kotlin / JVM"
 
-    const val DEFAULT_MODULE_NAME = ":repository:database (as an example)"
+    const val DEFAULT_MODULE_NAME = ":feature:home (as an example)"
     const val DEFAULT_SRC_VALUE = "EMPTY"
 
-    const val DEFAULT_BASE_PACKAGE_NAME = "com.example.application"
+    const val DEFAULT_BASE_PACKAGE_NAME = "app.source.getcontact"
 
     const val DEFAULT_WEB_VIEW_URL = "https://gtc-zoo.test.mobylonia.com/"
 
