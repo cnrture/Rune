@@ -11,10 +11,7 @@ class LibraryDependencyFinder {
         val artifact: String,
         val versionRef: String? = null,
         val version: String? = null,
-    ) {
-        val module: String
-            get() = "$group:$artifact"
-    }
+    )
 
     fun parseLibsVersionsToml(projectRoot: File): List<LibraryInfo> {
         val libraries = mutableListOf<LibraryInfo>()

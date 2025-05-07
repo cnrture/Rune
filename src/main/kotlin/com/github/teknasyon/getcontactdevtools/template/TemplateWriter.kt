@@ -72,7 +72,7 @@ class TemplateWriter {
 
             if (hasLibDeps) {
                 if (hasDeps) append("\n")
-                append("$libraryDependencies")
+                append(libraryDependencies)
             }
         }.toString().trimEnd()
     }
