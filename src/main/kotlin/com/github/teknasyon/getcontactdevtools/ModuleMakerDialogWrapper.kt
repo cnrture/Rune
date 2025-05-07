@@ -99,7 +99,6 @@ class ModuleMakerDialogWrapper(
                     }
                     val findModules = analyzer.analyzeSourceDirectory(directory)
 
-                    // Find library dependencies if enabled
                     if (analyzeLibraries.value && projectRoot != null) {
                         val availableLibraries = libraryDependencyFinder.parseLibsVersionsToml(projectRoot)
                         val usedLibraries = libraryDependencyFinder.findImportedLibraries(directory, availableLibraries)

@@ -62,7 +62,6 @@ class TemplateWriter {
         if (!hasDeps && !hasLibDeps) return Constants.EMPTY
 
         return StringBuilder().apply {
-            // Add module dependencies
             if (hasDeps) {
                 append("// Module Dependencies\n")
                 dependencies.forEach { module ->
@@ -71,9 +70,8 @@ class TemplateWriter {
                 }
             }
 
-            // Add library dependencies if provided
             if (hasLibDeps) {
-                if (hasDeps) append("\n") // Add separator if we have both types
+                if (hasDeps) append("\n")
                 append("$libraryDependencies")
             }
         }.toString().trimEnd()
