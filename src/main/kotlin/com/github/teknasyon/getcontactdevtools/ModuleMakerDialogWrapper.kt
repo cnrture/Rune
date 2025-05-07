@@ -25,6 +25,7 @@ import com.github.teknasyon.getcontactdevtools.components.*
 import com.github.teknasyon.getcontactdevtools.data.SettingsService
 import com.github.teknasyon.getcontactdevtools.file.FileTree
 import com.github.teknasyon.getcontactdevtools.file.FileWriter
+import com.github.teknasyon.getcontactdevtools.file.LibraryDependencyFinder
 import com.github.teknasyon.getcontactdevtools.file.toProjectFile
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 import com.intellij.openapi.application.ApplicationManager
@@ -49,12 +50,15 @@ class ModuleMakerDialogWrapper(
 
     private val fileWriter = FileWriter()
     private val settings = project.getService(SettingsService::class.java)
+    private val libraryDependencyFinder = LibraryDependencyFinder()
 
     private var existingModules = listOf<String>()
     private var selectedModules = mutableStateListOf<String>()
     private var detectedModules = mutableStateListOf<String>()
+    private var detectedLibraries = mutableStateListOf<String>()
 
     private val isMoveFiles = mutableStateOf(false)
+    private val analyzeLibraries = mutableStateOf(false)
 
     private val selectedSrc = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
     private val moduleType = mutableStateOf(settings.state.preferredModuleType)
@@ -94,6 +98,21 @@ class ModuleMakerDialogWrapper(
                         analyzer.discoverProjectModules(projectRoot)
                     }
                     val findModules = analyzer.analyzeSourceDirectory(directory)
+
+                    // Find library dependencies if enabled
+                    if (analyzeLibraries.value && projectRoot != null) {
+                        val availableLibraries = libraryDependencyFinder.parseLibsVersionsToml(projectRoot)
+                        val usedLibraries = libraryDependencyFinder.findImportedLibraries(directory, availableLibraries)
+
+                        println("Available libraries: $availableLibraries")
+                        println("Used libraries: $usedLibraries")
+
+                        SwingUtilities.invokeLater {
+                            detectedLibraries.clear()
+                            detectedLibraries.addAll(usedLibraries)
+                        }
+                    }
+
                     SwingUtilities.invokeLater {
                         detectedModules.clear()
                         detectedModules.addAll(findModules)
@@ -257,6 +276,7 @@ class ModuleMakerDialogWrapper(
         var moduleNameState by remember { moduleName }
         val selectedModules = remember { selectedModules }
         var isMoveFiles by remember { isMoveFiles }
+        var analyzeLibraries by remember { analyzeLibraries }
         val isAnalyzingState by remember { isAnalyzing }
         val analysisResultState by remember { analysisResult }
 
@@ -307,6 +327,8 @@ class ModuleMakerDialogWrapper(
                 MoveFilesContent(
                     isChecked = isMoveFiles,
                     onCheckedChange = { isMoveFiles = it },
+                    analyzeLibraries = analyzeLibraries,
+                    onAnalyzeLibrariesChange = { analyzeLibraries = it }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -409,6 +431,8 @@ class ModuleMakerDialogWrapper(
     private fun MoveFilesContent(
         isChecked: Boolean,
         onCheckedChange: (Boolean) -> Unit,
+        analyzeLibraries: Boolean = false,
+        onAnalyzeLibrariesChange: (Boolean) -> Unit = {},
     ) {
         Column(
             modifier = Modifier
@@ -434,6 +458,21 @@ class ModuleMakerDialogWrapper(
                 text = "This will move files from the selected directory to the new module.",
                 color = GetcontactTheme.colors.lightGray,
             )
+
+            if (isChecked) {
+                Spacer(modifier = Modifier.height(8.dp))
+                GetcontactCheckbox(
+                    label = "Analyze and include library dependencies",
+                    checked = analyzeLibraries,
+                    onCheckedChange = { onAnalyzeLibrariesChange(it) },
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
+                    text = "Parse libs.versions.toml and include relevant library dependencies.",
+                    color = GetcontactTheme.colors.lightGray,
+                )
+            }
         }
     }
 
@@ -590,6 +629,8 @@ class ModuleMakerDialogWrapper(
             }
 
             val movedFiles = mutableListOf<VirtualFile>()
+            val packageMappings = mutableMapOf<String, String>()
+            val filePathMappings = mutableMapOf<String, File>()
 
             sourceFiles.forEach { sourceFile ->
                 try {
@@ -614,14 +655,45 @@ class ModuleMakerDialogWrapper(
 
                     val content = targetFile.readText()
                     val packagePattern = """package\s+([a-zA-Z0-9_.]+)""".toRegex()
+                    val packageMatch = packagePattern.find(content)
+                    val originalPackage = packageMatch?.groupValues?.get(1) ?: ""
+
+                    if (originalPackage.isNotEmpty()) {
+                        packageMappings[originalPackage] = fullPackageName
+                    }
+
                     val updatedContent = packagePattern.replace(content, "package $fullPackageName")
 
                     if (content != updatedContent) {
                         targetFile.writeText(updatedContent)
                     }
 
+                    filePathMappings[sourceFile.absolutePath] = targetFile
+
                     VfsUtil.findFileByIoFile(targetFile, true)?.let { vFile ->
                         movedFiles.add(vFile)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            filePathMappings.values.forEach { targetFile ->
+                try {
+                    val content = targetFile.readText()
+                    var updatedContent = content
+
+                    packageMappings.forEach { (oldPackage, newPackage) ->
+                        // Using a regex that captures the full path after the base package
+                        val importPattern = """import\s+$oldPackage\.([a-zA-Z0-9_.]+)""".toRegex()
+                        updatedContent = updatedContent.replace(importPattern) { matchResult ->
+                            val subpath = matchResult.groupValues[1]
+                            "import $newPackage.$subpath"
+                        }
+                    }
+
+                    if (content != updatedContent) {
+                        targetFile.writeText(updatedContent)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -692,6 +764,13 @@ class ModuleMakerDialogWrapper(
                 val moduleNameTrimmed = moduleName.removePrefix(":").replace(":", ".")
                 val finalPackageName = "${packageName.value}.${moduleNameTrimmed.split(".").last()}"
 
+                // Get detected library dependencies if enabled
+                val libraryDependenciesString = if (isMoveFiles.value && analyzeLibraries.value) {
+                    libraryDependencyFinder.formatLibraryDependencies(detectedLibraries)
+                } else {
+                    ""
+                }
+
                 val filesCreated = fileWriter.createModule(
                     packageName = finalPackageName,
                     settingsGradleFile = settingsGradleFile,
@@ -716,7 +795,8 @@ class ModuleMakerDialogWrapper(
                         syncProject()
                     },
                     workingDirectory = File(project.basePath.orEmpty()),
-                    dependencies = selectedModules
+                    dependencies = selectedModules,
+                    libraryDependencies = libraryDependenciesString
                 )
                 return filesCreated
             } else {

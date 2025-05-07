@@ -22,6 +22,7 @@ class TemplateWriter {
         moduleType: String,
         moduleName: String,
         dependencies: List<String> = emptyList(),
+        libraryDependencies: String = "",
     ): List<File> {
         try {
             val data: MutableMap<String, Any> = HashMap()
@@ -30,7 +31,7 @@ class TemplateWriter {
             val gradleTemplate = when (moduleType) {
                 Constants.ANDROID -> GradleTemplate.getAndroidModuleGradleTemplate(
                     packageName = packageName,
-                    dependencies = buildDependenciesBlock(dependencies),
+                    dependencies = buildDependenciesBlock(dependencies, libraryDependencies),
                     moduleName = moduleName,
                 )
 
@@ -54,16 +55,28 @@ class TemplateWriter {
         return emptyList()
     }
 
-    private fun buildDependenciesBlock(dependencies: List<String>): String {
-        if (dependencies.isEmpty()) return Constants.EMPTY
+    private fun buildDependenciesBlock(dependencies: List<String>, libraryDependencies: String = ""): String {
+        val hasDeps = dependencies.isNotEmpty()
+        val hasLibDeps = libraryDependencies.isNotEmpty()
+
+        if (!hasDeps && !hasLibDeps) return Constants.EMPTY
+
         return StringBuilder().apply {
-            append("// Module Dependencies\n")
-            dependencies.forEachIndexed { index, module ->
-                val moduleName = module.removePrefix(":").replace(":", ".")
-                append("    implementation(projects.$moduleName)")
-                if (index != dependencies.lastIndex) append("\n")
+            // Add module dependencies
+            if (hasDeps) {
+                append("// Module Dependencies\n")
+                dependencies.forEach { module ->
+                    val moduleName = module.removePrefix(":").replace(":", ".")
+                    append("    implementation(projects.$moduleName)\n")
+                }
             }
-        }.toString()
+
+            // Add library dependencies if provided
+            if (hasLibDeps) {
+                if (hasDeps) append("\n") // Add separator if we have both types
+                append("$libraryDependencies")
+            }
+        }.toString().trimEnd()
     }
 
     fun createReadmeFile(moduleFile: File, moduleName: String): List<File> {

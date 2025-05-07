@@ -25,6 +25,7 @@ class FileWriter {
         showErrorDialog: (String) -> Unit,
         showSuccessDialog: () -> Unit,
         dependencies: List<String> = emptyList(),
+        libraryDependencies: String = "",
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
@@ -52,6 +53,7 @@ class FileWriter {
             moduleName = modulePathAsString,
             moduleType = moduleType,
             dependencies = dependencies,
+            libraryDependencies = libraryDependencies,
         )
 
         showSuccessDialog()
@@ -65,6 +67,7 @@ class FileWriter {
         moduleName: String,
         moduleType: String,
         dependencies: List<String> = emptyList(),
+        libraryDependencies: String = "",
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
@@ -74,6 +77,7 @@ class FileWriter {
             moduleType = moduleType,
             dependencies = dependencies,
             moduleName = moduleName,
+            libraryDependencies = libraryDependencies,
         )
 
         if (moduleType == Constants.ANDROID) {
