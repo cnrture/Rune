@@ -36,7 +36,7 @@ class FeatureMakerDialogWrapper(
     private val fileWriter = FileWriter()
 
     private var selectedSrc = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
-    private var featureName = mutableStateOf("")
+    private var featureName = mutableStateOf(Constants.EMPTY)
 
     init {
         selectedSrc.value = if (startingLocation != null) {
@@ -193,7 +193,7 @@ class FeatureMakerDialogWrapper(
             val packagePath = cleanSelectedPath
                 .replace(
                     Regex("^.*?(/src/main/java/|/src/main/kotlin/)"),
-                    ""
+                    Constants.EMPTY,
                 )
                 .replace("/", ".")
 

@@ -53,8 +53,8 @@ class LibraryDependencyFinder {
             val alias = matchGroups[1]
             val group = matchGroups[2]
             val artifact = matchGroups[3]
-            val versionRef = if (matchGroups.size > 4) matchGroups[4] else ""
-            val version = if (matchGroups.size > 5) matchGroups[5] else ""
+            val versionRef = if (matchGroups.size > 4) matchGroups[4] else Constants.EMPTY
+            val version = if (matchGroups.size > 5) matchGroups[5] else Constants.EMPTY
 
             libraries.add(LibraryInfo(alias, group, artifact, versionRef.ifEmpty { null }, version.ifEmpty { null }))
         }
@@ -65,8 +65,8 @@ class LibraryDependencyFinder {
             val alias = matchGroups[1]
             val group = matchGroups[2]
             val artifact = matchGroups[3]
-            val versionRef = if (matchGroups.size > 4) matchGroups[4] else ""
-            val version = if (matchGroups.size > 5) matchGroups[5] else ""
+            val versionRef = if (matchGroups.size > 4) matchGroups[4] else Constants.EMPTY
+            val version = if (matchGroups.size > 5) matchGroups[5] else Constants.EMPTY
 
             libraries.add(
                 LibraryInfo(
@@ -121,7 +121,7 @@ class LibraryDependencyFinder {
 
         libraries.forEach { library ->
             val group = library.group
-            val artifact = library.artifact.replace("-", "")
+            val artifact = library.artifact.replace("-", Constants.EMPTY)
 
             val usageScore = calculateLibraryUsageScore(group, artifact, allImports, fileContent)
 
@@ -137,19 +137,17 @@ class LibraryDependencyFinder {
         return usedLibraries.toList()
     }
 
-    private val LIBRARY_USAGE_THRESHOLD = 2
-
     private fun calculateLibraryUsageScore(
         group: String,
         artifact: String,
         imports: Set<String>,
         fileContent: String,
     ): Int {
-        val normalizedArtifact = artifact.replace("-", "")
+        val normalizedArtifact = artifact.replace("-", Constants.EMPTY)
         var score = 0
 
         val groupParts = group.split(".")
-        val lastGroupPart = groupParts.lastOrNull()?.replace("-", "") ?: ""
+        val lastGroupPart = groupParts.lastOrNull()?.replace("-", Constants.EMPTY).orEmpty()
 
         if (imports.any { it == "$group.$artifact" || it == "$group.$normalizedArtifact" }) {
             println("  - Found exact import match for $group.$artifact")
@@ -203,5 +201,9 @@ class LibraryDependencyFinder {
                 if (index != libraryAliases.lastIndex) append("\n")
             }
         }.toString()
+    }
+
+    companion object {
+        private const val LIBRARY_USAGE_THRESHOLD = 2
     }
 }

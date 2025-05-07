@@ -43,8 +43,8 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
 
     private val templateTypes = listOf("Feature", "Module", "Manifest", "Gradle")
     private var selectedTemplateType by mutableStateOf("Feature")
-    private var selectedTemplateName by mutableStateOf("")
-    private var templateContent by mutableStateOf("")
+    private var selectedTemplateName by mutableStateOf(Constants.EMPTY)
+    private var templateContent by mutableStateOf(Constants.EMPTY)
     private var showTemplateDropdown by mutableStateOf(false)
 
     @Composable
@@ -310,14 +310,14 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
                     "Contract" -> FeatureTemplate.getContract("com.example", "Example")
                     "ComponentKey" -> FeatureTemplate.getComponentKey("com.example", "Example")
                     "PreviewProvider" -> FeatureTemplate.getPreviewProvider("com.example", "Example")
-                    else -> ""
+                    else -> Constants.EMPTY
                 }
             }
 
             "Module" -> {
                 when (selectedTemplateName) {
                     "README" -> currentSettings.moduleReadmeTemplate
-                    else -> ""
+                    else -> Constants.EMPTY
                 }
             }
 
@@ -331,11 +331,11 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
                     )
 
                     "Kotlin Module" -> GradleTemplate.getKotlinModuleGradleTemplate()
-                    else -> ""
+                    else -> Constants.EMPTY
                 }
             }
 
-            else -> ""
+            else -> Constants.EMPTY
         }
     }
 
@@ -375,13 +375,13 @@ class SettingsDialogWrapper(project: Project) : GetcontactDialogWrapper(
 
     private fun createNewTemplate() {
         selectedTemplateName = "New Template"
-        templateContent = ""
+        templateContent = Constants.EMPTY
     }
 
     private fun deleteCurrentTemplate() {
         if (selectedTemplateName.isNotEmpty()) {
-            selectedTemplateName = ""
-            templateContent = ""
+            selectedTemplateName = Constants.EMPTY
+            templateContent = Constants.EMPTY
         }
     }
 

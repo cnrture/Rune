@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.getcontactdevtools.common.Constants
 import com.github.teknasyon.getcontactdevtools.components.ActionCard
 import com.github.teknasyon.getcontactdevtools.components.GetcontactText
 import com.github.teknasyon.getcontactdevtools.data.SettingsService
@@ -36,7 +37,7 @@ class GetcontactToolWindowFactory : ToolWindowFactory {
         val contentFactory = ContentFactory.getInstance()
         val content = contentFactory.createContent(
             createToolWindowComponent(project),
-            "",
+            Constants.EMPTY,
             false
         )
         toolWindow.contentManager.addContent(content)

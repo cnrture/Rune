@@ -13,7 +13,7 @@ import java.nio.file.Paths
 class TemplateWriter {
 
     private val cfg = Configuration(Constants.FREEMARKER_VERSION).apply {
-        setClassLoaderForTemplateLoading(TemplateWriter::class.java.classLoader, "")
+        setClassLoaderForTemplateLoading(TemplateWriter::class.java.classLoader, Constants.EMPTY)
     }
 
     fun createGradleFile(
@@ -22,7 +22,7 @@ class TemplateWriter {
         moduleType: String,
         moduleName: String,
         dependencies: List<String> = emptyList(),
-        libraryDependencies: String = "",
+        libraryDependencies: String = Constants.EMPTY,
     ): List<File> {
         try {
             val data: MutableMap<String, Any> = HashMap()

@@ -1,5 +1,6 @@
 package com.github.teknasyon.getcontactdevtools
 
+import com.github.teknasyon.getcontactdevtools.common.Constants
 import java.io.File
 
 class ImportAnalyzer() {
@@ -95,7 +96,7 @@ class ImportAnalyzer() {
 
     private fun getModulePath(projectRoot: File, moduleDir: File): String {
         val relativePath = moduleDir.relativeTo(projectRoot).path
-        if (relativePath.isEmpty()) return ""
+        if (relativePath.isEmpty()) return Constants.EMPTY
 
         return ":${relativePath.replace(File.separator, ":")}"
     }

@@ -25,7 +25,7 @@ class FileWriter {
         showErrorDialog: (String) -> Unit,
         showSuccessDialog: () -> Unit,
         dependencies: List<String> = emptyList(),
-        libraryDependencies: String = "",
+        libraryDependencies: String = Constants.EMPTY,
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
@@ -67,7 +67,7 @@ class FileWriter {
         moduleName: String,
         moduleType: String,
         dependencies: List<String> = emptyList(),
-        libraryDependencies: String = "",
+        libraryDependencies: String = Constants.EMPTY,
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
@@ -325,7 +325,7 @@ class FileWriter {
 
             val baseIndentation = lastLine.takeWhile { it.isWhitespace() }
 
-            var continuationIndentation = ""
+            var continuationIndentation = Constants.EMPTY
             if (insertPosition > blockStart) {
                 for (i in blockStart + 1..insertPosition) {
                     val line = settingsFileContent[i].trim()
@@ -361,7 +361,7 @@ class FileWriter {
 
             return settingsFileContent
         } else {
-            settingsFileContent.add("")
+            settingsFileContent.add(Constants.EMPTY)
             settingsFileContent.add("// $moduleCategory")
 
             val includeStatement = constructIncludeStatement(modulePathAsString, settingsFileContent)

@@ -647,7 +647,7 @@ class ModuleMakerDialogWrapper(
                     val subPackage = if (relativeDir.isNotEmpty()) {
                         "." + relativeDir.replace(File.separator, ".")
                     } else {
-                        ""
+                        Constants.EMPTY
                     }
 
                     val fullPackageName = packageName + subPackage
@@ -655,7 +655,7 @@ class ModuleMakerDialogWrapper(
                     val content = targetFile.readText()
                     val packagePattern = """package\s+([a-zA-Z0-9_.]+)""".toRegex()
                     val packageMatch = packagePattern.find(content)
-                    val originalPackage = packageMatch?.groupValues?.get(1) ?: ""
+                    val originalPackage = packageMatch?.groupValues?.get(1).orEmpty()
 
                     if (originalPackage.isNotEmpty()) {
                         packageMappings[originalPackage] = fullPackageName
@@ -765,7 +765,7 @@ class ModuleMakerDialogWrapper(
                 val libraryDependenciesString = if (isMoveFiles.value && analyzeLibraries.value) {
                     libraryDependencyFinder.formatLibraryDependencies(detectedLibraries)
                 } else {
-                    ""
+                    Constants.EMPTY
                 }
 
                 val filesCreated = fileWriter.createModule(
