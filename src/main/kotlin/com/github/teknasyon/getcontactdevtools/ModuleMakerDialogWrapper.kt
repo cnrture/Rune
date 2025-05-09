@@ -312,6 +312,7 @@ class ModuleMakerDialogWrapper(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
                     ),
+                    softWrap = true,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))

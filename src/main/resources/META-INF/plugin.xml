@@ -6,11 +6,24 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Getcontact DevTools"
-                    anchor="right"
-                    icon="/icons/pluginIcon.svg"
-                    factoryClass="com.github.teknasyon.getcontactdevtools.GetcontactToolWindowFactory"/>
+        <toolWindow
+                factoryClass="com.github.teknasyon.getcontactdevtools.GetcontactToolWindowFactory"
+                id="Getcontact DevTools"
+                anchor="right"
+                icon="/icons/pluginIcon.svg"/>
     </extensions>
+
+    <actions>
+        <action id="Getcontact.NewFeature"
+                class="com.github.teknasyon.getcontactdevtools.action.CreateFeatureAction"
+                text="Getcontact Feature"
+                description="Create a new feature module"
+                icon="AllIcons.Nodes.Module">
+            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewDir"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="control shift G"/>
+        </action>
+    </actions>
 </idea-plugin>
