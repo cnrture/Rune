@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactdevtools
+package com.github.teknasyon.getcontactdevtools.dialog
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.getcontactdevtools.file.ImportAnalyzer
 import com.github.teknasyon.getcontactdevtools.common.Constants
 import com.github.teknasyon.getcontactdevtools.common.getCurrentlySelectedFile
 import com.github.teknasyon.getcontactdevtools.common.rootDirectoryString

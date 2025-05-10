@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactdevtools
+package com.github.teknasyon.getcontactdevtools.file
 
 import com.github.teknasyon.getcontactdevtools.common.Constants
 import java.io.File

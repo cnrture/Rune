@@ -1,6 +1,6 @@
 package com.github.teknasyon.getcontactdevtools.action
 
-import com.github.teknasyon.getcontactdevtools.FeatureMakerDialogWrapper
+import com.github.teknasyon.getcontactdevtools.dialog.FeatureMakerDialogWrapper
 import com.intellij.icons.AllIcons
 import com.intellij.ide.actions.CreateElementActionBase
 import com.intellij.openapi.actionSystem.AnActionEvent

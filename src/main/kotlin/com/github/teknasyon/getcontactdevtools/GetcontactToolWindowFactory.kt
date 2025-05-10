@@ -21,6 +21,9 @@ import com.github.teknasyon.getcontactdevtools.common.Constants
 import com.github.teknasyon.getcontactdevtools.components.ActionCard
 import com.github.teknasyon.getcontactdevtools.components.GetcontactText
 import com.github.teknasyon.getcontactdevtools.data.SettingsService
+import com.github.teknasyon.getcontactdevtools.dialog.FeatureMakerDialogWrapper
+import com.github.teknasyon.getcontactdevtools.dialog.ModuleMakerDialogWrapper
+import com.github.teknasyon.getcontactdevtools.dialog.SettingsDialogWrapper
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow

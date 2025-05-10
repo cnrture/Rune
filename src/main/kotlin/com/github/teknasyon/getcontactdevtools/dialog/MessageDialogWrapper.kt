@@ -1,4 +1,4 @@
-package com.github.teknasyon.getcontactdevtools
+package com.github.teknasyon.getcontactdevtools.dialog
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
