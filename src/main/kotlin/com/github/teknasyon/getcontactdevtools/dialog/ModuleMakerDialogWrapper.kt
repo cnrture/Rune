@@ -203,28 +203,51 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun loadExistingModules() {
-        try {
-            val settingsFile = getSettingsGradleFile()
-            if (settingsFile?.exists() == true) {
+        val settingsFile = getSettingsGradleFile()
+        if (settingsFile != null) {
+            try {
                 val content = settingsFile.readText()
 
-                // Simplified regex pattern for better performance
-                val includePattern = """include\s*\(\s*["']([^"']+)["']\s*\)|include\s+["']([^"']+)["']""".toRegex()
+                val patterns = listOf(
+                    """include\s*\(\s*["']([^"']+)["']\s*\)""".toRegex(),
+                    """include\s+['"]([^"']+)["']""".toRegex(),
+                    """include\s+['"]([^"']+)["'](?:\s*,\s*['"]([^"']+)["'])*""".toRegex(),
+                    """include\s+['"]([^"']+)["'](?:\s*,\s*\n\s*['"]([^"']+)["'])*""".toRegex()
+                )
+
                 val modulesSet = mutableSetOf<String>()
 
-                includePattern.findAll(content).forEach { match ->
-                    val moduleValue = match.groupValues[1].ifEmpty { match.groupValues[2] }
-                    if (moduleValue.isNotEmpty()) {
-                        modulesSet.add(moduleValue)
+                patterns.forEach { pattern ->
+                    val matches = pattern.findAll(content)
+                    matches.forEach { matchResult ->
+                        matchResult.groupValues.drop(1).forEach { moduleValue ->
+                            if (moduleValue.isNotEmpty()) {
+                                modulesSet.add(moduleValue)
+                            }
+                        }
+                    }
+                }
+
+                val multiLinePattern =
+                    """include\s*(?:'[^']*'|"[^"]*")\s*(?:,\s*\n\s*(?:'[^']*'|"[^"]*")\s*)*""".toRegex()
+                val multiLineMatches = multiLinePattern.findAll(content)
+
+                multiLineMatches.forEach { match ->
+                    val modulePattern = """['"]([^"']+)["']""".toRegex()
+                    val moduleMatches = modulePattern.findAll(match.value)
+                    moduleMatches.forEach { moduleMatch ->
+                        val moduleValue = moduleMatch.groupValues[1]
+                        if (moduleValue.isNotEmpty()) {
+                            modulesSet.add(moduleValue)
+                        }
                     }
                 }
 
                 existingModules = modulesSet.toList().sorted()
-            } else {
+            } catch (e: Exception) {
+                e.printStackTrace()
                 existingModules = emptyList()
             }
-        } catch (e: Exception) {
-            existingModules = emptyList()
         }
     }
 
