@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.text.TextStyle
@@ -17,17 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.github.teknasyon.getcontactdevtools.file.ImportAnalyzer
 import com.github.teknasyon.getcontactdevtools.common.Constants
 import com.github.teknasyon.getcontactdevtools.common.getCurrentlySelectedFile
 import com.github.teknasyon.getcontactdevtools.common.rootDirectoryString
 import com.github.teknasyon.getcontactdevtools.common.rootDirectoryStringDropLast
 import com.github.teknasyon.getcontactdevtools.components.*
 import com.github.teknasyon.getcontactdevtools.data.SettingsService
-import com.github.teknasyon.getcontactdevtools.file.FileTree
-import com.github.teknasyon.getcontactdevtools.file.FileWriter
-import com.github.teknasyon.getcontactdevtools.file.LibraryDependencyFinder
-import com.github.teknasyon.getcontactdevtools.file.toProjectFile
+import com.github.teknasyon.getcontactdevtools.file.*
 import com.github.teknasyon.getcontactdevtools.theme.GetcontactTheme
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
@@ -58,6 +56,12 @@ class ModuleMakerDialogWrapper(
     private var detectedModules = mutableStateListOf<String>()
     private var detectedLibraries = mutableStateListOf<String>()
 
+    // Library selection
+    private var availableLibraries = mutableStateListOf<String>()
+    private var selectedLibraries = mutableStateListOf<String>()
+    private var libraryGroups = mutableStateMapOf<String, List<String>>()
+    private var expandedGroups = mutableStateMapOf<String, Boolean>()
+
     private val isMoveFiles = mutableStateOf(false)
     private val analyzeLibraries = mutableStateOf(false)
 
@@ -71,6 +75,7 @@ class ModuleMakerDialogWrapper(
 
     init {
         loadExistingModules()
+        loadAvailableLibraries()
 
         selectedSrc.value = if (startingLocation != null) {
             File(startingLocation.path).absolutePath.removePrefix(project.rootDirectoryStringDropLast())
@@ -79,6 +84,62 @@ class ModuleMakerDialogWrapper(
             File(project.rootDirectoryString()).absolutePath.removePrefix(project.rootDirectoryStringDropLast())
                 .removePrefix(File.separator)
         }
+    }
+
+    private fun loadAvailableLibraries() {
+        thread {
+            try {
+                val projectRoot = File(project.basePath.orEmpty())
+                if (projectRoot.exists()) {
+                    val libraries = libraryDependencyFinder.parseLibsVersionsToml(projectRoot)
+                    val libraryAliases = libraries.map { it.alias }
+
+                    // Group libraries by prefix (like room-, retrofit-, etc.)
+                    val grouped = groupLibraries(libraryAliases)
+
+                    SwingUtilities.invokeLater {
+                        availableLibraries.clear()
+                        availableLibraries.addAll(libraryAliases)
+
+                        libraryGroups.clear()
+                        libraryGroups.putAll(grouped)
+
+                        expandedGroups.clear()
+                        grouped.keys.forEach { expandedGroups[it] = false }
+                    }
+                }
+            } catch (e: Exception) {
+                // Silently fail
+            }
+        }
+    }
+
+    private fun groupLibraries(libraries: List<String>): Map<String, List<String>> {
+        val grouped = mutableMapOf<String, MutableList<String>>()
+        val ungrouped = mutableListOf<String>()
+
+        libraries.forEach { library ->
+            val parts = library.split("-")
+            if (parts.size > 1) {
+                val prefix = parts[0]
+                // Only group if there are multiple libraries with the same prefix
+                val relatedLibs = libraries.filter { it.startsWith("$prefix-") }
+                if (relatedLibs.size > 1) {
+                    grouped.getOrPut(prefix) { mutableListOf() }.add(library)
+                } else {
+                    ungrouped.add(library)
+                }
+            } else {
+                ungrouped.add(library)
+            }
+        }
+
+        // Add ungrouped libraries as individual items
+        if (ungrouped.isNotEmpty()) {
+            grouped["Other"] = ungrouped.toMutableList()
+        }
+
+        return grouped.mapValues { it.value.sorted() }
     }
 
     private fun analyzeSelectedDirectory(directory: File) {
@@ -131,7 +192,6 @@ class ModuleMakerDialogWrapper(
                     SwingUtilities.invokeLater {
                         analysisResult.value = "Error analyzing directory: ${e.message}"
                         isAnalyzing.value = false
-                        e.printStackTrace()
                     }
                 }
             }
@@ -139,7 +199,6 @@ class ModuleMakerDialogWrapper(
         } catch (e: Exception) {
             analysisResult.value = "Error analyzing directory: ${e.message}"
             isAnalyzing.value = false
-            e.printStackTrace()
         }
     }
 
@@ -353,6 +412,26 @@ class ModuleMakerDialogWrapper(
                         } else {
                             selectedModules.add(module)
                         }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LibrarySelectionContent(
+                    availableLibraries = availableLibraries,
+                    selectedLibraries = selectedLibraries,
+                    onLibrarySelected = { library ->
+                        if (selectedLibraries.contains(library)) {
+                            selectedLibraries.remove(library)
+                        } else {
+                            selectedLibraries.add(library)
+                        }
+                    },
+                    libraryGroups = libraryGroups,
+                    expandedGroups = expandedGroups,
+                    onGroupExpandToggle = { groupName ->
+                        val currentState = expandedGroups[groupName] ?: false
+                        expandedGroups[groupName] = !currentState
                     }
                 )
             }
@@ -603,6 +682,99 @@ class ModuleMakerDialogWrapper(
         }
     }
 
+    @OptIn(ExperimentalLayoutApi::class)
+    @Composable
+    private fun LibrarySelectionContent(
+        availableLibraries: List<String>,
+        selectedLibraries: List<String>,
+        onLibrarySelected: (String) -> Unit,
+        libraryGroups: Map<String, List<String>>,
+        expandedGroups: Map<String, Boolean>,
+        onGroupExpandToggle: (String) -> Unit,
+    ) {
+        if (availableLibraries.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .border(
+                        width = 2.dp,
+                        color = GetcontactTheme.colors.white,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Library Dependencies",
+                    color = GetcontactTheme.colors.white,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(
+                    text = "Select libraries that your new module will depend on:",
+                    color = GetcontactTheme.colors.lightGray,
+                    fontSize = 14.sp,
+                )
+                Divider(
+                    color = GetcontactTheme.colors.lightGray,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    libraryGroups.forEach { (groupName, groupLibraries) ->
+                        val isExpanded = expandedGroups[groupName] ?: false
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onGroupExpandToggle(groupName) }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = groupName,
+                                color = GetcontactTheme.colors.orange,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                            )
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Icon(
+                                imageVector = Icons.Rounded.ExpandMore,
+                                contentDescription = null,
+                                tint = GetcontactTheme.colors.orange,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .rotate(if (isExpanded) 180f else 0f)
+                            )
+                        }
+                        if (isExpanded) {
+                            FlowRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                groupLibraries.forEach { library ->
+                                    val isChecked = library in selectedLibraries
+                                    GetcontactCheckbox(
+                                        checked = isChecked,
+                                        label = library,
+                                        isBackgroundEnable = true,
+                                        onCheckedChange = { onLibrarySelected(library) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun moveFilesToNewModule(sourceDir: File, targetModulePath: String, packageName: String) {
         if (!isMoveFiles.value) return
 
@@ -770,6 +942,13 @@ class ModuleMakerDialogWrapper(
                     Constants.EMPTY
                 }
 
+                val manualLibraryDependenciesString =
+                    libraryDependencyFinder.formatLibraryDependencies(selectedLibraries)
+
+                val combinedLibraryDependencies = listOf(libraryDependenciesString, manualLibraryDependenciesString)
+                    .filter { it.isNotEmpty() }
+                    .joinToString("\n")
+
                 val filesCreated = fileWriter.createModule(
                     packageName = finalPackageName,
                     settingsGradleFile = settingsGradleFile,
@@ -796,7 +975,7 @@ class ModuleMakerDialogWrapper(
                     },
                     workingDirectory = File(project.basePath.orEmpty()),
                     dependencies = selectedModules,
-                    libraryDependencies = libraryDependenciesString
+                    libraryDependencies = combinedLibraryDependencies
                 )
                 return filesCreated
             } else {
