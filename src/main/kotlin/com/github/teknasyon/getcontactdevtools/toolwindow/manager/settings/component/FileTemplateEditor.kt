@@ -1,0 +1,127 @@
+package com.github.teknasyon.getcontactdevtools.toolwindow.manager.settings.component
+
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.github.teknasyon.getcontactdevtools.components.GTCActionCard
+import com.github.teknasyon.getcontactdevtools.components.GTCActionCardType
+import com.github.teknasyon.getcontactdevtools.components.GTCText
+import com.github.teknasyon.getcontactdevtools.components.GTCTextField
+import com.github.teknasyon.getcontactdevtools.data.FileTemplate
+import com.github.teknasyon.getcontactdevtools.theme.GTCTheme
+
+@Composable
+fun FileTemplateEditor(
+    fileTemplate: FileTemplate,
+    isModuleEdit: Boolean = false,
+    isReview: Boolean = false,
+    onUpdate: (FileTemplate) -> Unit = {},
+    onDelete: () -> Unit = {},
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        backgroundColor = GTCTheme.colors.gray,
+        elevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (!isReview) {
+                        GTCTextField(
+                            placeholder = "ex. Repository.kt",
+                            color = GTCTheme.colors.white,
+                            value = fileTemplate.fileName,
+                            onValueChange = { onUpdate(fileTemplate.copy(fileName = it)) }
+                        )
+                    } else {
+                        GTCText(
+                            modifier = Modifier
+                                .border(
+                                    width = 1.dp,
+                                    color = GTCTheme.colors.white,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(12.dp),
+                            text = fileTemplate.fileName,
+                            color = GTCTheme.colors.white,
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        )
+                    }
+                }
+                if (isModuleEdit) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        GTCTextField(
+                            placeholder = "ex. domain.repository",
+                            color = GTCTheme.colors.white,
+                            value = fileTemplate.filePath,
+                            onValueChange = { onUpdate(fileTemplate.copy(filePath = it)) }
+                        )
+                    }
+                }
+            }
+            if (isReview) {
+                GTCText(
+                    modifier = Modifier
+                        .border(
+                            width = 1.dp,
+                            color = GTCTheme.colors.white,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(12.dp),
+                    text = fileTemplate.fileContent,
+                    color = GTCTheme.colors.white,
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily.Monospace,
+                    ),
+                )
+            } else {
+                GTCTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    placeholder = "package {FILE_PACKAGE}\n\ninterface {NAME}Repository {\n    // Define methods here\n}",
+                    color = GTCTheme.colors.white,
+                    textStyle = TextStyle(
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                    ),
+                    value = fileTemplate.fileContent,
+                    onValueChange = { onUpdate(fileTemplate.copy(fileContent = it)) },
+                    isSingleLine = false,
+                )
+                GTCActionCard(
+                    modifier = Modifier.align(Alignment.End),
+                    title = "Delete File Template",
+                    icon = Icons.Rounded.Delete,
+                    type = GTCActionCardType.SMALL,
+                    actionColor = GTCTheme.colors.blue,
+                    onClick = onDelete
+                )
+            }
+        }
+    }
+}
