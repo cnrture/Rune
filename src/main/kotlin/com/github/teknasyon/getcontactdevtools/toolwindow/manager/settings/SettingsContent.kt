@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.PopupProperties
-import com.github.teknasyon.getcontactdevtools.common.Constants
 import com.github.teknasyon.getcontactdevtools.common.Utils
 import com.github.teknasyon.getcontactdevtools.components.*
 import com.github.teknasyon.getcontactdevtools.data.FeatureTemplate
@@ -34,9 +33,7 @@ import java.util.*
 fun SettingsContent(project: Project) {
     val settings = SettingsService.getInstance()
     var currentSettings by mutableStateOf(settings.state.copy())
-    var selectedTab by mutableStateOf("general")
-    var selectedModuleType by mutableStateOf(currentSettings.preferredModuleType)
-    var packageName by mutableStateOf(currentSettings.defaultPackageName)
+    var selectedTab by mutableStateOf("templates")
 
     var refreshTrigger by remember { mutableStateOf(0) }
     val moduleTemplates by remember(refreshTrigger) {
@@ -78,12 +75,6 @@ fun SettingsContent(project: Project) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 GTCTabRow(
-                    text = "General",
-                    isSelected = selectedTab == "general",
-                    color = GTCTheme.colors.lightGray,
-                    onTabSelected = { selectedTab = "general" }
-                )
-                GTCTabRow(
                     text = "Module",
                     isSelected = selectedTab == "templates",
                     color = GTCTheme.colors.lightGray,
@@ -106,27 +97,6 @@ fun SettingsContent(project: Project) {
                     .verticalScroll(rememberScrollState())
             ) {
                 when (selectedTab) {
-                    "general" -> {
-                        GeneralSettingsTab(
-                            defaultPackageName = packageName,
-                            preferredModuleType = selectedModuleType,
-                            onSaveClick = {
-                                currentSettings = currentSettings.copy(
-                                    defaultPackageName = packageName,
-                                    preferredModuleType = selectedModuleType
-                                )
-                                settings.loadState(currentSettings)
-                                triggerRefresh()
-                                Utils.showInfo(
-                                    title = "GTC DevTools",
-                                    message = "Settings saved successfully!",
-                                )
-                            },
-                            onPackageNameChange = { packageName = it },
-                            onModuleTypeChange = { selectedModuleType = it }
-                        )
-                    }
-
                     "templates" -> {
                         ModuleTemplatesTab(
                             project = project,
@@ -488,101 +458,6 @@ private fun ModuleTemplateCard(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun GeneralSettingsTab(
-    defaultPackageName: String,
-    preferredModuleType: String,
-    onSaveClick: () -> Unit,
-    onPackageNameChange: (String) -> Unit,
-    onModuleTypeChange: (String) -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        SettingItem("Default Package Name") {
-            GTCTextField(
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = "com.example",
-                color = GTCTheme.colors.lightGray,
-                value = defaultPackageName,
-                onValueChange = onPackageNameChange,
-            )
-        }
-        SettingItem("Preferred Module Type") {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                GTCRadioButton(
-                    text = Constants.ANDROID,
-                    selected = preferredModuleType == Constants.ANDROID,
-                    color = GTCTheme.colors.lightGray,
-                    onClick = { onModuleTypeChange(Constants.ANDROID) },
-                )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                GTCRadioButton(
-                    text = Constants.KOTLIN,
-                    selected = preferredModuleType == Constants.KOTLIN,
-                    color = GTCTheme.colors.lightGray,
-                    onClick = { onModuleTypeChange(Constants.KOTLIN) },
-                )
-            }
-        }
-        GTCActionCard(
-            modifier = Modifier.align(Alignment.End),
-            title = "Save",
-            icon = Icons.Rounded.Save,
-            actionColor = GTCTheme.colors.lightGray,
-            type = GTCActionCardType.MEDIUM,
-            onClick = onSaveClick,
-        )
-    }
-}
-
-@Composable
-private fun SettingItem(
-    label: String,
-    description: String? = null,
-    content: @Composable () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                color = GTCTheme.colors.gray,
-                shape = RoundedCornerShape(8.dp)
-            )
-            .padding(16.dp),
-    ) {
-        GTCText(
-            text = label,
-            color = GTCTheme.colors.white,
-            style = TextStyle(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-        )
-
-        description?.let {
-            Spacer(modifier = Modifier.size(8.dp))
-            GTCText(
-                text = it,
-                color = GTCTheme.colors.lightGray,
-                style = TextStyle(
-                    fontSize = 14.sp,
-                )
-            )
-        }
-
-        Spacer(modifier = Modifier.size(8.dp))
-
-        content()
     }
 }
 

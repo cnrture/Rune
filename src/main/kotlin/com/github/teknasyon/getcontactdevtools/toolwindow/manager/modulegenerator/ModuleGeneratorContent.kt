@@ -44,8 +44,8 @@ fun ModuleGeneratorContent(project: Project) {
     val availableTemplates = remember { settings.getModuleTemplates() }
 
     val selectedSrc = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
-    val moduleType = mutableStateOf(settings.state.preferredModuleType)
-    val packageName = mutableStateOf(settings.state.defaultPackageName)
+    val moduleType = mutableStateOf(Constants.ANDROID)
+    val packageName = mutableStateOf("app.source.getcontact")
     val moduleName = mutableStateOf(Constants.EMPTY)
     val name = mutableStateOf(Constants.EMPTY)
 
@@ -79,9 +79,9 @@ fun ModuleGeneratorContent(project: Project) {
     Utils.loadAvailablePlugins(
         project = project,
         libraryDependencyFinder = libraryDependencyFinder,
-        onAvailablePluginsLoaded = {
+        onAvailablePluginsLoaded = { plugins ->
             availablePlugins.clear()
-            availablePlugins.addAll(it.map { PluginListItem(it) })
+            availablePlugins.addAll(plugins.map { PluginListItem(it) })
         },
     )
 

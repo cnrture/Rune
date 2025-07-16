@@ -27,7 +27,6 @@ import com.github.teknasyon.getcontactdevtools.components.GTCActionCardType
 import com.github.teknasyon.getcontactdevtools.components.GTCDialogWrapper
 import com.github.teknasyon.getcontactdevtools.components.GTCText
 import com.github.teknasyon.getcontactdevtools.data.PluginListItem
-import com.github.teknasyon.getcontactdevtools.service.SettingsService
 import com.github.teknasyon.getcontactdevtools.theme.GTCTheme
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.modulegenerator.components.*
 import com.intellij.notification.NotificationType
@@ -42,7 +41,6 @@ class ModuleGeneratorDialog(
     width = 800,
     height = 700,
 ) {
-    private val settings = SettingsService.getInstance()
     private val libraryDependencyFinder = LibraryDependencyFinder()
     private val fileWriter = FileWriter()
     private var selectedSrc = mutableStateOf(Constants.DEFAULT_SRC_VALUE)
@@ -74,8 +72,8 @@ class ModuleGeneratorDialog(
 
         val availablePlugins = mutableStateListOf<PluginListItem>()
 
-        val moduleType = mutableStateOf(settings.state.preferredModuleType)
-        val packageName = mutableStateOf(settings.state.defaultPackageName)
+        val moduleType = mutableStateOf(Constants.ANDROID)
+        val packageName = mutableStateOf("app.source.getcontact")
         val moduleName = mutableStateOf(Constants.EMPTY)
         val name = mutableStateOf(Constants.EMPTY)
 

@@ -9,8 +9,6 @@ data class SettingsState(
     var featureTemplates: MutableList<FeatureTemplate> = mutableListOf(),
     var defaultModuleTemplateId: String = "candroid_template",
     var defaultFeatureTemplateId: String = "candroid_template",
-    var defaultPackageName: String = Constants.DEFAULT_BASE_PACKAGE_NAME,
-    var preferredModuleType: String = Constants.ANDROID,
     var featureScreenTemplate: String = Constants.EMPTY,
     var featureViewModelTemplate: String = Constants.EMPTY,
     var featureContractTemplate: String = Constants.EMPTY,
