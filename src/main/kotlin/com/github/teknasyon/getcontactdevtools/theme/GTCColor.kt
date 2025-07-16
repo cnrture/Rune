@@ -12,7 +12,7 @@ fun lightColors(
     gray: Color = Color(0xff18181b),
     lightGray: Color = Color(0xffa1a1aa),
     blue: Color = Color(0xff006fee),
-    purple: Color = Color(0xff7829c8),
+    purple: Color = Color(0xff7828C8),
     orange: Color = Color(0xfff5a524),
     hintGray: Color = Color(0xFF565656),
 ): GTCColor = GTCColor(

@@ -33,6 +33,7 @@ import com.github.teknasyon.getcontactdevtools.toolwindow.manager.apitester.ApiT
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.colorpicker.ColorPickerContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.featuregenerator.FeatureGeneratorContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.formatter.FormatterContent
+import com.github.teknasyon.getcontactdevtools.toolwindow.manager.jungle.JungleContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.modulegenerator.ModuleGeneratorContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.settings.SettingsContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.settings.dialog.ExportSettingsContent
@@ -184,6 +185,15 @@ class GTCToolWindowFactory : ToolWindowFactory {
                         )
 
                         SidebarButton(
+                            title = "Jungle",
+                            icon = Icons.Rounded.Language,
+                            isSelected = selectedSection == "jungle",
+                            color = GTCTheme.colors.blue,
+                            isExpanded = isExpanded,
+                            onClick = { selectedSection = "jungle" }
+                        )
+
+                        SidebarButton(
                             title = "Picker",
                             icon = Icons.Rounded.ColorLens,
                             isSelected = selectedSection == "color",
@@ -260,6 +270,7 @@ class GTCToolWindowFactory : ToolWindowFactory {
                     "color" -> ColorPickerContent()
                     "api" -> ApiTesterContent()
                     "settings" -> SettingsContent(project)
+                    "jungle" -> JungleContent()
                 }
             }
         }
