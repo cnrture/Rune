@@ -1,10 +1,12 @@
 package com.github.teknasyon.getcontactdevtools.toolwindow.manager.jungle
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,6 +16,9 @@ import androidx.compose.ui.unit.sp
 import com.github.teknasyon.getcontactdevtools.theme.GTCTheme
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
+import org.cef.browser.CefBrowser
+import org.cef.browser.CefFrame
+import org.cef.handler.CefLifeSpanHandlerAdapter
 
 @Composable
 fun JungleContent() {
@@ -24,9 +29,22 @@ fun JungleContent() {
         LaunchedEffect(Unit) {
             try {
                 if (JBCefApp.isSupported()) {
-                    val browser = JBCefBrowser()
-                    browser.loadURL("https://gtc-zoo.test.mobylonia.com/")
-                    browserComponent = browser
+                    JBCefBrowser().apply {
+                        jbCefClient.cefClient.addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
+                            override fun onBeforePopup(
+                                browser: CefBrowser,
+                                frame: CefFrame,
+                                targetUrl: String,
+                                targetFrameName: String,
+                            ): Boolean {
+                                browser.loadURL(targetUrl)
+                                return true
+                            }
+                        })
+
+                        loadURL("https://gtc-zoo.test.mobylonia.com/")
+                        browserComponent = this
+                    }
                 } else {
                     errorMessage = "JCEF browser is not supported on this platform"
                 }
@@ -37,10 +55,38 @@ fun JungleContent() {
 
         when {
             browserComponent != null -> {
-                SwingPanel(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = { browserComponent!!.component }
-                )
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(GTCTheme.colors.gray)
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = {
+                                browserComponent?.cefBrowser?.goBack()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                contentDescription = "Back",
+                                tint = GTCTheme.colors.white
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Back",
+                            color = GTCTheme.colors.white,
+                            fontSize = 16.sp,
+                        )
+                    }
+
+                    SwingPanel(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { browserComponent!!.component }
+                    )
+                }
             }
 
             errorMessage != null -> {
