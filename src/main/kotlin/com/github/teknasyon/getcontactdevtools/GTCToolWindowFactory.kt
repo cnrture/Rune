@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Article
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,6 +36,7 @@ import com.github.teknasyon.getcontactdevtools.toolwindow.manager.featuregenerat
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.formatter.FormatterContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.jungle.JungleContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.modulegenerator.ModuleGeneratorContent
+import com.github.teknasyon.getcontactdevtools.toolwindow.manager.newsletter.NewsletterContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.settings.SettingsContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.settings.dialog.ExportSettingsContent
 import com.intellij.notification.NotificationType
@@ -185,6 +187,15 @@ class GTCToolWindowFactory : ToolWindowFactory {
                         )
 
                         SidebarButton(
+                            title = "News",
+                            icon = Icons.AutoMirrored.Rounded.Article,
+                            isSelected = selectedSection == "news",
+                            color = GTCTheme.colors.purple,
+                            isExpanded = isExpanded,
+                            onClick = { selectedSection = "news" }
+                        )
+
+                        SidebarButton(
                             title = "Jungle",
                             icon = Icons.Rounded.Language,
                             isSelected = selectedSection == "jungle",
@@ -271,6 +282,7 @@ class GTCToolWindowFactory : ToolWindowFactory {
                     "api" -> ApiTesterContent()
                     "settings" -> SettingsContent(project)
                     "jungle" -> JungleContent()
+                    "news" -> NewsletterContent()
                 }
             }
         }
