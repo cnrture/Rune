@@ -11,6 +11,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="GTC Notification Group"
                            displayType="BALLOON"/>
+        <postStartupActivity
+                implementation="com.github.teknasyon.getcontactdevtools.startup.NewsletterStartupActivity"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
