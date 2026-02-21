@@ -28,6 +28,7 @@ fun SkillDockPanel(
     val state by viewModel.state.collectAsState()
     val tab = state.currentTab
     val tracker = state.reviewTracker
+    val isCommandsTab = state.activeTab == SkillDockTab.COMMANDS
 
     if (tracker.isDialogVisible) {
         ReviewTrackerDialog(
@@ -55,7 +56,7 @@ fun SkillDockPanel(
             title = {
                 SearchBar(
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    query = tab.searchQuery,
+                    query = if (isCommandsTab) state.commandsSearchQuery else tab.searchQuery,
                     onQueryChange = { viewModel.onEvent(SkillDockEvent.SearchQueryChanged(it)) },
                 )
             },
@@ -67,19 +68,21 @@ fun SkillDockPanel(
                         tint = TPTheme.colors.white,
                     )
                 }
-                IconButton(onClick = { viewModel.onEvent(SkillDockEvent.ToggleFavoritesFilter) }) {
-                    Icon(
-                        imageVector = if (tab.showOnlyFavorites) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                        contentDescription = "Toggle Favorites",
-                        tint = if (tab.showOnlyFavorites) Color(0xFFFFD700) else TPTheme.colors.white,
-                    )
-                }
-                IconButton(onClick = { viewModel.onEvent(SkillDockEvent.RefreshSkills) }) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Refresh",
-                        tint = TPTheme.colors.white,
-                    )
+                if (!isCommandsTab) {
+                    IconButton(onClick = { viewModel.onEvent(SkillDockEvent.ToggleFavoritesFilter) }) {
+                        Icon(
+                            imageVector = if (tab.showOnlyFavorites) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                            contentDescription = "Toggle Favorites",
+                            tint = if (tab.showOnlyFavorites) Color(0xFFFFD700) else TPTheme.colors.white,
+                        )
+                    }
+                    IconButton(onClick = { viewModel.onEvent(SkillDockEvent.RefreshSkills) }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = TPTheme.colors.white,
+                        )
+                    }
                 }
             },
             elevation = 4.dp,
@@ -101,34 +104,46 @@ fun SkillDockPanel(
                 onClick = { viewModel.onEvent(SkillDockEvent.TabChanged(SkillDockTab.AGENTS)) },
                 text = { Text("Agents") }
             )
+            Tab(
+                selected = state.activeTab == SkillDockTab.COMMANDS,
+                onClick = { viewModel.onEvent(SkillDockEvent.TabChanged(SkillDockTab.COMMANDS)) },
+                text = { Text("Commands") }
+            )
         }
 
         Box(modifier = Modifier.weight(1f)) {
-            when {
-                tab.isLoading -> LoadingView()
-                tab.error != null -> ErrorView(
-                    message = tab.error,
-                    onRetry = { viewModel.onEvent(SkillDockEvent.RefreshSkills) },
-                    onOpenSettings = { onShowSettingsClick() }
+            if (isCommandsTab) {
+                CommandsTabView(
+                    searchQuery = state.commandsSearchQuery,
+                    onRunCommand = { command -> viewModel.onEvent(SkillDockEvent.RunCommand(command)) },
                 )
+            } else {
+                when {
+                    tab.isLoading -> LoadingView()
+                    tab.error != null -> ErrorView(
+                        message = tab.error,
+                        onRetry = { viewModel.onEvent(SkillDockEvent.RefreshSkills) },
+                        onOpenSettings = { onShowSettingsClick() }
+                    )
 
-                tab.items.isEmpty() -> EmptyView(onOpenSettings = { onShowSettingsClick() })
-                else -> SkillList(
-                    skills = tab.items,
-                    showRunButton = state.activeTab == SkillDockTab.AGENTS,
-                    onExecuteSkill = { skill, input ->
-                        viewModel.onEvent(SkillDockEvent.ExecuteSkill(skill, input))
-                    },
-                    onToggleFavorite = { skill ->
-                        viewModel.onEvent(SkillDockEvent.ToggleFavorite(skill))
-                    },
-                    onOpenFile = { skill ->
-                        val virtualFile = LocalFileSystem.getInstance().findFileByPath(skill.filePath)
-                        if (virtualFile != null) {
-                            FileEditorManager.getInstance(project).openFile(virtualFile, true)
+                    tab.items.isEmpty() -> EmptyView(onOpenSettings = { onShowSettingsClick() })
+                    else -> SkillList(
+                        skills = tab.items,
+                        showRunButton = state.activeTab == SkillDockTab.AGENTS,
+                        onExecuteSkill = { skill, input ->
+                            viewModel.onEvent(SkillDockEvent.ExecuteSkill(skill, input))
+                        },
+                        onToggleFavorite = { skill ->
+                            viewModel.onEvent(SkillDockEvent.ToggleFavorite(skill))
+                        },
+                        onOpenFile = { skill ->
+                            val virtualFile = LocalFileSystem.getInstance().findFileByPath(skill.filePath)
+                            if (virtualFile != null) {
+                                FileEditorManager.getInstance(project).openFile(virtualFile, true)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

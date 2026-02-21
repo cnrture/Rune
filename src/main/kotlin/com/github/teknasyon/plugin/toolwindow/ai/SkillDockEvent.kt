@@ -14,4 +14,5 @@ sealed interface SkillDockEvent {
     data object OpenReviewTracker : SkillDockEvent
     data class StartReviewTracking(val prUrl: String) : SkillDockEvent
     data object CloseReviewTracker : SkillDockEvent
+    data class RunCommand(val command: String) : SkillDockEvent
 }

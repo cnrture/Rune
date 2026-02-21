@@ -378,6 +378,7 @@ class TPToolWindowFactory : ToolWindowFactory {
             executeSkillUseCase = executeSkillUseCase,
             toggleFavoriteUseCase = toggleFavoriteUseCase,
             processReviewCommentsUseCase = processReviewCommentsUseCase,
+            terminalExecutor = terminalExecutor,
         )
     }
 }

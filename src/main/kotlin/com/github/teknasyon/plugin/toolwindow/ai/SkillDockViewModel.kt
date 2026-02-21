@@ -1,6 +1,7 @@
 package com.github.teknasyon.plugin.toolwindow.ai
 
 import com.github.teknasyon.plugin.service.SkillDockSettingsService
+import com.github.teknasyon.plugin.service.TerminalExecutor
 import com.github.teknasyon.plugin.domain.model.Skill
 import com.github.teknasyon.plugin.domain.usecase.ExecuteSkillUseCase
 import com.github.teknasyon.plugin.domain.usecase.ProcessReviewCommentsUseCase
@@ -20,6 +21,7 @@ class SkillDockViewModel(
     private val executeSkillUseCase: ExecuteSkillUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val processReviewCommentsUseCase: ProcessReviewCommentsUseCase,
+    private val terminalExecutor: TerminalExecutor,
 ) {
     private val _state = MutableStateFlow(
         SkillDockState(
@@ -51,6 +53,7 @@ class SkillDockViewModel(
             is SkillDockEvent.CloseReviewTracker -> _state.update {
                 it.copy(reviewTracker = ReviewTrackerState())
             }
+            is SkillDockEvent.RunCommand -> terminalExecutor.executeCommand(project, "claude ${event.command}")
         }
     }
 
@@ -136,6 +139,7 @@ class SkillDockViewModel(
     }
 
     private fun loadTab(tab: SkillDockTab) {
+        if (tab == SkillDockTab.COMMANDS) return
         val rootPath = if (tab == SkillDockTab.SKILLS) settingsService.getSkillsRootPath()
         else settingsService.getAgentsRootPath()
 
@@ -186,11 +190,15 @@ class SkillDockViewModel(
 
     private fun updateSearchQuery(query: String) {
         _state.update { state ->
-            state.updateCurrentTab {
-                copy(
-                    searchQuery = query,
-                    items = applyFilters(allFolders.flatMap { it.getAllSkills() }, query, showOnlyFavorites)
-                )
+            if (state.activeTab == SkillDockTab.COMMANDS) {
+                state.copy(commandsSearchQuery = query)
+            } else {
+                state.updateCurrentTab {
+                    copy(
+                        searchQuery = query,
+                        items = applyFilters(allFolders.flatMap { it.getAllSkills() }, query, showOnlyFavorites)
+                    )
+                }
             }
         }
     }
