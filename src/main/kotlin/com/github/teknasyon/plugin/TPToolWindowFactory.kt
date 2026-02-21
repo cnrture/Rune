@@ -3,6 +3,7 @@ package com.github.teknasyon.plugin
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
@@ -31,10 +32,8 @@ import com.github.teknasyon.plugin.service.SettingsService
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.github.teknasyon.plugin.toolwindow.manager.ai.AiContent
 import com.github.teknasyon.plugin.toolwindow.manager.featuregenerator.FeatureGeneratorContent
-import com.github.teknasyon.plugin.toolwindow.manager.formatter.FormatterContent
 import com.github.teknasyon.plugin.toolwindow.manager.jungle.JungleContent
 import com.github.teknasyon.plugin.toolwindow.manager.modulegenerator.ModuleGeneratorContent
-import com.github.teknasyon.plugin.toolwindow.manager.newsletter.NewsletterContent
 import com.github.teknasyon.plugin.toolwindow.manager.settings.SettingsContent
 import com.github.teknasyon.plugin.toolwindow.manager.settings.dialog.ExportSettingsContent
 import com.intellij.notification.NotificationType
@@ -105,7 +104,7 @@ class TPToolWindowFactory : ToolWindowFactory {
 
     @Composable
     private fun MainContent(project: Project) {
-        var selectedSection by remember { mutableStateOf("module") }
+        var selectedSection by remember { mutableStateOf("ai") }
         var isExpanded by remember { mutableStateOf(settings.state.isActionsExpanded) }
         var isExportDialogVisible by remember { mutableStateOf(false) }
 
@@ -116,7 +115,7 @@ class TPToolWindowFactory : ToolWindowFactory {
         ) {
             Card(
                 modifier = Modifier
-                    .width(if (isExpanded) 180.dp else 60.dp)
+                    .width(if (isExpanded) 124.dp else 60.dp)
                     .fillMaxHeight(),
                 backgroundColor = TPTheme.colors.gray,
                 elevation = 8.dp,
@@ -124,7 +123,7 @@ class TPToolWindowFactory : ToolWindowFactory {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(if (isExpanded) 16.dp else 8.dp),
+                        .padding(8.dp),
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -171,6 +170,24 @@ class TPToolWindowFactory : ToolWindowFactory {
                         }
 
                         SidebarButton(
+                            title = "AI Tools",
+                            icon = Icons.Rounded.Memory,
+                            isSelected = selectedSection == "ai",
+                            color = TPTheme.colors.blue,
+                            isExpanded = isExpanded,
+                            onClick = { selectedSection = "ai" }
+                        )
+
+                        SidebarButton(
+                            title = "Jungle",
+                            icon = Icons.Rounded.Language,
+                            isSelected = selectedSection == "jungle",
+                            color = TPTheme.colors.blue,
+                            isExpanded = isExpanded,
+                            onClick = { selectedSection = "jungle" }
+                        )
+
+                        SidebarButton(
                             title = "Module",
                             icon = Icons.Rounded.ViewModule,
                             isSelected = selectedSection == "module",
@@ -186,24 +203,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                             color = TPTheme.colors.blue,
                             isExpanded = isExpanded,
                             onClick = { selectedSection = "feature" }
-                        )
-
-                        SidebarButton(
-                            title = "Jungle",
-                            icon = Icons.Rounded.Language,
-                            isSelected = selectedSection == "jungle",
-                            color = TPTheme.colors.blue,
-                            isExpanded = isExpanded,
-                            onClick = { selectedSection = "jungle" }
-                        )
-
-                        SidebarButton(
-                            title = "AI Tools",
-                            icon = Icons.Rounded.Memory,
-                            isSelected = selectedSection == "ai",
-                            color = TPTheme.colors.blue,
-                            isExpanded = isExpanded,
-                            onClick = { selectedSection = "ai" }
                         )
 
                         SidebarButton(
@@ -290,36 +289,34 @@ class TPToolWindowFactory : ToolWindowFactory {
         isExpanded: Boolean,
         onClick: () -> Unit,
     ) {
-        Card(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onClick() },
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-            backgroundColor = if (isSelected) color.copy(alpha = 0.2f) else TPTheme.colors.black,
-            elevation = 0.dp
-        ) {
-            Row(
-                modifier = Modifier.padding(if (isExpanded) 8.dp else 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = if (isSelected) color else TPTheme.colors.lightGray,
-                    modifier = Modifier.size(20.dp)
+                .background(
+                    color = if (isSelected) color.copy(alpha = 0.2f) else TPTheme.colors.black,
+                    shape = RoundedCornerShape(12.dp)
                 )
-                if (isExpanded) {
-                    TPText(
-                        modifier = Modifier.padding(8.dp),
-                        text = title,
-                        color = if (isSelected) TPTheme.colors.white else TPTheme.colors.lightGray,
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                        )
+                .clickable { onClick() }
+                .padding(horizontal = 6.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isSelected) color else TPTheme.colors.lightGray,
+                modifier = Modifier.size(18.dp)
+            )
+            if (isExpanded) {
+                Spacer(modifier = Modifier.width(4.dp))
+                TPText(
+                    text = title,
+                    color = if (isSelected) TPTheme.colors.white else TPTheme.colors.lightGray.copy(alpha = 0.4f),
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                     )
-                }
+                )
             }
         }
     }
