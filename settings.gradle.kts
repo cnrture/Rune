@@ -1,4 +1,4 @@
-rootProject.name = "Teknasyon-Android-Studio-Plugin"
+rootProject.name = "Teknasyon-AndroidStudio-Plugin"
 
 pluginManagement {
     plugins {
