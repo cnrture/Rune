@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Article
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +29,7 @@ import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.data.SettingsState
 import com.github.teknasyon.plugin.service.SettingsService
 import com.github.teknasyon.plugin.theme.TPTheme
+import com.github.teknasyon.plugin.toolwindow.manager.ai.AiContent
 import com.github.teknasyon.plugin.toolwindow.manager.featuregenerator.FeatureGeneratorContent
 import com.github.teknasyon.plugin.toolwindow.manager.formatter.FormatterContent
 import com.github.teknasyon.plugin.toolwindow.manager.jungle.JungleContent
@@ -54,6 +54,10 @@ class TPToolWindowFactory : ToolWindowFactory {
     private val settings = SettingsService.getInstance()
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+        if (System.getProperty("skiko.renderApi") == null) {
+            System.setProperty("skiko.renderApi", "SOFTWARE")
+        }
+
         toolWindow.contentManager.addContent(
             ContentFactory.getInstance().createContent(
                 createToolWindowComponent(project),
@@ -77,9 +81,9 @@ class TPToolWindowFactory : ToolWindowFactory {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(24.dp),
-                            text = "TP DevTools",
+                            text = "Teknasyon DevTools",
                             style = TextStyle(
-                                fontSize = 30.sp,
+                                fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
@@ -185,15 +189,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                         )
 
                         SidebarButton(
-                            title = "News",
-                            icon = Icons.AutoMirrored.Rounded.Article,
-                            isSelected = selectedSection == "news",
-                            color = TPTheme.colors.purple,
-                            isExpanded = isExpanded,
-                            onClick = { selectedSection = "news" }
-                        )
-
-                        SidebarButton(
                             title = "Jungle",
                             icon = Icons.Rounded.Language,
                             isSelected = selectedSection == "jungle",
@@ -203,30 +198,12 @@ class TPToolWindowFactory : ToolWindowFactory {
                         )
 
                         SidebarButton(
-                            title = "Picker",
-                            icon = Icons.Rounded.ColorLens,
-                            isSelected = selectedSection == "color",
-                            color = TPTheme.colors.purple,
-                            isExpanded = isExpanded,
-                            onClick = { selectedSection = "color" }
-                        )
-
-                        SidebarButton(
-                            title = "Formatter",
-                            icon = Icons.Rounded.FormatAlignCenter,
-                            isSelected = selectedSection == "formatter",
+                            title = "AI Tools",
+                            icon = Icons.Rounded.Memory,
+                            isSelected = selectedSection == "ai",
                             color = TPTheme.colors.blue,
                             isExpanded = isExpanded,
-                            onClick = { selectedSection = "formatter" }
-                        )
-
-                        SidebarButton(
-                            title = "API Test",
-                            icon = Icons.Rounded.Api,
-                            isSelected = selectedSection == "api",
-                            color = TPTheme.colors.blue,
-                            isExpanded = isExpanded,
-                            onClick = { selectedSection = "api" }
+                            onClick = { selectedSection = "ai" }
                         )
 
                         SidebarButton(
@@ -275,10 +252,9 @@ class TPToolWindowFactory : ToolWindowFactory {
                 when (selectedSection) {
                     "module" -> ModuleGeneratorContent(project)
                     "feature" -> FeatureGeneratorContent(project)
-                    "formatter" -> FormatterContent()
                     "settings" -> SettingsContent(project)
                     "jungle" -> JungleContent()
-                    "news" -> NewsletterContent()
+                    "ai" -> AiContent(project)
                 }
             }
         }

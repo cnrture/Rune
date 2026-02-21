@@ -107,7 +107,7 @@ fun SettingsContent(project: Project) {
                                     settings.removeTemplate(template)
                                     triggerRefresh()
                                     Utils.showInfo(
-                                        title = "TP DevTools",
+                                        title = "Teknasyon DevTools",
                                         message = "Template '${template.name}' deleted successfully!",
                                     )
                                 }
@@ -117,7 +117,7 @@ fun SettingsContent(project: Project) {
                                 settings.setDefaultModuleTemplate(template.id)
                                 triggerRefresh()
                                 Utils.showInfo(
-                                    title = "TP DevTools",
+                                    title = "Teknasyon DevTools",
                                     message = "Default template set to '${template.name}' successfully!",
                                 )
                             },
@@ -132,7 +132,7 @@ fun SettingsContent(project: Project) {
                                         triggerRefresh()
                                     }
                                     Utils.showInfo(
-                                        title = "TP DevTools",
+                                        title = "Teknasyon DevTools",
                                         message = message,
                                     )
                                 }
@@ -150,7 +150,7 @@ fun SettingsContent(project: Project) {
                                     settings.removeFeatureTemplate(template)
                                     triggerRefresh()
                                     Utils.showInfo(
-                                        title = "TP DevTools",
+                                        title = "Teknasyon DevTools",
                                         message = "Feature template '${template.name}' deleted successfully!",
                                     )
                                 }
@@ -160,7 +160,7 @@ fun SettingsContent(project: Project) {
                                 settings.setDefaultFeatureTemplate(template.id)
                                 triggerRefresh()
                                 Utils.showInfo(
-                                    title = "TP DevTools",
+                                    title = "Teknasyon DevTools",
                                     message = "Default template set to '${template.name}' successfully!",
                                 )
                             },
@@ -176,7 +176,7 @@ fun SettingsContent(project: Project) {
                                         triggerRefresh()
                                     }
                                     Utils.showInfo(
-                                        title = "TP DevTools",
+                                        title = "Teknasyon DevTools",
                                         message = message,
                                     )
                                 }
@@ -250,7 +250,7 @@ private fun ModuleTemplatesTab(
                 onSetDefault = { onSetDefault(template) },
                 onExport = {
                     Utils.exportModuleTemplate(project, template) { success, message ->
-                        Utils.showInfo("TP DevTools", message)
+                        Utils.showInfo("Teknasyon DevTools", message)
                     }
                 },
                 onReview = { isReviewDialogVisible = Pair(true, template) },
@@ -263,7 +263,7 @@ private fun ModuleTemplatesTab(
                     settings.addModuleTemplate(duplicatedTemplate)
                     onRefreshTriggered()
                     Utils.showInfo(
-                        title = "TP DevTools",
+                        title = "Teknasyon DevTools",
                         message = "Template duplicated as '${duplicatedTemplate.name}' successfully!",
                     )
                 }
@@ -291,7 +291,7 @@ private fun ModuleTemplatesTab(
                     onOkayClick = { updatedTemplate ->
                         settings.saveTemplate(updatedTemplate)
                         Utils.showInfo(
-                            title = "TP DevTools",
+                            title = "Teknasyon DevTools",
                             message = "Module template '${updatedTemplate.name}' updated successfully!",
                         )
                         onRefreshTriggered()
@@ -321,7 +321,7 @@ private fun ModuleTemplatesTab(
                     onOkayClick = { template ->
                         settings.saveTemplate(template)
                         Utils.showInfo(
-                            title = "TP DevTools",
+                            title = "Teknasyon DevTools",
                             message = "Module template '${template.name}' added successfully!",
                         )
                         onRefreshTriggered()
@@ -522,7 +522,7 @@ private fun FeatureTemplatesTab(
                 onSetDefault = { onSetDefault(template) },
                 onExport = {
                     Utils.exportFeatureTemplate(project, template) { success, message ->
-                        Utils.showInfo("TP DevTools", message)
+                        Utils.showInfo("Teknasyon DevTools", message)
                     }
                 },
                 onReview = { isReviewDialogVisible = Pair(true, template) },
@@ -535,7 +535,7 @@ private fun FeatureTemplatesTab(
                     settings.addFeatureTemplate(duplicatedTemplate)
                     onRefreshTriggered()
                     Utils.showInfo(
-                        title = "TP DevTools",
+                        title = "Teknasyon DevTools",
                         message = "Template duplicated as '${duplicatedTemplate.name}' successfully!",
                     )
                 }
@@ -563,7 +563,7 @@ private fun FeatureTemplatesTab(
                     onOkayClick = { updatedTemplate ->
                         settings.saveFeatureTemplate(updatedTemplate)
                         Utils.showInfo(
-                            title = "TP DevTools",
+                            title = "Teknasyon DevTools",
                             message = "Feature template '${updatedTemplate.name}' updated successfully!",
                         )
                         onRefreshTriggered()
@@ -593,7 +593,7 @@ private fun FeatureTemplatesTab(
                     onOkayClick = { template ->
                         settings.saveFeatureTemplate(template)
                         Utils.showInfo(
-                            title = "TP DevTools",
+                            title = "Teknasyon DevTools",
                             message = "Feature template '${template.name}' added successfully!",
                         )
                         onRefreshTriggered()

@@ -634,7 +634,7 @@ object Utils {
         val notification = NotificationGroupManager.getInstance()
             .getNotificationGroup("TP Notification Group")
             .createNotification(
-                title = title ?: "TP DevTools",
+                title = title ?: "Teknasyon DevTools",
                 content = message,
                 type = type,
             )
