@@ -30,8 +30,6 @@ import com.github.teknasyon.getcontactdevtools.components.GTCText
 import com.github.teknasyon.getcontactdevtools.data.SettingsState
 import com.github.teknasyon.getcontactdevtools.service.SettingsService
 import com.github.teknasyon.getcontactdevtools.theme.GTCTheme
-import com.github.teknasyon.getcontactdevtools.toolwindow.manager.apitester.ApiTesterContent
-import com.github.teknasyon.getcontactdevtools.toolwindow.manager.colorpicker.ColorPickerContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.featuregenerator.FeatureGeneratorContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.formatter.FormatterContent
 import com.github.teknasyon.getcontactdevtools.toolwindow.manager.jungle.JungleContent
@@ -53,7 +51,7 @@ import javax.swing.JPanel
 
 class GTCToolWindowFactory : ToolWindowFactory {
 
-    private val settings = SettingsService.Companion.getInstance()
+    private val settings = SettingsService.getInstance()
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         toolWindow.contentManager.addContent(
@@ -71,24 +69,24 @@ class GTCToolWindowFactory : ToolWindowFactory {
             setContent {
                 GTCTheme {
                     Column(
-                        modifier = Modifier.Companion
+                        modifier = Modifier
                             .fillMaxWidth()
                             .background(GTCTheme.colors.gray),
                     ) {
                         GTCText(
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(24.dp),
                             text = "GTC DevTools",
                             style = TextStyle(
                                 fontSize = 30.sp,
-                                fontWeight = FontWeight.Companion.Bold,
-                                brush = Brush.Companion.horizontalGradient(
+                                fontWeight = FontWeight.Bold,
+                                brush = Brush.horizontalGradient(
                                     colors = listOf(
                                         GTCTheme.colors.blue,
                                         GTCTheme.colors.purple,
                                     ),
-                                    tileMode = TileMode.Companion.Mirror,
+                                    tileMode = TileMode.Mirror,
                                 ),
                             ),
                         )
@@ -108,19 +106,19 @@ class GTCToolWindowFactory : ToolWindowFactory {
         var isExportDialogVisible by remember { mutableStateOf(false) }
 
         Row(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxSize()
                 .background(GTCTheme.colors.black)
         ) {
             Card(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .width(if (isExpanded) 180.dp else 60.dp)
                     .fillMaxHeight(),
                 backgroundColor = GTCTheme.colors.gray,
                 elevation = 8.dp,
             ) {
                 Column(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .fillMaxSize()
                         .padding(if (isExpanded) 16.dp else 8.dp),
                 ) {
@@ -128,8 +126,8 @@ class GTCToolWindowFactory : ToolWindowFactory {
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Row(
-                            modifier = Modifier.Companion.fillMaxWidth(),
-                            verticalAlignment = Alignment.Companion.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
                             if (isExpanded) {
@@ -138,15 +136,15 @@ class GTCToolWindowFactory : ToolWindowFactory {
                                     color = GTCTheme.colors.white,
                                     style = TextStyle(
                                         fontSize = 18.sp,
-                                        fontWeight = FontWeight.Companion.Bold,
+                                        fontWeight = FontWeight.Bold,
                                     ),
                                 )
-                                Spacer(modifier = Modifier.Companion.weight(1f))
+                                Spacer(modifier = Modifier.weight(1f))
                                 Icon(
                                     imageVector = Icons.Rounded.KeyboardDoubleArrowLeft,
                                     contentDescription = null,
                                     tint = GTCTheme.colors.white,
-                                    modifier = Modifier.Companion
+                                    modifier = Modifier
                                         .size(32.dp)
                                         .clickable {
                                             isExpanded = !isExpanded
@@ -158,7 +156,7 @@ class GTCToolWindowFactory : ToolWindowFactory {
                                     imageVector = Icons.Rounded.KeyboardDoubleArrowRight,
                                     contentDescription = null,
                                     tint = GTCTheme.colors.white,
-                                    modifier = Modifier.Companion
+                                    modifier = Modifier
                                         .size(32.dp)
                                         .clickable {
                                             isExpanded = !isExpanded
@@ -240,9 +238,9 @@ class GTCToolWindowFactory : ToolWindowFactory {
                             onClick = { selectedSection = "settings" }
                         )
                     }
-                    Spacer(modifier = Modifier.Companion.weight(1f))
+                    Spacer(modifier = Modifier.weight(1f))
                     Column(
-                        horizontalAlignment = Alignment.Companion.CenterHorizontally,
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         GTCActionCard(
                             title = "Export Settings",
@@ -252,7 +250,7 @@ class GTCToolWindowFactory : ToolWindowFactory {
                             isTextVisible = isExpanded,
                             onClick = { isExportDialogVisible = true }
                         )
-                        Spacer(modifier = Modifier.Companion.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         GTCActionCard(
                             title = "Import Settings",
                             icon = Icons.Rounded.FileDownload,
@@ -270,7 +268,7 @@ class GTCToolWindowFactory : ToolWindowFactory {
             }
 
             Box(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             ) {
@@ -278,8 +276,6 @@ class GTCToolWindowFactory : ToolWindowFactory {
                     "module" -> ModuleGeneratorContent(project)
                     "feature" -> FeatureGeneratorContent(project)
                     "formatter" -> FormatterContent()
-                    "color" -> ColorPickerContent()
-                    "api" -> ApiTesterContent()
                     "settings" -> SettingsContent(project)
                     "jungle" -> JungleContent()
                     "news" -> NewsletterContent()
@@ -319,7 +315,7 @@ class GTCToolWindowFactory : ToolWindowFactory {
         onClick: () -> Unit,
     ) {
         Card(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() },
             shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
@@ -327,24 +323,24 @@ class GTCToolWindowFactory : ToolWindowFactory {
             elevation = 0.dp
         ) {
             Row(
-                modifier = Modifier.Companion.padding(if (isExpanded) 8.dp else 6.dp),
-                verticalAlignment = Alignment.Companion.CenterVertically,
+                modifier = Modifier.padding(if (isExpanded) 8.dp else 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = if (isSelected) color else GTCTheme.colors.lightGray,
-                    modifier = Modifier.Companion.size(20.dp)
+                    modifier = Modifier.size(20.dp)
                 )
                 if (isExpanded) {
                     GTCText(
-                        modifier = Modifier.Companion.padding(8.dp),
+                        modifier = Modifier.padding(8.dp),
                         text = title,
                         color = if (isSelected) GTCTheme.colors.white else GTCTheme.colors.lightGray,
                         style = TextStyle(
                             fontSize = 16.sp,
-                            fontWeight = if (isSelected) FontWeight.Companion.Bold else FontWeight.Companion.Medium
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                         )
                     )
                 }

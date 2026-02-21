@@ -61,27 +61,27 @@ class FeatureGeneratorDialog(
     @Composable
     override fun createDesign() {
         Surface(
-            modifier = Modifier.Companion.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             color = GTCTheme.colors.black,
         ) {
             Column(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxSize()
                     .padding(24.dp),
             ) {
                 GTCText(
-                    modifier = Modifier.Companion.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     text = "Feature Generator",
                     style = TextStyle(
                         color = GTCTheme.colors.blue,
                         fontSize = 36.sp,
-                        fontWeight = FontWeight.Companion.Bold,
-                        textAlign = TextAlign.Companion.Center,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
                     ),
                 )
-                Spacer(modifier = Modifier.Companion.size(24.dp))
+                Spacer(modifier = Modifier.size(24.dp))
                 ConfigurationPanel(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .fillMaxHeight()
                         .weight(0.6f),
                 )
@@ -91,7 +91,7 @@ class FeatureGeneratorDialog(
 
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
-    private fun ConfigurationPanel(modifier: Modifier = Modifier.Companion) {
+    private fun ConfigurationPanel(modifier: Modifier = Modifier) {
         val selectedSrc = remember { selectedSrc }
         val featureName = remember { featureName }
         val settings = SettingsService.getInstance()
@@ -103,9 +103,9 @@ class FeatureGeneratorDialog(
             backgroundColor = GTCTheme.colors.black,
             bottomBar = {
                 Row(
-                    modifier = Modifier.Companion.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.Companion.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     GTCActionCard(
                         title = "Cancel",
@@ -114,7 +114,7 @@ class FeatureGeneratorDialog(
                         type = GTCActionCardType.MEDIUM,
                         onClick = { close(Constants.DEFAULT_EXIT_CODE) },
                     )
-                    Spacer(modifier = Modifier.Companion.size(16.dp))
+                    Spacer(modifier = Modifier.size(16.dp))
                     GTCActionCard(
                         title = "Create",
                         icon = Icons.Rounded.CreateNewFolder,
@@ -142,7 +142,7 @@ class FeatureGeneratorDialog(
             }
         ) { padding ->
             Column(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
@@ -151,11 +151,11 @@ class FeatureGeneratorDialog(
                     color = GTCTheme.colors.blue,
                     style = TextStyle(
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Companion.SemiBold,
+                        fontWeight = FontWeight.SemiBold,
                     ),
                 )
 
-                Spacer(modifier = Modifier.Companion.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 if (availableTemplates.isNotEmpty()) {
                     TemplateSelectionContent(
@@ -168,10 +168,10 @@ class FeatureGeneratorDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.Companion.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Column(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .background(
                             color = GTCTheme.colors.gray,
                             shape = RoundedCornerShape(8.dp)
@@ -179,20 +179,20 @@ class FeatureGeneratorDialog(
                         .padding(16.dp)
                 ) {
                     GTCTextField(
-                        modifier = Modifier.Companion
+                        modifier = Modifier
                             .fillMaxWidth(),
                         placeholder = "Enter feature name",
                         value = featureName.value,
                         onValueChange = { featureName.value = it },
                     )
 
-                    Spacer(modifier = Modifier.Companion.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     GTCText(
                         text = "Be sure to use camel case for the feature name (e.g. MyFeature)",
                         color = GTCTheme.colors.lightGray,
                         style = TextStyle(
-                            fontWeight = FontWeight.Companion.SemiBold,
+                            fontWeight = FontWeight.SemiBold,
                         ),
                     )
                 }
@@ -208,7 +208,7 @@ class FeatureGeneratorDialog(
         onTemplateSelected: (FeatureTemplate?) -> Unit,
     ) {
         Column(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .background(
                     color = GTCTheme.colors.gray,
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
@@ -220,11 +220,11 @@ class FeatureGeneratorDialog(
                 color = GTCTheme.colors.white,
                 style = TextStyle(
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Companion.Bold,
+                    fontWeight = FontWeight.Bold,
                 )
             )
 
-            Spacer(modifier = Modifier.Companion.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             GTCText(
                 text = "Choose a template to auto-configure your module",
@@ -232,7 +232,7 @@ class FeatureGeneratorDialog(
                 style = TextStyle(fontSize = 12.sp)
             )
 
-            Spacer(modifier = Modifier.Companion.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             templates.forEach { template ->
                 TemplateOption(
@@ -244,7 +244,7 @@ class FeatureGeneratorDialog(
                     badge = if (template.id == defaultTemplateId) "Default" else "",
                     badgeColor = if (template.id == defaultTemplateId) GTCTheme.colors.blue else GTCTheme.colors.purple
                 )
-                Spacer(modifier = Modifier.Companion.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
@@ -258,36 +258,36 @@ class FeatureGeneratorDialog(
         badgeColor: Color,
     ) {
         Card(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() },
             shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
             border = BorderStroke(
                 width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) GTCTheme.colors.blue else Color.Companion.Transparent
+                color = if (isSelected) GTCTheme.colors.blue else Color.Transparent
             ),
             backgroundColor = GTCTheme.colors.gray,
             elevation = 0.dp
         ) {
             Row(
-                modifier = Modifier.Companion.padding(12.dp),
-                verticalAlignment = Alignment.Companion.CenterVertically
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
-                    modifier = Modifier.Companion.weight(1f)
+                    modifier = Modifier.weight(1f)
                 ) {
                     Row(
-                        verticalAlignment = Alignment.Companion.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         GTCText(
                             text = title,
                             color = GTCTheme.colors.white,
                             style = TextStyle(
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Companion.Bold
+                                fontWeight = FontWeight.Bold
                             )
                         )
-                        Spacer(modifier = Modifier.Companion.width(8.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
                         if (badge.isNotEmpty()) {
                             Card(
@@ -298,7 +298,7 @@ class FeatureGeneratorDialog(
                                     text = badge,
                                     color = badgeColor,
                                     style = TextStyle(fontSize = 9.sp),
-                                    modifier = Modifier.Companion.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
                         }
@@ -310,7 +310,7 @@ class FeatureGeneratorDialog(
                         imageVector = Icons.Rounded.CheckCircle,
                         contentDescription = "Selected",
                         tint = GTCTheme.colors.blue,
-                        modifier = Modifier.Companion.size(20.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

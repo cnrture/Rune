@@ -6,11 +6,11 @@ freemarker = "2.3.34"
 kotlinxSerialization = "1.9.0"
 
 # plugins
-changelog = "2.4.0"
-intelliJPlatform = "2.9.0"
-kotlin = "2.2.20"
-kover = "0.9.2"
-qodana = "2025.2.1"
+changelog = "2.5.0"
+intelliJPlatform = "2.11.0"
+kotlin = "2.3.0"
+kover = "0.9.5"
+qodana = "2025.3.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }

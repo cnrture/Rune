@@ -28,7 +28,7 @@ fun Color.toHSV(): FloatArray {
     return floatArrayOf(h % 360f, s, v)
 }
 
-fun Color.Companion.hsvToColor(h: Float, s: Float, v: Float): Color {
+fun Color.hsvToColor(h: Float, s: Float, v: Float): Color {
     val c = v * s
     val x = c * (1 - abs((h / 60f) % 2 - 1))
     val m = v - c

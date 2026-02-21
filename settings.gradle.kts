@@ -1,4 +1,4 @@
-rootProject.name = "Getcontact-Android-Studio-Plugin-Project"
+rootProject.name = "Teknasyon-Android-Studio-Plugin"
 
 pluginManagement {
     plugins {
