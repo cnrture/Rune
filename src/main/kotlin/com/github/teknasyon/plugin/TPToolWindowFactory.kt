@@ -151,7 +151,7 @@ class TPToolWindowFactory : ToolWindowFactory {
                                     text = "Actions",
                                     color = TPTheme.colors.white,
                                     style = TextStyle(
-                                        fontSize = 18.sp,
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
                                     ),
                                 )
@@ -161,7 +161,7 @@ class TPToolWindowFactory : ToolWindowFactory {
                                     contentDescription = null,
                                     tint = TPTheme.colors.white,
                                     modifier = Modifier
-                                        .size(32.dp)
+                                        .size(28.dp)
                                         .clickable {
                                             isExpanded = !isExpanded
                                             settings.loadState(settings.state.copy(isActionsExpanded = isExpanded))

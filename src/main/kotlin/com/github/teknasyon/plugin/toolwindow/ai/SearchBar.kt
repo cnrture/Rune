@@ -50,7 +50,7 @@ fun SearchBar(
                 Spacer(modifier = Modifier.size(12.dp))
                 if (!isFocused && query.isEmpty()) {
                     Text(
-                        text = "Search skills...",
+                        text = "Search...",
                         style = TextStyle(
                             color = TPTheme.colors.white.copy(alpha = 0.55f),
                             fontSize = 16.sp,

@@ -52,7 +52,7 @@ fun SkillItemView(
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .background(
-                            color = TPTheme.colors.white,
+                            color = TPTheme.colors.gray,
                             shape = RoundedCornerShape(16.dp),
                         )
                         .padding(16.dp),
@@ -73,6 +73,14 @@ fun SkillItemView(
                         modifier = Modifier
                             .fillMaxWidth()
                             .focusRequester(focusRequester),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            textColor = TPTheme.colors.white,
+                            focusedBorderColor = TPTheme.colors.white,
+                            unfocusedBorderColor = TPTheme.colors.white.copy(alpha = 0.5f),
+                            focusedLabelColor = TPTheme.colors.white,
+                            unfocusedLabelColor = TPTheme.colors.white.copy(alpha = 0.5f),
+                            placeholderColor = TPTheme.colors.white.copy(alpha = 0.5f),
+                        )
                     )
                     Spacer(Modifier.height(24.dp))
                     Row(
@@ -83,7 +91,8 @@ fun SkillItemView(
                             onClick = {
                                 showDialog = false
                                 inputText = ""
-                            }
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.white.copy(alpha = 0.7f))
                         ) {
                             Text("Cancel")
                         }
@@ -92,7 +101,8 @@ fun SkillItemView(
                                 onExecute(inputText.trim())
                                 showDialog = false
                                 inputText = ""
-                            }
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.blue)
                         ) {
                             Text("Run")
                         }
