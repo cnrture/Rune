@@ -3,7 +3,6 @@ package com.github.teknasyon.plugin.toolwindow.ai
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -14,6 +13,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.plugin.theme.TPTheme
 
 /**
  * Search bar for filtering skills.
@@ -32,7 +32,7 @@ fun SearchBar(
         onValueChange = onQueryChange,
         singleLine = true,
         textStyle = TextStyle(
-            color = MaterialTheme.colors.onSurface,
+            color = TPTheme.colors.white,
             fontSize = 16.sp,
         ),
         decorationBox = { innerTextField ->
@@ -44,7 +44,7 @@ fun SearchBar(
                 Icon(
                     modifier = Modifier.size(24.dp),
                     imageVector = Icons.Default.Search,
-                    tint = MaterialTheme.colors.onSurface.copy(alpha = 0.55f),
+                    tint = TPTheme.colors.white.copy(alpha = 0.55f),
                     contentDescription = "Search Icon"
                 )
                 Spacer(modifier = Modifier.size(12.dp))
@@ -52,7 +52,7 @@ fun SearchBar(
                     Text(
                         text = "Search skills...",
                         style = TextStyle(
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.55f),
+                            color = TPTheme.colors.white.copy(alpha = 0.55f),
                             fontSize = 16.sp,
                         ),
                     )

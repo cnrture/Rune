@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.github.teknasyon.plugin.theme.TPTheme
 
 @Composable
 fun LoadingView(modifier: Modifier = Modifier) {
@@ -20,13 +21,13 @@ fun LoadingView(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Center
         ) {
             CircularProgressIndicator(
-                color = MaterialTheme.colors.primary
+                color = TPTheme.colors.blue
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Loading skills...",
                 style = MaterialTheme.typography.body2,
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                color = TPTheme.colors.white.copy(alpha = 0.6f)
             )
         }
     }

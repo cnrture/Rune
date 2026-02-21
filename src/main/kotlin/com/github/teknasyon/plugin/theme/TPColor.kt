@@ -14,6 +14,7 @@ fun lightColors(
     blue: Color = Color(0xff006fee),
     purple: Color = Color(0xff7828C8),
     hintGray: Color = Color(0xFF565656),
+    red: Color = Color(0xffe53935),
 ): TPColor = TPColor(
     white = white,
     black = black,
@@ -22,6 +23,7 @@ fun lightColors(
     blue = blue,
     purple = purple,
     hintGray = hintGray,
+    red = red,
 )
 
 class TPColor(
@@ -32,6 +34,7 @@ class TPColor(
     blue: Color,
     purple: Color,
     hintGray: Color,
+    red: Color,
 ) {
     private var _white: Color by mutableStateOf(white)
     val white: Color = _white
@@ -53,6 +56,9 @@ class TPColor(
 
     private var _hintGray: Color by mutableStateOf(hintGray)
     val hintGray: Color = _hintGray
+
+    private var _red: Color by mutableStateOf(red)
+    val red: Color = _red
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColors() }

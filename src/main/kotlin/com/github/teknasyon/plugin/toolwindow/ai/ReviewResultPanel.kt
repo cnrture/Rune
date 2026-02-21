@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.domain.model.ReviewChange
 import com.github.teknasyon.plugin.domain.model.ReviewTask
 import com.github.teknasyon.plugin.domain.model.TaskStatus
+import com.github.teknasyon.plugin.theme.TPTheme
 
 @Composable
 fun ReviewResultPanel(
@@ -50,7 +51,7 @@ fun ReviewResultPanel(
                     text = progressMessage,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                    color = TPTheme.colors.white.copy(alpha = 0.7f),
                 )
             }
         }
@@ -59,7 +60,7 @@ fun ReviewResultPanel(
             Text(
                 text = error,
                 modifier = Modifier.padding(16.dp),
-                color = MaterialTheme.colors.error,
+                color = TPTheme.colors.red,
                 style = MaterialTheme.typography.body2,
             )
         }
@@ -93,7 +94,7 @@ private fun TaskCard(task: ReviewTask, change: ReviewChange?) {
                     Text(
                         task.filePath,
                         style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                        color = TPTheme.colors.white.copy(alpha = 0.6f),
                     )
                 }
             }
@@ -112,7 +113,7 @@ private fun TaskStatusIcon(status: TaskStatus) {
         TaskStatus.PENDING -> Icon(
             Icons.Default.Pending,
             contentDescription = "Bekliyor",
-            tint = MaterialTheme.colors.onSurface.copy(alpha = 0.4f),
+            tint = TPTheme.colors.white.copy(alpha = 0.4f),
         )
 
         TaskStatus.IN_PROGRESS -> CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -125,7 +126,7 @@ private fun TaskStatusIcon(status: TaskStatus) {
         TaskStatus.FAILED -> Icon(
             Icons.Default.Error,
             contentDescription = "Hata",
-            tint = MaterialTheme.colors.error,
+            tint = TPTheme.colors.red,
         )
     }
 }
@@ -137,13 +138,13 @@ private fun DiffView(before: String, after: String) {
 
     Surface(
         shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colors.surface,
+        color = TPTheme.colors.white,
         elevation = 0.dp,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colors.onSurface.copy(alpha = 0.05f))
+                .background(TPTheme.colors.white.copy(alpha = 0.05f))
                 .padding(8.dp),
         ) {
             for (line in diffLines) {
@@ -164,7 +165,7 @@ private fun DiffView(before: String, after: String) {
                         color = when (prefix) {
                             "+" -> Color(0xFF4CAF50)
                             "-" -> Color(0xFFF44336)
-                            else -> MaterialTheme.colors.onSurface.copy(alpha = 0.4f)
+                            else -> TPTheme.colors.white.copy(alpha = 0.4f)
                         },
                         modifier = Modifier.width(16.dp),
                     )
@@ -172,7 +173,7 @@ private fun DiffView(before: String, after: String) {
                         text = text,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.85f),
+                        color = TPTheme.colors.white.copy(alpha = 0.85f),
                     )
                 }
             }

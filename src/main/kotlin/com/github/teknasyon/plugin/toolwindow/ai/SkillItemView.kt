@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.github.teknasyon.plugin.domain.model.Skill
+import com.github.teknasyon.plugin.theme.TPTheme
 
 @Composable
 fun SkillItemView(
@@ -51,7 +52,7 @@ fun SkillItemView(
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
                         .background(
-                            color = MaterialTheme.colors.surface,
+                            color = TPTheme.colors.white,
                             shape = RoundedCornerShape(16.dp),
                         )
                         .padding(16.dp),
@@ -60,7 +61,7 @@ fun SkillItemView(
                         text = skill.relativePath,
                         style = MaterialTheme.typography.subtitle1,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.onSurface,
+                        color = TPTheme.colors.white,
                     )
                     Spacer(Modifier.height(16.dp))
                     OutlinedTextField(
@@ -110,7 +111,7 @@ fun SkillItemView(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .background(
-                color = MaterialTheme.colors.primary.copy(alpha = 0.15f),
+                color = TPTheme.colors.blue.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(8.dp),
             )
             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -128,7 +129,7 @@ fun SkillItemView(
                     style = MaterialTheme.typography.body2,
                     fontWeight = FontWeight.Black,
                     modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colors.onSurface,
+                    color = TPTheme.colors.white,
                 )
                 IconButton(
                     onClick = onOpenFile,
@@ -137,7 +138,7 @@ fun SkillItemView(
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
                         contentDescription = "Open file",
-                        tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                        tint = TPTheme.colors.white.copy(alpha = 0.6f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -149,7 +150,7 @@ fun SkillItemView(
                     Icon(
                         imageVector = if (skill.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
                         contentDescription = "Favorite",
-                        tint = if (skill.isFavorite) Color(0xFFFFD700) else MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                        tint = if (skill.isFavorite) Color(0xFFFFD700) else TPTheme.colors.white.copy(alpha = 0.6f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -162,7 +163,7 @@ fun SkillItemView(
                         Icon(
                             imageVector = Icons.Rounded.PlayCircle,
                             contentDescription = "Run",
-                            tint = MaterialTheme.colors.primary,
+                            tint = TPTheme.colors.blue,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -173,7 +174,7 @@ fun SkillItemView(
                 Text(
                     text = skill.description,
                     style = MaterialTheme.typography.overline.copy(letterSpacing = 0.4.sp),
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                    color = TPTheme.colors.white.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

@@ -5,14 +5,16 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -21,26 +23,11 @@ import com.intellij.openapi.vfs.LocalFileSystem
 fun SkillDockPanel(
     viewModel: SkillDockViewModel,
     project: Project,
-    modifier: Modifier = Modifier,
+    onShowSettingsClick: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
-    var showSettings by remember { mutableStateOf(false) }
     val tab = state.currentTab
     val tracker = state.reviewTracker
-
-    if (showSettings) {
-        SettingsDialog(
-            currentSkillsPath = state.skillsTab.rootPath,
-            currentAgentsPath = state.agentsTab.rootPath,
-            project = project,
-            onSave = { skillsPath, agentsPath ->
-                viewModel.onEvent(SkillDockEvent.SaveSkillsRootPath(skillsPath))
-                viewModel.onEvent(SkillDockEvent.SaveAgentsRootPath(agentsPath))
-                showSettings = false
-            },
-            onDismiss = { showSettings = false }
-        )
-    }
 
     if (tracker.isDialogVisible) {
         ReviewTrackerDialog(
@@ -59,12 +46,11 @@ fun SkillDockPanel(
             changes = tracker.changes,
             error = tracker.error,
             onBack = { viewModel.onEvent(SkillDockEvent.CloseReviewTracker) },
-            modifier = modifier,
         )
         return
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column {
         TopAppBar(
             title = {
                 SearchBar(
@@ -75,27 +61,36 @@ fun SkillDockPanel(
             },
             actions = {
                 IconButton(onClick = { viewModel.onEvent(SkillDockEvent.OpenReviewTracker) }) {
-                    Icon(Icons.AutoMirrored.Filled.Assignment, contentDescription = "PR Tracker")
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Assignment,
+                        contentDescription = "PR Tracker",
+                        tint = TPTheme.colors.white,
+                    )
                 }
                 IconButton(onClick = { viewModel.onEvent(SkillDockEvent.ToggleFavoritesFilter) }) {
                     Icon(
                         imageVector = if (tab.showOnlyFavorites) Icons.Filled.Star else Icons.Outlined.StarBorder,
                         contentDescription = "Toggle Favorites",
-                        tint = if (tab.showOnlyFavorites) Color(0xFFFFD700)
-                        else LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                        tint = if (tab.showOnlyFavorites) Color(0xFFFFD700) else TPTheme.colors.white,
                     )
                 }
                 IconButton(onClick = { viewModel.onEvent(SkillDockEvent.RefreshSkills) }) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Refresh")
-                }
-                IconButton(onClick = { showSettings = true }) {
-                    Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh",
+                        tint = TPTheme.colors.white,
+                    )
                 }
             },
             elevation = 4.dp,
+            backgroundColor = TPTheme.colors.black,
         )
 
-        TabRow(selectedTabIndex = state.activeTab.ordinal) {
+        TabRow(
+            selectedTabIndex = state.activeTab.ordinal,
+            backgroundColor = TPTheme.colors.black,
+            contentColor = TPTheme.colors.white,
+        ) {
             Tab(
                 selected = state.activeTab == SkillDockTab.SKILLS,
                 onClick = { viewModel.onEvent(SkillDockEvent.TabChanged(SkillDockTab.SKILLS)) },
@@ -114,10 +109,10 @@ fun SkillDockPanel(
                 tab.error != null -> ErrorView(
                     message = tab.error,
                     onRetry = { viewModel.onEvent(SkillDockEvent.RefreshSkills) },
-                    onOpenSettings = { showSettings = true }
+                    onOpenSettings = { onShowSettingsClick() }
                 )
 
-                tab.items.isEmpty() -> EmptyView(onOpenSettings = { showSettings = true })
+                tab.items.isEmpty() -> EmptyView(onOpenSettings = { onShowSettingsClick() })
                 else -> SkillList(
                     skills = tab.items,
                     showRunButton = state.activeTab == SkillDockTab.AGENTS,
@@ -152,10 +147,13 @@ private fun EmptyView(onOpenSettings: () -> Unit) {
             Text(
                 text = "No skills found",
                 style = MaterialTheme.typography.h6,
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                color = TPTheme.colors.white.copy(alpha = 0.6f)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            TextButton(onClick = onOpenSettings) {
+            TextButton(
+                onClick = onOpenSettings,
+                colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.blue)
+            ) {
                 Text("Configure Root Path")
             }
         }

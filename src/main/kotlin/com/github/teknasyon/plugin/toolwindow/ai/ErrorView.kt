@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.github.teknasyon.plugin.theme.TPTheme
 
 @Composable
 fun ErrorView(
@@ -34,13 +35,13 @@ fun ErrorView(
             Text(
                 text = "Error",
                 style = MaterialTheme.typography.h6,
-                color = MaterialTheme.colors.error
+                color = TPTheme.colors.red
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = message,
                 style = MaterialTheme.typography.body2,
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                color = TPTheme.colors.white.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
