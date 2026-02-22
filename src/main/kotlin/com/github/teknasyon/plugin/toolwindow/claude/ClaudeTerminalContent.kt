@@ -37,10 +37,13 @@ import com.github.teknasyon.plugin.service.FileScanner
 import com.github.teknasyon.plugin.service.SkillDockSettingsService
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.fileChooser.FileChooser
+import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import javax.swing.SwingUtilities
 
 @Composable
 fun ClaudeTerminalContent(project: Project) {
@@ -161,6 +164,7 @@ fun ClaudeTerminalContent(project: Project) {
                         }
 
                         val pendingInput by service.pendingInput.collectAsState()
+                        var selectedImagePath by remember { mutableStateOf<String?>(null) }
 
                         TerminalInputBar(
                             onSend = { text -> sendToTerminal(text, true) },
@@ -171,6 +175,20 @@ fun ClaudeTerminalContent(project: Project) {
                                     .removePrefix(project.basePath ?: "")
                                     .removePrefix("/")
                             },
+                            selectedImagePath = selectedImagePath,
+                            onPickImage = {
+                                val descriptor = FileChooserDescriptor(true, false, false, false, false, false)
+                                    .apply {
+                                        title = "Select Image"
+                                        withFileFilter { file ->
+                                            file.extension?.lowercase() in listOf("png", "jpg", "jpeg", "gif", "webp", "bmp")
+                                        }
+                                    }
+                                FileChooser.chooseFile(descriptor, project, null) { file ->
+                                    selectedImagePath = file.path
+                                }
+                            },
+                            onClearImage = { selectedImagePath = null },
                             pendingInput = pendingInput,
                             onPendingInputConsumed = { service.consumePendingInput() },
                         )
@@ -371,6 +389,9 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
 private fun TerminalInputBar(
     onSend: (String) -> Unit,
     onInjectFile: () -> String?,
+    selectedImagePath: String?,
+    onPickImage: () -> Unit,
+    onClearImage: () -> Unit,
     pendingInput: String?,
     onPendingInputConsumed: () -> Unit,
 ) {
@@ -384,6 +405,23 @@ private fun TerminalInputBar(
         }
     }
 
+    val hasContent = inputValue.text.isNotBlank() || selectedImagePath != null
+
+    fun doSend() {
+        if (!hasContent) return
+        val message = buildString {
+            if (inputValue.text.isNotBlank()) append(inputValue.text)
+            if (selectedImagePath != null) {
+                if (isNotEmpty()) append(" ")
+                append(selectedImagePath)
+            }
+        }
+        inputValue = TextFieldValue("")
+        onSend(message)
+        // Clear image after send so recomposition doesn't interfere with terminal
+        SwingUtilities.invokeLater { onClearImage() }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -392,78 +430,127 @@ private fun TerminalInputBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        // File inject button
-        Icon(
-            imageVector = Icons.Rounded.FileOpen,
-            contentDescription = "Add active file path",
-            tint = TPTheme.colors.lightGray,
-            modifier = Modifier
-                .size(28.dp)
-                .clickable {
-                    val path = onInjectFile() ?: return@clickable
-                    val newText = if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
-                    inputValue = TextFieldValue(newText, TextRange(newText.length))
-                }
-        )
-
-        // Input field
-        BasicTextField(
-            value = inputValue,
-            onValueChange = { inputValue = it },
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(8.dp))
-                .background(TPTheme.colors.black)
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .onPreviewKeyEvent { event ->
-                    if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
-                        if (event.isShiftPressed) {
-                            val cursor = inputValue.selection.start
-                            val newText = inputValue.text.substring(0, cursor) + "\n" + inputValue.text.substring(cursor)
-                            inputValue = TextFieldValue(newText, TextRange(cursor + 1))
-                            true
-                        } else {
-                            if (inputValue.text.isNotBlank()) {
-                                onSend(inputValue.text)
-                                inputValue = TextFieldValue("")
-                            }
-                            true
-                        }
-                    } else false
-                },
-            textStyle = TextStyle(
-                color = TPTheme.colors.white,
-                fontSize = 14.sp,
-            ),
-            cursorBrush = SolidColor(TPTheme.colors.white),
-            decorationBox = { innerTextField ->
-                Box(contentAlignment = Alignment.TopStart) {
-                    if (inputValue.text.isEmpty()) {
-                        TPText(
-                            text = "Write your message here...",
-                            color = TPTheme.colors.hintGray,
-                            style = TextStyle(fontSize = 14.sp),
-                        )
+        // Left side icons
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // File inject button
+            Icon(
+                imageVector = Icons.Rounded.FileOpen,
+                contentDescription = "Add active file path",
+                tint = TPTheme.colors.lightGray,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable {
+                        val path = onInjectFile() ?: return@clickable
+                        val newText = if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
+                        inputValue = TextFieldValue(newText, TextRange(newText.length))
                     }
-                    innerTextField()
+            )
+            // Image picker button
+            Icon(
+                imageVector = Icons.Rounded.Image,
+                contentDescription = "Add image",
+                tint = if (selectedImagePath != null) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable { onPickImage() }
+            )
+        }
+
+        // Middle area: image chip + input field
+        Column(
+            modifier = Modifier.weight(1f),
+        ) {
+            // Image chip
+            if (selectedImagePath != null) {
+                val fileName = selectedImagePath.substringAfterLast("/")
+                Row(
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
+                        .background(
+                            color = TPTheme.colors.blue.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(6.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Image,
+                        contentDescription = null,
+                        tint = TPTheme.colors.blue,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    TPText(
+                        text = fileName,
+                        color = TPTheme.colors.blue,
+                        style = TextStyle(fontSize = 12.sp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = "Remove image",
+                        tint = TPTheme.colors.blue,
+                        modifier = Modifier
+                            .size(14.dp)
+                            .clickable { onClearImage() }
+                    )
                 }
-            },
-            minLines = 4,
-        )
+            }
+
+            // Input field
+            BasicTextField(
+                value = inputValue,
+                onValueChange = { inputValue = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(TPTheme.colors.black)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .onPreviewKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
+                            if (event.isShiftPressed) {
+                                val cursor = inputValue.selection.start
+                                val newText = inputValue.text.substring(0, cursor) + "\n" + inputValue.text.substring(cursor)
+                                inputValue = TextFieldValue(newText, TextRange(cursor + 1))
+                                true
+                            } else {
+                                doSend()
+                                true
+                            }
+                        } else false
+                    },
+                textStyle = TextStyle(
+                    color = TPTheme.colors.white,
+                    fontSize = 14.sp,
+                ),
+                cursorBrush = SolidColor(TPTheme.colors.white),
+                decorationBox = { innerTextField ->
+                    Box(contentAlignment = Alignment.TopStart) {
+                        if (inputValue.text.isEmpty()) {
+                            TPText(
+                                text = "Write your message here...",
+                                color = TPTheme.colors.hintGray,
+                                style = TextStyle(fontSize = 14.sp),
+                            )
+                        }
+                        innerTextField()
+                    }
+                },
+                minLines = 4,
+            )
+        }
 
         // Send button
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.Send,
             contentDescription = "Send",
-            tint = if (inputValue.text.isNotBlank()) TPTheme.colors.blue else TPTheme.colors.hintGray,
+            tint = if (hasContent) TPTheme.colors.blue else TPTheme.colors.hintGray,
             modifier = Modifier
                 .size(28.dp)
-                .clickable {
-                    if (inputValue.text.isNotBlank()) {
-                        onSend(inputValue.text)
-                        inputValue = TextFieldValue("")
-                    }
-                }
+                .clickable { doSend() }
         )
     }
 }
