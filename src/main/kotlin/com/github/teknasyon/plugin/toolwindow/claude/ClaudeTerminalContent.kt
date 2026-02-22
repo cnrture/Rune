@@ -27,11 +27,15 @@ import com.intellij.terminal.JBTerminalWidget
 import com.intellij.ui.JBColor
 import org.jetbrains.plugins.terminal.LocalTerminalDirectRunner
 import java.awt.BorderLayout
+import java.awt.KeyEventDispatcher
+import java.awt.KeyboardFocusManager
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.awt.event.KeyEvent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
+import javax.swing.SwingUtilities
 
 @Composable
 fun ClaudeTerminalContent(project: Project) {
@@ -85,7 +89,7 @@ fun ClaudeTerminalContent(project: Project) {
                         val relativePath = file.path
                             .removePrefix(project.basePath ?: "")
                             .removePrefix("/")
-                        widget.terminalStarter?.sendString(relativePath, true)
+                        widget.terminalStarter?.sendString(relativePath.plus("\n"), true)
                     }
             )
         }
@@ -160,6 +164,24 @@ private fun createClaudeTerminalPanel(
 
         panel.add(widget.component, BorderLayout.CENTER)
         onWidgetReady(widget)
+
+        // Intercept ESC at the AWT level before IntelliJ's action system,
+        // so ESC goes to Claude instead of hiding the tool window
+        val escDispatcher = KeyEventDispatcher { e ->
+            if (e.id == KeyEvent.KEY_PRESSED && e.keyCode == KeyEvent.VK_ESCAPE) {
+                val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
+                if (focusOwner != null && SwingUtilities.isDescendingFrom(focusOwner, panel)) {
+                    @Suppress("DEPRECATION")
+                    widget.terminalStarter?.sendString("\u001B", true)
+                    e.consume()
+                    true
+                } else false
+            } else false
+        }
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(escDispatcher)
+        Disposer.register(disposable) {
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(escDispatcher)
+        }
 
         // Execute claude command after shell initializes
         ApplicationManager.getApplication().executeOnPooledThread {
