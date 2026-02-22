@@ -47,7 +47,7 @@ fun TPActionCard(
         TPActionCardType.LARGE -> 24.dp
     }
     val borderSize = when (type) {
-        TPActionCardType.SMALL -> 1.dp
+        TPActionCardType.SMALL -> 2.dp
         TPActionCardType.MEDIUM -> 2.dp
         TPActionCardType.LARGE -> 3.dp
     }
@@ -102,7 +102,7 @@ fun TPActionCard(
         }
 
         if (icon != null && title != null && isTextVisible) {
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(4.dp))
         }
 
         if (isTextVisible) {

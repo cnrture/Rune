@@ -142,11 +142,10 @@ fun ClaudeTerminalContent(project: Project) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             TPActionCard(
-                                modifier = Modifier.weight(1f),
                                 title = "Model",
                                 icon = Icons.Rounded.SmartToy,
                                 type = TPActionCardType.SMALL,
@@ -154,7 +153,6 @@ fun ClaudeTerminalContent(project: Project) {
                                 onClick = { sendToTerminal("/model", true) },
                             )
                             TPActionCard(
-                                modifier = Modifier.weight(1f),
                                 title = "Skills",
                                 icon = Icons.Rounded.AutoFixHigh,
                                 type = TPActionCardType.SMALL,
@@ -162,7 +160,6 @@ fun ClaudeTerminalContent(project: Project) {
                                 onClick = { showSkillsDialog = true },
                             )
                             TPActionCard(
-                                modifier = Modifier.weight(1f),
                                 title = "Agents",
                                 icon = Icons.Rounded.Psychology,
                                 type = TPActionCardType.SMALL,
