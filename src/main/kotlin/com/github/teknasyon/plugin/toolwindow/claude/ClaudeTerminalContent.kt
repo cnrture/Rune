@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.InsertDriveFile
 import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Terminal
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,8 +20,11 @@ import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.terminal.JBTerminalWidget
+import com.intellij.ui.JBColor
 import org.jetbrains.plugins.terminal.LocalTerminalDirectRunner
 import java.awt.BorderLayout
 import java.awt.Toolkit
@@ -34,6 +37,7 @@ import javax.swing.SwingConstants
 fun ClaudeTerminalContent(project: Project) {
     var claudeInstalled by remember { mutableStateOf<Boolean?>(null) }
     var terminalKey by remember { mutableStateOf(0) }
+    var terminalWidget by remember { mutableStateOf<JBTerminalWidget?>(null) }
 
     LaunchedEffect(Unit) {
         claudeInstalled = checkClaudeInstalled()
@@ -69,13 +73,19 @@ fun ClaudeTerminalContent(project: Project) {
             )
             Spacer(modifier = Modifier.weight(1f))
             Icon(
-                imageVector = Icons.Rounded.Refresh,
-                contentDescription = "Restart",
-                tint = TPTheme.colors.lightGray,
+                imageVector = Icons.AutoMirrored.Rounded.InsertDriveFile,
+                contentDescription = "Aktif dosyayı gönder",
+                tint = if (terminalWidget != null) TPTheme.colors.lightGray else TPTheme.colors.hintGray,
                 modifier = Modifier
                     .size(20.dp)
                     .clickable {
-                        terminalKey++
+                        val widget = terminalWidget ?: return@clickable
+                        val file = FileEditorManager.getInstance(project).selectedFiles.firstOrNull()
+                            ?: return@clickable
+                        val relativePath = file.path
+                            .removePrefix(project.basePath ?: "")
+                            .removePrefix("/")
+                        widget.terminalStarter?.sendString(relativePath, true)
                     }
             )
         }
@@ -105,14 +115,20 @@ fun ClaudeTerminalContent(project: Project) {
             }
 
             true -> {
-                ClaudeTerminalPanel(project, terminalKey)
+                ClaudeTerminalPanel(project, terminalKey) { widget ->
+                    terminalWidget = widget
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ClaudeTerminalPanel(project: Project, key: Int) {
+private fun ClaudeTerminalPanel(
+    project: Project,
+    key: Int,
+    onWidgetReady: (JBTerminalWidget) -> Unit,
+) {
     val disposable = remember(key) { Disposer.newDisposable("ClaudeTerminal-$key") }
 
     DisposableEffect(key) {
@@ -124,7 +140,7 @@ private fun ClaudeTerminalPanel(project: Project, key: Int) {
     SwingPanel(
         modifier = Modifier.fillMaxSize(),
         factory = {
-            createClaudeTerminalPanel(project, disposable)
+            createClaudeTerminalPanel(project, disposable, onWidgetReady)
         },
         update = {}
     )
@@ -134,6 +150,7 @@ private fun ClaudeTerminalPanel(project: Project, key: Int) {
 private fun createClaudeTerminalPanel(
     project: Project,
     disposable: com.intellij.openapi.Disposable,
+    onWidgetReady: (JBTerminalWidget) -> Unit,
 ): JPanel {
     val panel = JPanel(BorderLayout())
 
@@ -142,6 +159,7 @@ private fun createClaudeTerminalPanel(
         val widget = runner.createTerminalWidget(disposable, project.basePath ?: "", false)
 
         panel.add(widget.component, BorderLayout.CENTER)
+        onWidgetReady(widget)
 
         // Execute claude command after shell initializes
         ApplicationManager.getApplication().executeOnPooledThread {
@@ -158,7 +176,7 @@ private fun createClaudeTerminalPanel(
             "<html><center><br><br>Terminal oluşturulamadı.<br><br>${e.message ?: "Bilinmeyen hata"}</center></html>"
         )
         label.horizontalAlignment = SwingConstants.CENTER
-        label.foreground = java.awt.Color.LIGHT_GRAY
+        label.foreground = JBColor.LIGHT_GRAY
         panel.add(label, BorderLayout.CENTER)
     }
 
