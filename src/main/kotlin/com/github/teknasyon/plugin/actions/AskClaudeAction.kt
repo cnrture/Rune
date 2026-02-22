@@ -14,21 +14,23 @@ class AskClaudeAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
-        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return
         val selectionModel = editor.selectionModel
         val selectedText = selectionModel.selectedText
         if (selectedText.isNullOrBlank()) return
 
-        val document = editor.document
-        val startLine = document.getLineNumber(selectionModel.selectionStart) + 1
-        val endLine = document.getLineNumber(selectionModel.selectionEnd) + 1
-
-        val basePath = project.basePath ?: ""
-        val relativePath = virtualFile.path
-            .removePrefix(basePath)
-            .removePrefix("/")
-
-        val context = "$relativePath:$startLine-$endLine "
+        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
+        val context = if (virtualFile != null) {
+            val document = editor.document
+            val startLine = document.getLineNumber(selectionModel.selectionStart) + 1
+            val endLine = document.getLineNumber(selectionModel.selectionEnd) + 1
+            val basePath = project.basePath ?: ""
+            val relativePath = virtualFile.path
+                .removePrefix(basePath)
+                .removePrefix("/")
+            "$relativePath:$startLine-$endLine "
+        } else {
+            "$selectedText\n"
+        }
 
         // Open Claude tool window
         val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Claude")

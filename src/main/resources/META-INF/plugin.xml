@@ -74,6 +74,7 @@
                 description="Send selected code to Claude terminal"
                 icon="/icons/claudeIcon.svg">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ConsoleEditorPopupMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>
