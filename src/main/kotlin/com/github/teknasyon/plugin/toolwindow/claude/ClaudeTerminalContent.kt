@@ -22,6 +22,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.plugin.components.TPActionCard
+import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -77,9 +79,30 @@ fun ClaudeTerminalContent(project: Project) {
                     )
 
                     SwingPanel(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 1.dp),
                         factory = { service.sessionManager.parentPanel },
                         update = {}
+                    )
+
+                    TPActionCard(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        title = "Change Model",
+                        icon = Icons.Rounded.SmartToy,
+                        type = TPActionCardType.SMALL,
+                        actionColor = TPTheme.colors.purple,
+                        onClick = {
+                            val widget = service.activeWidget ?: return@TPActionCard
+                            @Suppress("DEPRECATION")
+                            widget.terminalStarter?.sendString("/model", true)
+                            widget.preferredFocusableComponent.requestFocusInWindow()
+                            javax.swing.SwingUtilities.invokeLater {
+                                @Suppress("DEPRECATION")
+                                widget.terminalStarter?.sendBytes("\r".toByteArray(), true)
+                            }
+                        },
                     )
 
                     TerminalInputBar(
@@ -305,7 +328,7 @@ private fun TerminalInputBar(
             ),
             cursorBrush = SolidColor(TPTheme.colors.white),
             decorationBox = { innerTextField ->
-                Box(contentAlignment = Alignment.CenterStart) {
+                Box(contentAlignment = Alignment.TopStart) {
                     if (inputText.isEmpty()) {
                         TPText(
                             text = "Mesajınızı yazın...",
@@ -316,6 +339,7 @@ private fun TerminalInputBar(
                     innerTextField()
                 }
             },
+            minLines = 2,
         )
 
         // Send button
