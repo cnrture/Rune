@@ -2,11 +2,15 @@ package com.github.teknasyon.plugin.toolwindow.claude
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.InsertDriveFile
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Terminal
 import androidx.compose.runtime.*
@@ -27,6 +31,7 @@ import com.intellij.terminal.JBTerminalWidget
 import com.intellij.ui.JBColor
 import org.jetbrains.plugins.terminal.LocalTerminalDirectRunner
 import java.awt.BorderLayout
+import java.awt.CardLayout
 import java.awt.KeyEventDispatcher
 import java.awt.KeyboardFocusManager
 import java.awt.Toolkit
@@ -37,15 +42,94 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 import javax.swing.SwingUtilities
 
+private data class ClaudeSession(
+    val id: Int,
+    val title: String,
+    val widget: JBTerminalWidget? = null,
+)
+
+private class SessionManager {
+    val cardLayout = CardLayout()
+    val parentPanel = JPanel(cardLayout)
+    private val panels = mutableMapOf<Int, JPanel>()
+    private val disposables = mutableMapOf<Int, com.intellij.openapi.Disposable>()
+
+    fun addSession(id: Int, project: Project): JBTerminalWidget? {
+        val disposable = Disposer.newDisposable("ClaudeTerminal-$id")
+        var widget: JBTerminalWidget? = null
+        val panel = createClaudeTerminalPanel(project, disposable) { w -> widget = w }
+        panels[id] = panel
+        disposables[id] = disposable
+        parentPanel.add(panel, id.toString())
+        cardLayout.show(parentPanel, id.toString())
+        parentPanel.revalidate()
+        parentPanel.repaint()
+        return widget
+    }
+
+    fun showSession(id: Int) {
+        cardLayout.show(parentPanel, id.toString())
+        parentPanel.revalidate()
+        parentPanel.repaint()
+    }
+
+    fun removeSession(id: Int) {
+        disposables[id]?.let { Disposer.dispose(it) }
+        panels[id]?.let { parentPanel.remove(it) }
+        disposables.remove(id)
+        panels.remove(id)
+        parentPanel.revalidate()
+        parentPanel.repaint()
+    }
+
+    fun dispose() {
+        disposables.values.toList().forEach { Disposer.dispose(it) }
+        disposables.clear()
+        panels.clear()
+    }
+}
+
 @Composable
 fun ClaudeTerminalContent(project: Project) {
     var claudeInstalled by remember { mutableStateOf<Boolean?>(null) }
-    var terminalKey by remember { mutableStateOf(0) }
-    var terminalWidget by remember { mutableStateOf<JBTerminalWidget?>(null) }
+    var sessions by remember { mutableStateOf(listOf<ClaudeSession>()) }
+    var activeSessionId by remember { mutableStateOf(0) }
+    var nextId by remember { mutableStateOf(1) }
+    val sessionManager = remember { SessionManager() }
+
+    DisposableEffect(Unit) {
+        onDispose { sessionManager.dispose() }
+    }
+
+    fun addNewSession() {
+        val id = nextId
+        nextId++
+        val widget = sessionManager.addSession(id, project)
+        sessions = sessions + ClaudeSession(id, "Claude $id", widget)
+        activeSessionId = id
+    }
+
+    fun closeSession(id: Int) {
+        sessionManager.removeSession(id)
+        sessions = sessions.filter { it.id != id }
+        if (sessions.isEmpty()) {
+            addNewSession()
+        } else if (activeSessionId == id) {
+            activeSessionId = sessions.last().id
+            sessionManager.showSession(activeSessionId)
+        }
+    }
+
+    fun switchToSession(id: Int) {
+        activeSessionId = id
+        sessionManager.showSession(id)
+    }
 
     LaunchedEffect(Unit) {
         claudeInstalled = checkClaudeInstalled()
     }
+
+    val activeWidget = sessions.find { it.id == activeSessionId }?.widget
 
     Column(
         modifier = Modifier
@@ -79,11 +163,11 @@ fun ClaudeTerminalContent(project: Project) {
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.InsertDriveFile,
                 contentDescription = "Aktif dosyayı gönder",
-                tint = if (terminalWidget != null) TPTheme.colors.lightGray else TPTheme.colors.hintGray,
+                tint = if (activeWidget != null) TPTheme.colors.lightGray else TPTheme.colors.hintGray,
                 modifier = Modifier
                     .size(20.dp)
                     .clickable {
-                        val widget = terminalWidget ?: return@clickable
+                        val widget = activeWidget ?: return@clickable
                         val file = FileEditorManager.getInstance(project).selectedFiles.firstOrNull()
                             ?: return@clickable
                         val relativePath = file.path
@@ -120,8 +204,26 @@ fun ClaudeTerminalContent(project: Project) {
             }
 
             true -> {
-                ClaudeTerminalPanel(project, terminalKey) { widget ->
-                    terminalWidget = widget
+                LaunchedEffect(Unit) {
+                    if (sessions.isEmpty()) {
+                        addNewSession()
+                    }
+                }
+
+                if (sessions.isNotEmpty()) {
+                    SessionTabBar(
+                        sessions = sessions,
+                        activeSessionId = activeSessionId,
+                        onSelectSession = { id -> switchToSession(id) },
+                        onCloseSession = { id -> closeSession(id) },
+                        onAddSession = { addNewSession() },
+                    )
+
+                    SwingPanel(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { sessionManager.parentPanel },
+                        update = {}
+                    )
                 }
             }
         }
@@ -129,81 +231,63 @@ fun ClaudeTerminalContent(project: Project) {
 }
 
 @Composable
-private fun ClaudeTerminalPanel(
-    project: Project,
-    key: Int,
-    onWidgetReady: (JBTerminalWidget) -> Unit,
+private fun SessionTabBar(
+    sessions: List<ClaudeSession>,
+    activeSessionId: Int,
+    onSelectSession: (Int) -> Unit,
+    onCloseSession: (Int) -> Unit,
+    onAddSession: () -> Unit,
 ) {
-    val disposable = remember(key) { Disposer.newDisposable("ClaudeTerminal-$key") }
-
-    DisposableEffect(key) {
-        onDispose {
-            Disposer.dispose(disposable)
-        }
-    }
-
-    SwingPanel(
-        modifier = Modifier.fillMaxSize(),
-        factory = {
-            createClaudeTerminalPanel(project, disposable, onWidgetReady)
-        },
-        update = {}
-    )
-}
-
-@Suppress("DEPRECATION")
-private fun createClaudeTerminalPanel(
-    project: Project,
-    disposable: com.intellij.openapi.Disposable,
-    onWidgetReady: (JBTerminalWidget) -> Unit,
-): JPanel {
-    val panel = JPanel(BorderLayout())
-
-    try {
-        val runner = LocalTerminalDirectRunner.createTerminalRunner(project)
-        val widget = runner.createTerminalWidget(disposable, project.basePath ?: "", false)
-
-        panel.add(widget.component, BorderLayout.CENTER)
-        onWidgetReady(widget)
-
-        // Intercept ESC at the AWT level before IntelliJ's action system,
-        // so ESC goes to Claude instead of hiding the tool window
-        val escDispatcher = KeyEventDispatcher { e ->
-            if (e.id == KeyEvent.KEY_PRESSED && e.keyCode == KeyEvent.VK_ESCAPE) {
-                val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
-                if (focusOwner != null && SwingUtilities.isDescendingFrom(focusOwner, panel)) {
-                    @Suppress("DEPRECATION")
-                    widget.terminalStarter?.sendString("\u001B", true)
-                    e.consume()
-                    true
-                } else false
-            } else false
-        }
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(escDispatcher)
-        Disposer.register(disposable) {
-            KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(escDispatcher)
-        }
-
-        // Execute claude command after shell initializes
-        ApplicationManager.getApplication().executeOnPooledThread {
-            Thread.sleep(1500)
-            ApplicationManager.getApplication().invokeLater {
-                try {
-                    widget.terminalStarter?.sendString("claude\n", true)
-                } catch (_: Exception) {
-                }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(TPTheme.colors.black)
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        sessions.forEach { session ->
+            val isActive = session.id == activeSessionId
+            Row(
+                modifier = Modifier
+                    .background(
+                        color = if (isActive) TPTheme.colors.gray else TPTheme.colors.black,
+                        shape = RoundedCornerShape(6.dp)
+                    )
+                    .clickable { onSelectSession(session.id) }
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TPText(
+                    text = session.title,
+                    color = if (isActive) TPTheme.colors.white else TPTheme.colors.lightGray,
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+                    )
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = "Oturumu kapat",
+                    tint = if (isActive) TPTheme.colors.lightGray else TPTheme.colors.hintGray,
+                    modifier = Modifier
+                        .size(14.dp)
+                        .clickable { onCloseSession(session.id) }
+                )
             }
         }
-    } catch (e: Exception) {
-        val label = JLabel(
-            "<html><center><br><br>Terminal oluşturulamadı.<br><br>${e.message ?: "Bilinmeyen hata"}</center></html>"
+        Icon(
+            imageVector = Icons.Rounded.Add,
+            contentDescription = "Yeni oturum",
+            tint = TPTheme.colors.lightGray,
+            modifier = Modifier
+                .size(20.dp)
+                .clickable { onAddSession() }
+                .padding(2.dp)
         )
-        label.horizontalAlignment = SwingConstants.CENTER
-        label.foreground = JBColor.LIGHT_GRAY
-        panel.add(label, BorderLayout.CENTER)
     }
-
-    return panel
 }
 
 @Composable
@@ -282,6 +366,61 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
+}
+
+@Suppress("DEPRECATION")
+private fun createClaudeTerminalPanel(
+    project: Project,
+    disposable: com.intellij.openapi.Disposable,
+    onWidgetReady: (JBTerminalWidget) -> Unit,
+): JPanel {
+    val panel = JPanel(BorderLayout())
+
+    try {
+        val runner = LocalTerminalDirectRunner.createTerminalRunner(project)
+        val widget = runner.createTerminalWidget(disposable, project.basePath ?: "", false)
+
+        panel.add(widget.component, BorderLayout.CENTER)
+        onWidgetReady(widget)
+
+        // Intercept ESC at the AWT level before IntelliJ's action system,
+        // so ESC goes to Claude instead of hiding the tool window
+        val escDispatcher = KeyEventDispatcher { e ->
+            if (e.id == KeyEvent.KEY_PRESSED && e.keyCode == KeyEvent.VK_ESCAPE) {
+                val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
+                if (focusOwner != null && SwingUtilities.isDescendingFrom(focusOwner, panel)) {
+                    @Suppress("DEPRECATION")
+                    widget.terminalStarter?.sendString("\u001B", true)
+                    e.consume()
+                    true
+                } else false
+            } else false
+        }
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(escDispatcher)
+        Disposer.register(disposable) {
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(escDispatcher)
+        }
+
+        // Execute claude command after shell initializes
+        ApplicationManager.getApplication().executeOnPooledThread {
+            Thread.sleep(1500)
+            ApplicationManager.getApplication().invokeLater {
+                try {
+                    widget.terminalStarter?.sendString("claude\n", true)
+                } catch (_: Exception) {
+                }
+            }
+        }
+    } catch (e: Exception) {
+        val label = JLabel(
+            "<html><center><br><br>Terminal oluşturulamadı.<br><br>${e.message ?: "Bilinmeyen hata"}</center></html>"
+        )
+        label.horizontalAlignment = SwingConstants.CENTER
+        label.foreground = JBColor.LIGHT_GRAY
+        panel.add(label, BorderLayout.CENTER)
+    }
+
+    return panel
 }
 
 private fun checkClaudeInstalled(): Boolean {
