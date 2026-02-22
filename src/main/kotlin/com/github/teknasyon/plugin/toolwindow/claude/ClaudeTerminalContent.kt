@@ -6,13 +6,18 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,34 +43,6 @@ fun ClaudeTerminalContent(project: Project) {
             .fillMaxSize()
             .background(TPTheme.colors.black)
     ) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(TPTheme.colors.gray)
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = Icons.Rounded.FileOpen,
-                contentDescription = "Aktif dosyayı gönder",
-                tint = if (service.activeWidget != null) TPTheme.colors.lightGray else TPTheme.colors.hintGray,
-                modifier = Modifier
-                    .size(16.dp)
-                    .clickable {
-                        val widget = service.activeWidget ?: return@clickable
-                        val file = FileEditorManager.getInstance(project).selectedFiles.firstOrNull()
-                            ?: return@clickable
-                        val relativePath = file.path
-                            .removePrefix(project.basePath ?: "")
-                            .removePrefix("/")
-                        widget.terminalStarter?.sendString(relativePath.plus("\n"), true)
-                        widget.preferredFocusableComponent.requestFocusInWindow()
-                    }
-            )
-        }
-
         when (state.claudeInstalled) {
             null -> {
                 Box(
@@ -100,9 +77,30 @@ fun ClaudeTerminalContent(project: Project) {
                     )
 
                     SwingPanel(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
                         factory = { service.sessionManager.parentPanel },
                         update = {}
+                    )
+
+                    TerminalInputBar(
+                        onSend = { text ->
+                            val widget = service.activeWidget ?: return@TerminalInputBar
+                            @Suppress("DEPRECATION")
+                            widget.terminalStarter?.sendString(text, true)
+                            widget.preferredFocusableComponent.requestFocusInWindow()
+                            // Send Enter separately so CLI treats it as submit, not part of paste
+                            javax.swing.SwingUtilities.invokeLater {
+                                @Suppress("DEPRECATION")
+                                widget.terminalStarter?.sendBytes("\r".toByteArray(), true)
+                            }
+                        },
+                        onInjectFile = {
+                            val file = FileEditorManager.getInstance(project).selectedFiles.firstOrNull()
+                                ?: return@TerminalInputBar null
+                            file.path
+                                .removePrefix(project.basePath ?: "")
+                                .removePrefix("/")
+                        },
                     )
                 }
             }
@@ -244,6 +242,97 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
                     shape = RoundedCornerShape(8.dp)
                 )
                 .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+    }
+}
+
+@Composable
+private fun TerminalInputBar(
+    onSend: (String) -> Unit,
+    onInjectFile: () -> String?,
+) {
+    var inputText by remember { mutableStateOf("") }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(TPTheme.colors.gray)
+            .padding(8.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        // File inject button
+        Icon(
+            imageVector = Icons.Rounded.AttachFile,
+            contentDescription = "Aktif dosyayı ekle",
+            tint = TPTheme.colors.lightGray,
+            modifier = Modifier
+                .size(24.dp)
+                .clickable {
+                    val path = onInjectFile() ?: return@clickable
+                    inputText = if (inputText.isEmpty()) path else "$inputText $path"
+                }
+                .padding(2.dp)
+                .align(Alignment.CenterVertically)
+        )
+
+        // Input field
+        BasicTextField(
+            value = inputText,
+            onValueChange = { inputText = it },
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = 36.dp, max = 120.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(TPTheme.colors.black)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .onPreviewKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
+                        if (event.isShiftPressed) {
+                            false // yeni satır
+                        } else {
+                            if (inputText.isNotBlank()) {
+                                onSend(inputText)
+                                inputText = ""
+                            }
+                            true
+                        }
+                    } else false
+                },
+            textStyle = TextStyle(
+                color = TPTheme.colors.white,
+                fontSize = 13.sp,
+            ),
+            cursorBrush = SolidColor(TPTheme.colors.white),
+            decorationBox = { innerTextField ->
+                Box(contentAlignment = Alignment.CenterStart) {
+                    if (inputText.isEmpty()) {
+                        TPText(
+                            text = "Mesajınızı yazın...",
+                            color = TPTheme.colors.hintGray,
+                            style = TextStyle(fontSize = 13.sp),
+                        )
+                    }
+                    innerTextField()
+                }
+            },
+        )
+
+        // Send button
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.Send,
+            contentDescription = "Gönder",
+            tint = if (inputText.isNotBlank()) TPTheme.colors.blue else TPTheme.colors.hintGray,
+            modifier = Modifier
+                .size(24.dp)
+                .clickable {
+                    if (inputText.isNotBlank()) {
+                        onSend(inputText)
+                        inputText = ""
+                    }
+                }
+                .padding(2.dp)
+                .align(Alignment.CenterVertically)
         )
     }
 }

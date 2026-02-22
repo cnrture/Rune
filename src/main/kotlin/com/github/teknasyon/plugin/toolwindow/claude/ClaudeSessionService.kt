@@ -15,6 +15,8 @@ import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.KeyEventDispatcher
 import java.awt.KeyboardFocusManager
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyEvent
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -171,20 +173,37 @@ private fun createClaudeTerminalPanel(
         panel.add(widget.component, BorderLayout.CENTER)
         onWidgetReady(widget)
 
-        val escDispatcher = KeyEventDispatcher { e ->
-            if (e.id == KeyEvent.KEY_PRESSED && e.keyCode == KeyEvent.VK_ESCAPE) {
-                val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
-                if (focusOwner != null && SwingUtilities.isDescendingFrom(focusOwner, panel)) {
+        val keyDispatcher = KeyEventDispatcher { e ->
+            if (e.id != KeyEvent.KEY_PRESSED) return@KeyEventDispatcher false
+            val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
+            if (focusOwner == null || !SwingUtilities.isDescendingFrom(focusOwner, panel)) return@KeyEventDispatcher false
+
+            val isMeta = e.isMetaDown // Cmd on macOS
+            when {
+                e.keyCode == KeyEvent.VK_ESCAPE -> {
                     @Suppress("DEPRECATION")
                     widget.terminalStarter?.sendString("\u001B", true)
                     e.consume()
                     true
-                } else false
-            } else false
+                }
+                // Cmd+C → copy selected text from terminal
+                isMeta && e.keyCode == KeyEvent.VK_C -> {
+                    try {
+                        val selected = widget.selectedText
+                        if (!selected.isNullOrEmpty()) {
+                            val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+                            clipboard.setContents(StringSelection(selected), null)
+                        }
+                    } catch (_: Exception) {}
+                    e.consume()
+                    true
+                }
+                else -> false
+            }
         }
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(escDispatcher)
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyDispatcher)
         Disposer.register(disposable) {
-            KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(escDispatcher)
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(keyDispatcher)
         }
 
         ApplicationManager.getApplication().executeOnPooledThread {
