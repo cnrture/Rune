@@ -67,5 +67,13 @@
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="after"
                           relative-to-action="SkillDock.GenerateCommitMessage"/>
         </action>
+        <action
+                id="SkillDock.AskClaude"
+                class="com.github.teknasyon.plugin.actions.AskClaudeAction"
+                text="Ask Claude"
+                description="Send selected code to Claude terminal"
+                icon="/icons/claudeIcon.svg">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
     </actions>
 </idea-plugin>

@@ -61,16 +61,7 @@ fun ClaudeTerminalContent(project: Project) {
 
     // Helper: send command to active terminal
     fun sendToTerminal(cmd: String, autoRun: Boolean) {
-        val widget = service.activeWidget ?: return
-        @Suppress("DEPRECATION")
-        widget.terminalStarter?.sendString(cmd, true)
-        widget.preferredFocusableComponent.requestFocusInWindow()
-        if (autoRun) {
-            javax.swing.SwingUtilities.invokeLater {
-                @Suppress("DEPRECATION")
-                widget.terminalStarter?.sendBytes("\r".toByteArray(), true)
-            }
-        }
+        service.sendToTerminal(cmd, autoRun)
     }
 
     Box(
@@ -167,6 +158,8 @@ fun ClaudeTerminalContent(project: Project) {
                             )
                         }
 
+                        val pendingInput by service.pendingInput.collectAsState()
+
                         TerminalInputBar(
                             onSend = { text -> sendToTerminal(text, true) },
                             onInjectFile = {
@@ -176,6 +169,8 @@ fun ClaudeTerminalContent(project: Project) {
                                     .removePrefix(project.basePath ?: "")
                                     .removePrefix("/")
                             },
+                            pendingInput = pendingInput,
+                            onPendingInputConsumed = { service.consumePendingInput() },
                         )
                     }
                 }
@@ -374,8 +369,17 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
 private fun TerminalInputBar(
     onSend: (String) -> Unit,
     onInjectFile: () -> String?,
+    pendingInput: String?,
+    onPendingInputConsumed: () -> Unit,
 ) {
     var inputText by remember { mutableStateOf("") }
+
+    LaunchedEffect(pendingInput) {
+        if (pendingInput != null) {
+            inputText = if (inputText.isEmpty()) pendingInput else "$inputText $pendingInput"
+            onPendingInputConsumed()
+        }
+    }
 
     Row(
         modifier = Modifier

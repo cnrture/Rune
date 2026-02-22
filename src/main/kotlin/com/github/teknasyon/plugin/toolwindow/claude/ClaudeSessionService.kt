@@ -37,6 +37,17 @@ class ClaudeSessionService(private val project: Project) : Disposable {
     private val _state = MutableStateFlow(ClaudeSessionState())
     val state: StateFlow<ClaudeSessionState> = _state.asStateFlow()
 
+    private val _pendingInput = MutableStateFlow<String?>(null)
+    val pendingInput: StateFlow<String?> = _pendingInput.asStateFlow()
+
+    fun setPendingInput(text: String) {
+        _pendingInput.value = text
+    }
+
+    fun consumePendingInput() {
+        _pendingInput.value = null
+    }
+
     val sessionManager = SessionManager()
     private var nextId = 1
 
@@ -100,6 +111,18 @@ class ClaudeSessionService(private val project: Project) : Disposable {
     fun ensureSession() {
         if (_state.value.sessions.isEmpty() && _state.value.claudeInstalled == true) {
             addNewSession()
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    fun sendToTerminal(text: String, autoRun: Boolean) {
+        val widget = activeWidget ?: return
+        widget.terminalStarter?.sendString(text, true)
+        widget.preferredFocusableComponent.requestFocusInWindow()
+        if (autoRun) {
+            SwingUtilities.invokeLater {
+                widget.terminalStarter?.sendBytes("\r".toByteArray(), true)
+            }
         }
     }
 
