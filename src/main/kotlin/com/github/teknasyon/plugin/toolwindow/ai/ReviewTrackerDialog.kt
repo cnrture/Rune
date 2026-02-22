@@ -20,7 +20,7 @@ fun ReviewTrackerDialog(
         title = { Text("Change Request Tracker") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Review comment'lerini otomatik olarak işlemek için PR URL'ini girin.")
+                Text("Enter the URL of the pull request you want to track:")
                 OutlinedTextField(
                     value = prUrl,
                     onValueChange = { prUrl = it },
@@ -36,12 +36,12 @@ fun ReviewTrackerDialog(
                 onClick = { if (prUrl.isNotBlank()) onStart(prUrl.trim()) },
                 enabled = prUrl.isNotBlank(),
             ) {
-                Text("Başlat")
+                Text("Start")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("İptal")
+                Text("Cancel")
             }
         },
     )

@@ -65,7 +65,7 @@ class SkillDockViewModel(
                 reviewTracker = ReviewTrackerState(
                     isDialogVisible = false,
                     status = ReviewTrackerStatus.FETCHING,
-                    progressMessage = "Başlatılıyor...",
+                    progressMessage = "Starting review tracking...",
                 )
             )
         }
@@ -113,7 +113,7 @@ class SkillDockViewModel(
                     state.copy(
                         reviewTracker = state.reviewTracker.copy(
                             status = ReviewTrackerStatus.DONE,
-                            progressMessage = "Tamamlandı.",
+                            progressMessage = "Review tracking completed",
                         )
                     )
                 }
@@ -122,7 +122,7 @@ class SkillDockViewModel(
                     state.copy(
                         reviewTracker = state.reviewTracker.copy(
                             status = ReviewTrackerStatus.ERROR,
-                            error = error.message ?: "Bilinmeyen hata",
+                            error = error.message ?: "Unknown error occurred",
                         )
                     )
                 }

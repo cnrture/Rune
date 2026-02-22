@@ -30,7 +30,6 @@ import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.data.repository.SkillRepositoryImpl
 import com.github.teknasyon.plugin.domain.model.Skill
-import com.github.teknasyon.plugin.domain.model.SkillFolder
 import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
 import com.github.teknasyon.plugin.service.FileScanner
 import com.github.teknasyon.plugin.service.SkillDockSettingsService
@@ -232,7 +231,7 @@ private fun SessionTabBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(TPTheme.colors.black)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -251,7 +250,7 @@ private fun SessionTabBar(
                             shape = RoundedCornerShape(6.dp)
                         )
                         .clickable { onSelectSession(session.id) }
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TPText(
@@ -278,9 +277,8 @@ private fun SessionTabBar(
                 contentDescription = "Yeni oturum",
                 tint = TPTheme.colors.lightGray,
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(24.dp)
                     .clickable { onAddSession() }
-                    .padding(2.dp)
             )
         }
         Icon(
@@ -288,9 +286,8 @@ private fun SessionTabBar(
             contentDescription = "Ayarlar",
             tint = TPTheme.colors.lightGray,
             modifier = Modifier
-                .size(18.dp)
+                .size(24.dp)
                 .clickable { onSettingsClick() }
-                .padding(1.dp)
         )
     }
 }
@@ -495,8 +492,8 @@ private fun SkillPickerDialog(
         if (searchQuery.isBlank()) skills
         else skills.filter {
             it.name.contains(searchQuery, ignoreCase = true) ||
-                    it.description.contains(searchQuery, ignoreCase = true) ||
-                    it.commandName.contains(searchQuery, ignoreCase = true)
+                it.description.contains(searchQuery, ignoreCase = true) ||
+                it.commandName.contains(searchQuery, ignoreCase = true)
         }
     }
 
@@ -565,6 +562,7 @@ private fun SkillPickerDialog(
                         modifier = Modifier.padding(8.dp),
                     )
                 }
+
                 filtered.isEmpty() && skills.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxWidth().height(100.dp),
@@ -573,6 +571,7 @@ private fun SkillPickerDialog(
                         Text("Yükleniyor...", color = TPTheme.colors.lightGray)
                     }
                 }
+
                 filtered.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxWidth().height(100.dp),
@@ -581,6 +580,7 @@ private fun SkillPickerDialog(
                         Text("Sonuç bulunamadı", color = TPTheme.colors.lightGray)
                     }
                 }
+
                 else -> {
                     LazyColumn(modifier = Modifier.fillMaxWidth()) {
                         items(filtered, key = { it.filePath }) { skill ->
@@ -642,7 +642,7 @@ private fun SettingsDialog(
                 .padding(16.dp)
         ) {
             Text(
-                text = "SkillDock Ayarları",
+                text = "Skill & Agent Path Settings",
                 style = MaterialTheme.typography.h6,
                 fontWeight = FontWeight.Bold,
                 color = TPTheme.colors.white,
@@ -693,7 +693,7 @@ private fun SettingsDialog(
                 TextButton(
                     onClick = onDismiss,
                     colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.lightGray)
-                ) { Text("İptal") }
+                ) { Text("Cancel") }
                 Spacer(Modifier.width(8.dp))
                 TextButton(
                     onClick = {
@@ -702,7 +702,7 @@ private fun SettingsDialog(
                         onDismiss()
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.blue)
-                ) { Text("Kaydet") }
+                ) { Text("Save") }
             }
         }
     }

@@ -11,11 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.jetbrains.plugins.terminal.LocalTerminalDirectRunner
-import java.awt.BorderLayout
-import java.awt.CardLayout
-import java.awt.KeyEventDispatcher
-import java.awt.KeyboardFocusManager
-import java.awt.Toolkit
+import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyEvent
 import javax.swing.JLabel
@@ -176,7 +172,11 @@ private fun createClaudeTerminalPanel(
         val keyDispatcher = KeyEventDispatcher { e ->
             if (e.id != KeyEvent.KEY_PRESSED) return@KeyEventDispatcher false
             val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
-            if (focusOwner == null || !SwingUtilities.isDescendingFrom(focusOwner, panel)) return@KeyEventDispatcher false
+            if (focusOwner == null || !SwingUtilities.isDescendingFrom(
+                    focusOwner,
+                    panel
+                )
+            ) return@KeyEventDispatcher false
 
             val isMeta = e.isMetaDown // Cmd on macOS
             when {
@@ -194,10 +194,12 @@ private fun createClaudeTerminalPanel(
                             val clipboard = Toolkit.getDefaultToolkit().systemClipboard
                             clipboard.setContents(StringSelection(selected), null)
                         }
-                    } catch (_: Exception) {}
+                    } catch (_: Exception) {
+                    }
                     e.consume()
                     true
                 }
+
                 else -> false
             }
         }
@@ -217,7 +219,7 @@ private fun createClaudeTerminalPanel(
         }
     } catch (e: Exception) {
         val label = JLabel(
-            "<html><center><br><br>Terminal oluşturulamadı.<br><br>${e.message ?: "Bilinmeyen hata"}</center></html>"
+            "<html><center><br><br>Terminal is not available.<br><br>Make sure you have 'claude' installed and accessible in your PATH.</center></html>"
         )
         label.horizontalAlignment = SwingConstants.CENTER
         label.foreground = JBColor.LIGHT_GRAY

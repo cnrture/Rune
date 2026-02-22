@@ -151,16 +151,6 @@ class SettingsService : PersistentStateComponent<SettingsState> {
         return myState.featureTemplates
     }
 
-    fun saveFormatterState(selectedFormat: String, inputText: String, errorMessage: String) {
-        myState.formatterSelectedFormat = selectedFormat
-        myState.formatterInputText = inputText
-        myState.formatterErrorMessage = errorMessage
-        saveToAutoBackup()
-    }
-
-    fun getFormatterSelectedFormat(): String = myState.formatterSelectedFormat
-    fun getFormatterInputText(): String = myState.formatterInputText
-    fun getFormatterErrorMessage(): String = myState.formatterErrorMessage
     fun removeFeatureTemplate(template: FeatureTemplate) {
         myState.featureTemplates.removeAll { it.id == template.id }
         saveToAutoBackup()
