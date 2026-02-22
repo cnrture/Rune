@@ -217,7 +217,7 @@ private fun createClaudeTerminalPanel(
                 }
             }
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         val label = JLabel(
             "<html><center><br><br>Terminal is not available.<br><br>Make sure you have 'claude' installed and accessible in your PATH.</center></html>"
         )
