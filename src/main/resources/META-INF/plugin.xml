@@ -12,8 +12,6 @@
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="TP Notification Group"
                            displayType="BALLOON"/>
-        <postStartupActivity
-                implementation="com.github.teknasyon.plugin.startup.NewsletterStartupActivity"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
