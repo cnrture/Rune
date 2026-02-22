@@ -164,7 +164,7 @@ fun ClaudeTerminalContent(project: Project) {
                         }
 
                         val pendingInput by service.pendingInput.collectAsState()
-                        var selectedImagePath by remember { mutableStateOf<String?>(null) }
+                        var selectedImagePaths by remember { mutableStateOf<List<String>>(emptyList()) }
 
                         TerminalInputBar(
                             onSend = { text -> sendToTerminal(text, true) },
@@ -175,20 +175,22 @@ fun ClaudeTerminalContent(project: Project) {
                                     .removePrefix(project.basePath ?: "")
                                     .removePrefix("/")
                             },
-                            selectedImagePath = selectedImagePath,
+                            selectedImagePaths = selectedImagePaths,
                             onPickImage = {
-                                val descriptor = FileChooserDescriptor(true, false, false, false, false, false)
+                                val descriptor = FileChooserDescriptor(true, false, false, false, false, true)
                                     .apply {
-                                        title = "Select Image"
+                                        title = "Select Images"
                                         withFileFilter { file ->
                                             file.extension?.lowercase() in listOf("png", "jpg", "jpeg", "gif", "webp", "bmp")
                                         }
                                     }
-                                FileChooser.chooseFile(descriptor, project, null) { file ->
-                                    selectedImagePath = file.path
+                                FileChooser.chooseFiles(descriptor, project, null) { files ->
+                                    val newPaths = files.map { it.path }
+                                    selectedImagePaths = selectedImagePaths + newPaths
                                 }
                             },
-                            onClearImage = { selectedImagePath = null },
+                            onRemoveImage = { path -> selectedImagePaths = selectedImagePaths - path },
+                            onClearImages = { selectedImagePaths = emptyList() },
                             pendingInput = pendingInput,
                             onPendingInputConsumed = { service.consumePendingInput() },
                         )
@@ -389,9 +391,10 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
 private fun TerminalInputBar(
     onSend: (String) -> Unit,
     onInjectFile: () -> String?,
-    selectedImagePath: String?,
+    selectedImagePaths: List<String>,
     onPickImage: () -> Unit,
-    onClearImage: () -> Unit,
+    onRemoveImage: (String) -> Unit,
+    onClearImages: () -> Unit,
     pendingInput: String?,
     onPendingInputConsumed: () -> Unit,
 ) {
@@ -405,21 +408,21 @@ private fun TerminalInputBar(
         }
     }
 
-    val hasContent = inputValue.text.isNotBlank() || selectedImagePath != null
+    val hasContent = inputValue.text.isNotBlank() || selectedImagePaths.isNotEmpty()
 
     fun doSend() {
         if (!hasContent) return
         val message = buildString {
             if (inputValue.text.isNotBlank()) append(inputValue.text)
-            if (selectedImagePath != null) {
+            for (path in selectedImagePaths) {
                 if (isNotEmpty()) append(" ")
-                append(selectedImagePath)
+                append(path)
             }
         }
         inputValue = TextFieldValue("")
         onSend(message)
-        // Clear image after send so recomposition doesn't interfere with terminal
-        SwingUtilities.invokeLater { onClearImage() }
+        // Clear images after send so recomposition doesn't interfere with terminal
+        SwingUtilities.invokeLater { onClearImages() }
     }
 
     Row(
@@ -452,51 +455,60 @@ private fun TerminalInputBar(
             Icon(
                 imageVector = Icons.Rounded.Image,
                 contentDescription = "Add image",
-                tint = if (selectedImagePath != null) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                tint = if (selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
                 modifier = Modifier
                     .size(28.dp)
                     .clickable { onPickImage() }
             )
         }
 
-        // Middle area: image chip + input field
+        // Middle area: image chips + input field
         Column(
             modifier = Modifier.weight(1f),
         ) {
-            // Image chip
-            if (selectedImagePath != null) {
-                val fileName = selectedImagePath.substringAfterLast("/")
+            // Image chips
+            if (selectedImagePaths.isNotEmpty()) {
                 Row(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(bottom = 4.dp)
-                        .background(
-                            color = TPTheme.colors.blue.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(6.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Image,
-                        contentDescription = null,
-                        tint = TPTheme.colors.blue,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    TPText(
-                        text = fileName,
-                        color = TPTheme.colors.blue,
-                        style = TextStyle(fontSize = 12.sp),
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "Remove image",
-                        tint = TPTheme.colors.blue,
-                        modifier = Modifier
-                            .size(14.dp)
-                            .clickable { onClearImage() }
-                    )
+                    selectedImagePaths.forEach { path ->
+                        val fileName = path.substringAfterLast("/")
+                        Row(
+                            modifier = Modifier
+                                .background(
+                                    color = TPTheme.colors.blue.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(6.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Image,
+                                contentDescription = null,
+                                tint = TPTheme.colors.blue,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            TPText(
+                                text = fileName,
+                                color = TPTheme.colors.blue,
+                                style = TextStyle(fontSize = 12.sp),
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Remove image",
+                                tint = TPTheme.colors.blue,
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .clickable { onRemoveImage(path) }
+                            )
+                        }
+                    }
                 }
             }
 
