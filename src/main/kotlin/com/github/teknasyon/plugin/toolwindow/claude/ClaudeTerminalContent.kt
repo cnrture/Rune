@@ -20,7 +20,9 @@ import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -372,11 +374,12 @@ private fun TerminalInputBar(
     pendingInput: String?,
     onPendingInputConsumed: () -> Unit,
 ) {
-    var inputText by remember { mutableStateOf("") }
+    var inputValue by remember { mutableStateOf(TextFieldValue("")) }
 
     LaunchedEffect(pendingInput) {
         if (pendingInput != null) {
-            inputText = if (inputText.isEmpty()) pendingInput else "$inputText $pendingInput"
+            val newText = if (inputValue.text.isEmpty()) pendingInput else "${inputValue.text} $pendingInput"
+            inputValue = TextFieldValue(newText, TextRange(newText.length))
             onPendingInputConsumed()
         }
     }
@@ -386,42 +389,43 @@ private fun TerminalInputBar(
             .fillMaxWidth()
             .background(TPTheme.colors.gray)
             .padding(8.dp),
-        verticalAlignment = Alignment.Bottom,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         // File inject button
         Icon(
-            imageVector = Icons.Rounded.AttachFile,
-            contentDescription = "Aktif dosyayı ekle",
+            imageVector = Icons.Rounded.FileOpen,
+            contentDescription = "Add active file path",
             tint = TPTheme.colors.lightGray,
             modifier = Modifier
-                .size(24.dp)
+                .size(28.dp)
                 .clickable {
                     val path = onInjectFile() ?: return@clickable
-                    inputText = if (inputText.isEmpty()) path else "$inputText $path"
+                    val newText = if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
+                    inputValue = TextFieldValue(newText, TextRange(newText.length))
                 }
-                .padding(2.dp)
-                .align(Alignment.CenterVertically)
         )
 
         // Input field
         BasicTextField(
-            value = inputText,
-            onValueChange = { inputText = it },
+            value = inputValue,
+            onValueChange = { inputValue = it },
             modifier = Modifier
                 .weight(1f)
-                .heightIn(min = 36.dp, max = 120.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(TPTheme.colors.black)
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .onPreviewKeyEvent { event ->
                     if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
                         if (event.isShiftPressed) {
-                            false // yeni satır
+                            val cursor = inputValue.selection.start
+                            val newText = inputValue.text.substring(0, cursor) + "\n" + inputValue.text.substring(cursor)
+                            inputValue = TextFieldValue(newText, TextRange(cursor + 1))
+                            true
                         } else {
-                            if (inputText.isNotBlank()) {
-                                onSend(inputText)
-                                inputText = ""
+                            if (inputValue.text.isNotBlank()) {
+                                onSend(inputValue.text)
+                                inputValue = TextFieldValue("")
                             }
                             true
                         }
@@ -429,39 +433,37 @@ private fun TerminalInputBar(
                 },
             textStyle = TextStyle(
                 color = TPTheme.colors.white,
-                fontSize = 13.sp,
+                fontSize = 14.sp,
             ),
             cursorBrush = SolidColor(TPTheme.colors.white),
             decorationBox = { innerTextField ->
                 Box(contentAlignment = Alignment.TopStart) {
-                    if (inputText.isEmpty()) {
+                    if (inputValue.text.isEmpty()) {
                         TPText(
-                            text = "Mesajınızı yazın...",
+                            text = "Write your message here...",
                             color = TPTheme.colors.hintGray,
-                            style = TextStyle(fontSize = 13.sp),
+                            style = TextStyle(fontSize = 14.sp),
                         )
                     }
                     innerTextField()
                 }
             },
-            minLines = 2,
+            minLines = 4,
         )
 
         // Send button
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.Send,
-            contentDescription = "Gönder",
-            tint = if (inputText.isNotBlank()) TPTheme.colors.blue else TPTheme.colors.hintGray,
+            contentDescription = "Send",
+            tint = if (inputValue.text.isNotBlank()) TPTheme.colors.blue else TPTheme.colors.hintGray,
             modifier = Modifier
-                .size(24.dp)
+                .size(28.dp)
                 .clickable {
-                    if (inputText.isNotBlank()) {
-                        onSend(inputText)
-                        inputText = ""
+                    if (inputValue.text.isNotBlank()) {
+                        onSend(inputValue.text)
+                        inputValue = TextFieldValue("")
                     }
                 }
-                .padding(2.dp)
-                .align(Alignment.CenterVertically)
         )
     }
 }
