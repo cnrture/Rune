@@ -1,6 +1,9 @@
 package com.github.teknasyon.plugin.service
 
-import com.github.teknasyon.plugin.data.*
+import com.github.teknasyon.plugin.data.FeatureTemplate
+import com.github.teknasyon.plugin.data.FileTemplate
+import com.github.teknasyon.plugin.data.ModuleTemplate
+import com.github.teknasyon.plugin.data.SettingsState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service

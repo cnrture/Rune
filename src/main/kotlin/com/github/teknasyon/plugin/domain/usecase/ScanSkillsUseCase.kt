@@ -1,8 +1,8 @@
 package com.github.teknasyon.plugin.domain.usecase
 
 import com.github.teknasyon.plugin.data.repository.SkillRepository
-import com.github.teknasyon.plugin.service.SkillDockSettingsService
 import com.github.teknasyon.plugin.domain.model.SkillFolder
+import com.github.teknasyon.plugin.service.SkillDockSettingsService
 
 class ScanSkillsUseCase(
     private val repository: SkillRepository,

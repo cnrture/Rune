@@ -1,12 +1,12 @@
 package com.github.teknasyon.plugin.toolwindow.ai
 
-import com.github.teknasyon.plugin.service.SkillDockSettingsService
-import com.github.teknasyon.plugin.service.TerminalExecutor
 import com.github.teknasyon.plugin.domain.model.Skill
 import com.github.teknasyon.plugin.domain.usecase.ExecuteSkillUseCase
 import com.github.teknasyon.plugin.domain.usecase.ProcessReviewCommentsUseCase
 import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
 import com.github.teknasyon.plugin.domain.usecase.ToggleFavoriteUseCase
+import com.github.teknasyon.plugin.service.SkillDockSettingsService
+import com.github.teknasyon.plugin.service.TerminalExecutor
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,10 +49,12 @@ class SkillDockViewModel(
             is SkillDockEvent.OpenReviewTracker -> _state.update {
                 it.copy(reviewTracker = it.reviewTracker.copy(isDialogVisible = true))
             }
+
             is SkillDockEvent.StartReviewTracking -> startReviewTracking(event.prUrl)
             is SkillDockEvent.CloseReviewTracker -> _state.update {
                 it.copy(reviewTracker = ReviewTrackerState())
             }
+
             is SkillDockEvent.RunCommand -> terminalExecutor.executeCommand(project, "claude ${event.command}")
         }
     }

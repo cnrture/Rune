@@ -1,7 +1,7 @@
 package com.github.teknasyon.plugin.domain.usecase
 
-import com.github.teknasyon.plugin.service.TerminalExecutor
 import com.github.teknasyon.plugin.domain.model.Skill
+import com.github.teknasyon.plugin.service.TerminalExecutor
 import com.intellij.openapi.project.Project
 
 class ExecuteSkillUseCase(
