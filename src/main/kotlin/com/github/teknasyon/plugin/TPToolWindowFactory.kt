@@ -43,7 +43,6 @@ import com.github.teknasyon.plugin.toolwindow.manager.ai.AiContent
 import com.github.teknasyon.plugin.toolwindow.manager.featuregenerator.FeatureGeneratorContent
 import com.github.teknasyon.plugin.toolwindow.manager.jungle.JungleContent
 import com.github.teknasyon.plugin.toolwindow.manager.modulegenerator.ModuleGeneratorContent
-import com.github.teknasyon.plugin.toolwindow.claude.ClaudeTerminalContent
 import com.github.teknasyon.plugin.toolwindow.manager.settings.SettingsContent
 import com.github.teknasyon.plugin.toolwindow.manager.settings.dialog.ExportSettingsContent
 import com.intellij.notification.NotificationType
@@ -228,14 +227,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                             onClick = { selectedSection = "settings" }
                         )
 
-                        SidebarButton(
-                            title = "Claude",
-                            icon = Icons.Rounded.Terminal,
-                            isSelected = selectedSection == "claude",
-                            color = TPTheme.colors.purple,
-                            isExpanded = isExpanded,
-                            onClick = { selectedSection = "claude" }
-                        )
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Column(
@@ -285,8 +276,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                         viewModel = viewModel,
                         onShowSettingsClick = { selectedSection = "settings" },
                     )
-
-                    "claude" -> ClaudeTerminalContent(project = project)
                 }
             }
         }

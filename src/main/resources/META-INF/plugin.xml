@@ -21,6 +21,11 @@
                 id="TPDevTools"
                 anchor="right"
                 icon="/icons/pluginIcon.svg"/>
+        <toolWindow
+                factoryClass="com.github.teknasyon.plugin.toolwindow.claude.ClaudeToolWindowFactory"
+                id="Claude"
+                anchor="bottom"
+                icon="/icons/claudeIcon.svg"/>
 
         <!-- Settings Configurable -->
         <projectConfigurable
