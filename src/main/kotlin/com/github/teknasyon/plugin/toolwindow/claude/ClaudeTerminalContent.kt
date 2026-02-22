@@ -90,6 +90,7 @@ fun ClaudeTerminalContent(project: Project) {
                             .removePrefix(project.basePath ?: "")
                             .removePrefix("/")
                         widget.terminalStarter?.sendString(relativePath.plus("\n"), true)
+                        widget.preferredFocusableComponent.requestFocusInWindow()
                     }
             )
         }
