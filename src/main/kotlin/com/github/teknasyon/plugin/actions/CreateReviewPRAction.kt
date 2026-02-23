@@ -118,6 +118,8 @@ class CreateReviewPRAction : AnAction() {
             override fun run(indicator: ProgressIndicator) {
                 indicator.text = "Creating PR $currentBranch → $reviewBranch…"
 
+                val jiraUrl = getJiraTicketUrl(dir)
+
                 val cmd = mutableListOf(
                     ghPath,
                     "pr", "create",
@@ -126,7 +128,7 @@ class CreateReviewPRAction : AnAction() {
                     "--base", reviewBranch,
                     "--head", currentBranch,
                     "--title", currentBranch,
-                    "--body", "",
+                    "--body", jiraUrl ?: "",
                 )
 
                 if (reviewers.isNotEmpty()) {
@@ -226,6 +228,12 @@ class CreateReviewPRAction : AnAction() {
             listOf("/usr/local/bin/gh", "/usr/bin/gh", "/opt/homebrew/bin/gh")
                 .firstOrNull { File(it).exists() }
         }
+    }
+
+    private fun getJiraTicketUrl(dir: File): String? {
+        val branch = runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
+        val ticketId = Regex("[A-Z]+-\\d+").find(branch)?.value ?: return null
+        return "https://pozitim.atlassian.net/browse/$ticketId"
     }
 
     private fun runGit(dir: File, vararg args: String): String {
