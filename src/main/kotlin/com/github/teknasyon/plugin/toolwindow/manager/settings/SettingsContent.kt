@@ -276,7 +276,7 @@ private fun ModuleTemplatesTab(
                 onDelete = { if (!template.isDefault) onTemplateDelete(template) },
                 onSetDefault = { onSetDefault(template) },
                 onExport = {
-                    Utils.exportModuleTemplate(project, template) { success, message ->
+                    Utils.exportModuleTemplate(project, template) { _, message ->
                         Utils.showInfo("Teknasyon DevTools", message)
                     }
                 },
@@ -548,7 +548,7 @@ private fun FeatureTemplatesTab(
                 onDelete = { if (!template.isDefault) onTemplateDelete(template) },
                 onSetDefault = { onSetDefault(template) },
                 onExport = {
-                    Utils.exportFeatureTemplate(project, template) { success, message ->
+                    Utils.exportFeatureTemplate(project, template) { _, message ->
                         Utils.showInfo("Teknasyon DevTools", message)
                     }
                 },

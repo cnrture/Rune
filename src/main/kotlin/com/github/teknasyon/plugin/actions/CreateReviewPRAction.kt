@@ -122,6 +122,7 @@ class CreateReviewPRAction : AnAction() {
                     ghPath,
                     "pr", "create",
                     "--draft",
+                    "--assignee", "@me",
                     "--base", reviewBranch,
                     "--head", currentBranch,
                     "--title", currentBranch,
