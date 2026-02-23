@@ -80,13 +80,17 @@ class CreateReviewPRAction : AnAction() {
                     return
                 }
 
-                // 8. Open dialog on EDT for reviewer/label selection
+                // 8. Extract Jira ticket ID from branch name
+                val ticketId = Regex("[A-Z]+-\\d+").find(currentBranch)?.value
+
+                // 9. Open dialog on EDT for reviewer/label selection
                 ApplicationManager.getApplication().invokeLater {
                     val dialog = CreatePRDialog(
                         ghPath = ghPath,
                         dir = dir,
                         owner = ownerRepo.first,
                         repo = ownerRepo.second,
+                        ticketId = ticketId,
                         onConfirm = { reviewers, labels ->
                             createPR(
                                 project = project,

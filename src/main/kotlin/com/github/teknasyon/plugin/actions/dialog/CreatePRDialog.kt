@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.components.*
 import com.github.teknasyon.plugin.service.GitHubCacheService
+import com.github.teknasyon.plugin.service.JiraService
 import com.github.teknasyon.plugin.theme.TPTheme
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -49,6 +50,7 @@ class CreatePRDialog(
     private val dir: File,
     private val owner: String,
     private val repo: String,
+    private val ticketId: String? = null,
     private val onConfirm: (reviewers: List<String>, labels: List<String>) -> Unit,
 ) : TPDialogWrapper(
     width = 600,
@@ -72,8 +74,46 @@ class CreatePRDialog(
                 collaborators = cached.collaborators.sorted(),
                 labels = cached.labels.sorted(),
             )
+            autoSelectLabels(cached.labels)
         } else {
             fetchGitHubData()
+        }
+    }
+
+    private fun autoSelectLabels(labels: List<String>) {
+        if (ticketId == null) return
+
+        // Team label mapping: ticket prefix -> label name
+        val teamLabelMap = mapOf(
+            "GR" to "revenue",
+            "COM" to "spam-protection",
+        )
+
+        val prefix = ticketId.substringBefore("-")
+        val teamLabel = teamLabelMap[prefix.uppercase()]
+        if (teamLabel != null) {
+            val match = labels.firstOrNull { it.equals(teamLabel, ignoreCase = true) }
+            if (match != null) {
+                state.value = state.value.copy(
+                    selectedLabels = state.value.selectedLabels + match,
+                )
+            }
+        }
+
+        // Fix version from Jira
+        if (!JiraService.hasCredentials()) return
+        kotlin.concurrent.thread {
+            val fixVersions = JiraService.fetchFixVersions(ticketId)
+            if (fixVersions.isNotEmpty()) {
+                val matchingLabels = labels.filter { label ->
+                    fixVersions.any { it.contains(label, ignoreCase = true) }
+                }.toSet()
+                if (matchingLabels.isNotEmpty()) {
+                    state.value = state.value.copy(
+                        selectedLabels = state.value.selectedLabels + matchingLabels,
+                    )
+                }
+            }
         }
     }
 
@@ -121,6 +161,10 @@ class CreatePRDialog(
                 labels = labels,
                 errorMessage = error,
             )
+
+            if (error == null) {
+                autoSelectLabels(labels)
+            }
         }
     }
 
@@ -381,9 +425,9 @@ class CreatePRDialog(
 
             Spacer(modifier = Modifier.size(8.dp))
 
-            val filtered = items.filter {
-                filterValue.isBlank() || it.contains(filterValue, ignoreCase = true)
-            }
+            val filtered = items
+                .filter { filterValue.isBlank() || it.contains(filterValue, ignoreCase = true) }
+                .sortedByDescending { it in selectedItems }
 
             val exactMatch = items.any { it.equals(filterValue.trim(), ignoreCase = true) }
             if (onAdd != null && filterValue.isNotBlank() && !exactMatch) {
