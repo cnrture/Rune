@@ -123,7 +123,6 @@ class CreateReviewPRAction : AnAction() {
                 val cmd = mutableListOf(
                     ghPath,
                     "pr", "create",
-                    "--draft",
                     "--assignee", "@me",
                     "--base", reviewBranch,
                     "--head", currentBranch,

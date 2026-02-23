@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Refresh
@@ -40,6 +41,7 @@ data class PRDialogState(
     val reviewerFilter: String = "",
     val labelFilter: String = "",
     val errorMessage: String? = null,
+    val isCreatingLabel: Boolean = false,
 )
 
 class CreatePRDialog(
@@ -119,6 +121,28 @@ class CreatePRDialog(
                 labels = labels,
                 errorMessage = error,
             )
+        }
+    }
+
+    private fun createLabel(name: String) {
+        state.value = state.value.copy(isCreatingLabel = true)
+        kotlin.concurrent.thread {
+            try {
+                runProcess(ghPath, "label", "create", name, "--repo", "$owner/$repo")
+                val updatedLabels = (state.value.labels + name).sorted()
+                cacheService.saveRepoCache(owner, repo, state.value.collaborators, updatedLabels)
+                state.value = state.value.copy(
+                    isCreatingLabel = false,
+                    labels = updatedLabels,
+                    selectedLabels = state.value.selectedLabels + name,
+                    labelFilter = "",
+                )
+            } catch (e: Exception) {
+                state.value = state.value.copy(
+                    isCreatingLabel = false,
+                    errorMessage = "Failed to create label: ${e.message}",
+                )
+            }
         }
     }
 
@@ -238,7 +262,7 @@ class CreatePRDialog(
                     title = "Labels",
                     filterValue = currentState.labelFilter,
                     onFilterChange = { state.value = state.value.copy(labelFilter = it) },
-                    filterPlaceholder = "Filter labels...",
+                    filterPlaceholder = "Filter or create label...",
                     items = currentState.labels,
                     selectedItems = currentState.selectedLabels,
                     onToggle = { item ->
@@ -247,6 +271,10 @@ class CreatePRDialog(
                             selectedLabels = if (item in current) current - item else current + item
                         )
                     },
+                    onAdd = if (!currentState.isCreatingLabel) {
+                        { name -> createLabel(name) }
+                    } else null,
+                    isAdding = currentState.isCreatingLabel,
                 )
             }
 
@@ -327,6 +355,8 @@ class CreatePRDialog(
         items: List<String>,
         selectedItems: Set<String>,
         onToggle: (String) -> Unit,
+        onAdd: ((String) -> Unit)? = null,
+        isAdding: Boolean = false,
     ) {
         Column(
             modifier = modifier,
@@ -353,6 +383,37 @@ class CreatePRDialog(
 
             val filtered = items.filter {
                 filterValue.isBlank() || it.contains(filterValue, ignoreCase = true)
+            }
+
+            val exactMatch = items.any { it.equals(filterValue.trim(), ignoreCase = true) }
+            if (onAdd != null && filterValue.isNotBlank() && !exactMatch) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (isAdding) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = TPTheme.colors.blue,
+                            strokeWidth = 2.dp,
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        TPText(
+                            text = "Creating...",
+                            color = TPTheme.colors.hintGray,
+                            style = TextStyle(fontSize = 12.sp),
+                        )
+                    } else {
+                        TPActionCard(
+                            title = "Add \"${filterValue.trim()}\"",
+                            icon = Icons.Rounded.Add,
+                            actionColor = TPTheme.colors.blue,
+                            type = TPActionCardType.SMALL,
+                            onClick = { onAdd(filterValue.trim()) },
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.size(8.dp))
             }
 
             if (filtered.isEmpty()) {
