@@ -1,8 +1,8 @@
 package com.github.teknasyon.plugin.toolwindow.template
 
 object ModuleReadMeTemplate {
-    val data = """
-        # ${'$'}{moduleName}
+    val data = $$"""
+        # ${moduleName}
 
         TODO
     """.trimIndent()

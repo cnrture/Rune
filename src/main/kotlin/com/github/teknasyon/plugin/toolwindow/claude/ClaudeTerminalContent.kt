@@ -32,7 +32,6 @@ import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.data.repository.SkillRepositoryImpl
 import com.github.teknasyon.plugin.domain.model.Skill
-import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
 import com.github.teknasyon.plugin.service.FileScanner
 import com.github.teknasyon.plugin.service.SkillDockSettingsService
 import com.github.teknasyon.plugin.theme.TPTheme
