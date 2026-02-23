@@ -28,18 +28,8 @@ import com.github.teknasyon.plugin.components.TPActionCard
 import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.data.SettingsState
-import com.github.teknasyon.plugin.data.repository.SkillRepositoryImpl
-import com.github.teknasyon.plugin.domain.usecase.ExecuteSkillUseCase
-import com.github.teknasyon.plugin.domain.usecase.ProcessReviewCommentsUseCase
-import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
-import com.github.teknasyon.plugin.domain.usecase.ToggleFavoriteUseCase
-import com.github.teknasyon.plugin.service.FileScanner
 import com.github.teknasyon.plugin.service.SettingsService
-import com.github.teknasyon.plugin.service.SkillDockSettingsService
-import com.github.teknasyon.plugin.service.TerminalExecutorImpl
 import com.github.teknasyon.plugin.theme.TPTheme
-import com.github.teknasyon.plugin.toolwindow.ai.SkillDockViewModel
-import com.github.teknasyon.plugin.toolwindow.manager.ai.AiContent
 import com.github.teknasyon.plugin.toolwindow.manager.featuregenerator.FeatureGeneratorContent
 import com.github.teknasyon.plugin.toolwindow.manager.jungle.JungleContent
 import com.github.teknasyon.plugin.toolwindow.manager.modulegenerator.ModuleGeneratorContent
@@ -113,11 +103,7 @@ class TPToolWindowFactory : ToolWindowFactory {
 
     @Composable
     private fun MainContent(project: Project) {
-        val viewModel = remember {
-            createViewModel(project)
-        }
-
-        var selectedSection by remember { mutableStateOf("ai") }
+        var selectedSection by remember { mutableStateOf("jungle") }
         var isExpanded by remember { mutableStateOf(settings.state.isActionsExpanded) }
         var isExportDialogVisible by remember { mutableStateOf(false) }
 
@@ -183,19 +169,9 @@ class TPToolWindowFactory : ToolWindowFactory {
                         }
 
                         SidebarButton(
-                            title = "AI Tools",
-                            icon = Icons.Rounded.Memory,
-                            isSelected = selectedSection == "ai",
-                            color = TPTheme.colors.blue,
-                            isExpanded = isExpanded,
-                            onClick = { selectedSection = "ai" }
-                        )
-
-                        SidebarButton(
                             title = "Jungle",
                             icon = Icons.Rounded.Language,
                             isSelected = selectedSection == "jungle",
-                            color = TPTheme.colors.blue,
                             isExpanded = isExpanded,
                             onClick = { selectedSection = "jungle" }
                         )
@@ -204,7 +180,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                             title = "Module",
                             icon = Icons.Rounded.ViewModule,
                             isSelected = selectedSection == "module",
-                            color = TPTheme.colors.blue,
                             isExpanded = isExpanded,
                             onClick = { selectedSection = "module" }
                         )
@@ -213,7 +188,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                             title = "Feature",
                             icon = Icons.Rounded.FileOpen,
                             isSelected = selectedSection == "feature",
-                            color = TPTheme.colors.blue,
                             isExpanded = isExpanded,
                             onClick = { selectedSection = "feature" }
                         )
@@ -222,7 +196,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                             title = "Settings",
                             icon = Icons.Rounded.Settings,
                             isSelected = selectedSection == "settings",
-                            color = TPTheme.colors.lightGray,
                             isExpanded = isExpanded,
                             onClick = { selectedSection = "settings" }
                         )
@@ -266,16 +239,7 @@ class TPToolWindowFactory : ToolWindowFactory {
                     "module" -> ModuleGeneratorContent(project)
                     "feature" -> FeatureGeneratorContent(project)
                     "jungle" -> JungleContent()
-                    "settings" -> SettingsContent(
-                        project = project,
-                        viewModel = viewModel,
-                    )
-
-                    "ai" -> AiContent(
-                        project = project,
-                        viewModel = viewModel,
-                        onShowSettingsClick = { selectedSection = "settings" },
-                    )
+                    "settings" -> SettingsContent(project)
                 }
             }
         }
@@ -307,7 +271,6 @@ class TPToolWindowFactory : ToolWindowFactory {
         title: String,
         icon: ImageVector,
         isSelected: Boolean,
-        color: Color,
         isExpanded: Boolean,
         onClick: () -> Unit,
     ) {
@@ -373,25 +336,5 @@ class TPToolWindowFactory : ToolWindowFactory {
                 )
             }
         }
-    }
-
-    private fun createViewModel(project: Project): SkillDockViewModel {
-        val settingsService = SkillDockSettingsService.getInstance(project)
-        val fileScanner = FileScanner(project)
-        val terminalExecutor = TerminalExecutorImpl()
-        val repository = SkillRepositoryImpl(fileScanner, settingsService)
-        val scanSkillsUseCase = ScanSkillsUseCase(repository, settingsService)
-        val executeSkillUseCase = ExecuteSkillUseCase(terminalExecutor)
-        val toggleFavoriteUseCase = ToggleFavoriteUseCase(settingsService)
-        val processReviewCommentsUseCase = ProcessReviewCommentsUseCase(project)
-        return SkillDockViewModel(
-            project = project,
-            settingsService = settingsService,
-            scanSkillsUseCase = scanSkillsUseCase,
-            executeSkillUseCase = executeSkillUseCase,
-            toggleFavoriteUseCase = toggleFavoriteUseCase,
-            processReviewCommentsUseCase = processReviewCommentsUseCase,
-            terminalExecutor = terminalExecutor,
-        )
     }
 }
