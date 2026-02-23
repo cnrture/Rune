@@ -1,5 +1,6 @@
 package com.github.teknasyon.plugin.actions
 
+import com.github.teknasyon.plugin.actions.dialog.CreatePRDialog
 import com.intellij.ide.BrowserUtil
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -25,7 +26,7 @@ class CreateReviewPRAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
 
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Creating review PR…", false) {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Preparing review PR…", false) {
             override fun run(indicator: ProgressIndicator) {
                 val dir = File(project.basePath ?: return)
 
@@ -68,10 +69,57 @@ class CreateReviewPRAction : AnAction() {
                     return
                 }
 
-                // 7. Create PR
+                // 7. Parse owner/repo
+                val ownerRepo = parseOwnerRepo(dir)
+                if (ownerRepo == null) {
+                    notify(
+                        project,
+                        "Could not parse owner/repo from git remote. Ensure 'origin' remote is set.",
+                        NotificationType.ERROR,
+                    )
+                    return
+                }
+
+                // 8. Open dialog on EDT for reviewer/label selection
+                ApplicationManager.getApplication().invokeLater {
+                    val dialog = CreatePRDialog(
+                        ghPath = ghPath,
+                        dir = dir,
+                        owner = ownerRepo.first,
+                        repo = ownerRepo.second,
+                        onConfirm = { reviewers, labels ->
+                            createPR(
+                                project = project,
+                                dir = dir,
+                                ghPath = ghPath,
+                                currentBranch = currentBranch,
+                                reviewBranch = reviewBranch,
+                                reviewers = reviewers,
+                                labels = labels,
+                            )
+                        },
+                    )
+                    dialog.show()
+                }
+            }
+        })
+    }
+
+    private fun createPR(
+        project: Project,
+        dir: File,
+        ghPath: String,
+        currentBranch: String,
+        reviewBranch: String,
+        reviewers: List<String>,
+        labels: List<String>,
+    ) {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Creating review PR…", false) {
+            override fun run(indicator: ProgressIndicator) {
                 indicator.text = "Creating PR $currentBranch → $reviewBranch…"
-                val prOutput = runProcess(
-                    dir, ghPath,
+
+                val cmd = mutableListOf(
+                    ghPath,
                     "pr", "create",
                     "--draft",
                     "--base", reviewBranch,
@@ -80,13 +128,22 @@ class CreateReviewPRAction : AnAction() {
                     "--body", "",
                 )
 
-                // 8. Extract PR URL and show
+                if (reviewers.isNotEmpty()) {
+                    cmd += "--reviewer"
+                    cmd += reviewers.joinToString(",")
+                }
+                if (labels.isNotEmpty()) {
+                    cmd += "--label"
+                    cmd += labels.joinToString(",")
+                }
+
+                val prOutput = runProcess(dir, *cmd.toTypedArray())
+
                 val prUrl = prOutput.lines().firstOrNull { it.startsWith("https://github.com") }
                 if (prUrl != null) {
                     ApplicationManager.getApplication().invokeLater { BrowserUtil.browse(prUrl) }
                     notify(project, "PR created: $prUrl", NotificationType.INFORMATION)
                 } else {
-                    // PR may already exist or gh returned error
                     val existingUrl = runProcess(dir, ghPath, "pr", "view", "--json", "url", "--jq", ".url")
                         .trim().takeIf { it.startsWith("https://") }
                     if (existingUrl != null) {
@@ -98,6 +155,29 @@ class CreateReviewPRAction : AnAction() {
                 }
             }
         })
+    }
+
+    /**
+     * Parses owner and repo name from the 'origin' remote URL.
+     * Supports both HTTPS (https://github.com/owner/repo.git) and SSH (git@github.com:owner/repo.git) formats.
+     */
+    private fun parseOwnerRepo(dir: File): Pair<String, String>? {
+        val remoteUrl = runGit(dir, "remote", "get-url", "origin").trim()
+        if (remoteUrl.isBlank()) return null
+
+        // SSH: git@github.com:owner/repo.git
+        val sshMatch = Regex("""git@[^:]+:([^/]+)/(.+?)(?:\.git)?$""").find(remoteUrl)
+        if (sshMatch != null) {
+            return sshMatch.groupValues[1] to sshMatch.groupValues[2]
+        }
+
+        // HTTPS: https://github.com/owner/repo.git
+        val httpsMatch = Regex("""https?://[^/]+/([^/]+)/(.+?)(?:\.git)?$""").find(remoteUrl)
+        if (httpsMatch != null) {
+            return httpsMatch.groupValues[1] to httpsMatch.groupValues[2]
+        }
+
+        return null
     }
 
     /**
