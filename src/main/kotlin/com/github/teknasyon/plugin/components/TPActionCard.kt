@@ -64,7 +64,7 @@ fun TPActionCard(
             )
             .border(
                 width = borderSize,
-                color = if (isEnabled) actionColor else TPTheme.colors.lightGray.copy(alpha = 0.1f),
+                color = if (isEnabled) actionColor else TPTheme.colors.outline.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(12.dp)
             )
             .then(

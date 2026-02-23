@@ -44,7 +44,7 @@ fun SearchBar(
                 Icon(
                     modifier = Modifier.size(24.dp),
                     imageVector = Icons.Default.Search,
-                    tint = TPTheme.colors.white.copy(alpha = 0.55f),
+                    tint = TPTheme.colors.lightGray,
                     contentDescription = "Search Icon"
                 )
                 Spacer(modifier = Modifier.size(12.dp))
@@ -52,7 +52,7 @@ fun SearchBar(
                     Text(
                         text = "Search...",
                         style = TextStyle(
-                            color = TPTheme.colors.white.copy(alpha = 0.55f),
+                            color = TPTheme.colors.hintGray,
                             fontSize = 16.sp,
                         ),
                     )

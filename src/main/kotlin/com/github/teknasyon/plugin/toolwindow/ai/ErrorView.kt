@@ -41,7 +41,7 @@ fun ErrorView(
             Text(
                 text = message,
                 style = MaterialTheme.typography.body2,
-                color = TPTheme.colors.white.copy(alpha = 0.6f),
+                color = TPTheme.colors.lightGray,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.size(16.dp))

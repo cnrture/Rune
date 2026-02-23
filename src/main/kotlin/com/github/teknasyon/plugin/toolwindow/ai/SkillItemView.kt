@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
+
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,11 +75,11 @@ fun SkillItemView(
                             .focusRequester(focusRequester),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             textColor = TPTheme.colors.white,
-                            focusedBorderColor = TPTheme.colors.white,
-                            unfocusedBorderColor = TPTheme.colors.white.copy(alpha = 0.5f),
-                            focusedLabelColor = TPTheme.colors.white,
-                            unfocusedLabelColor = TPTheme.colors.white.copy(alpha = 0.5f),
-                            placeholderColor = TPTheme.colors.white.copy(alpha = 0.5f),
+                            focusedBorderColor = TPTheme.colors.blue,
+                            unfocusedBorderColor = TPTheme.colors.outline,
+                            focusedLabelColor = TPTheme.colors.blue,
+                            unfocusedLabelColor = TPTheme.colors.lightGray,
+                            placeholderColor = TPTheme.colors.hintGray,
                         )
                     )
                     Spacer(Modifier.height(24.dp))
@@ -92,7 +92,7 @@ fun SkillItemView(
                                 showDialog = false
                                 inputText = ""
                             },
-                            colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.white.copy(alpha = 0.7f))
+                            colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.lightGray)
                         ) {
                             Text("Cancel")
                         }
@@ -121,7 +121,7 @@ fun SkillItemView(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .background(
-                color = TPTheme.colors.blue.copy(alpha = 0.15f),
+                color = TPTheme.colors.primaryContainer.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(8.dp),
             )
             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -148,7 +148,7 @@ fun SkillItemView(
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
                         contentDescription = "Open file",
-                        tint = TPTheme.colors.white.copy(alpha = 0.6f),
+                        tint = TPTheme.colors.lightGray,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -160,7 +160,7 @@ fun SkillItemView(
                     Icon(
                         imageVector = if (skill.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
                         contentDescription = "Favorite",
-                        tint = if (skill.isFavorite) Color(0xFFFFD700) else TPTheme.colors.white.copy(alpha = 0.6f),
+                        tint = if (skill.isFavorite) TPTheme.colors.warning else TPTheme.colors.lightGray,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -184,7 +184,7 @@ fun SkillItemView(
                 Text(
                     text = skill.description,
                     style = MaterialTheme.typography.overline.copy(letterSpacing = 0.4.sp),
-                    color = TPTheme.colors.white.copy(alpha = 0.7f),
+                    color = TPTheme.colors.lightGray,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

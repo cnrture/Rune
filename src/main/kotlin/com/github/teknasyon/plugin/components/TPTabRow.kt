@@ -25,7 +25,7 @@ fun TPTabRow(
     Card(
         modifier = Modifier.clickable { onTabSelected() }.then(modifier),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = if (isSelected) color else TPTheme.colors.gray,
+        backgroundColor = if (isSelected) TPTheme.colors.primaryContainer else TPTheme.colors.gray,
         elevation = 0.dp
     ) {
         TPText(

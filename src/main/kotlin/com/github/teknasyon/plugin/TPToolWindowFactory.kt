@@ -315,7 +315,7 @@ class TPToolWindowFactory : ToolWindowFactory {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = if (isSelected) color.copy(alpha = 0.2f) else TPTheme.colors.black,
+                    color = if (isSelected) TPTheme.colors.primaryContainer else Color.Transparent,
                     shape = RoundedCornerShape(12.dp)
                 )
                 .clickable { onClick() }
@@ -323,17 +323,29 @@ class TPToolWindowFactory : ToolWindowFactory {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .width(3.dp)
+                        .height(18.dp)
+                        .background(
+                            color = TPTheme.colors.blue,
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                )
+                Spacer(modifier = Modifier.size(4.dp))
+            }
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isSelected) color else TPTheme.colors.lightGray,
+                tint = if (isSelected) TPTheme.colors.blue else TPTheme.colors.lightGray,
                 modifier = Modifier.size(18.dp)
             )
             if (isExpanded) {
                 Spacer(modifier = Modifier.size(4.dp))
                 TPText(
                     text = title,
-                    color = if (isSelected) TPTheme.colors.white else TPTheme.colors.lightGray.copy(alpha = 0.4f),
+                    color = if (isSelected) TPTheme.colors.white else TPTheme.colors.lightGray,
                     style = TextStyle(
                         fontSize = 14.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal

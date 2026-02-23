@@ -27,7 +27,7 @@ fun LoadingView(modifier: Modifier = Modifier) {
             Text(
                 text = "Loading skills...",
                 style = MaterialTheme.typography.body2,
-                color = TPTheme.colors.white.copy(alpha = 0.6f)
+                color = TPTheme.colors.lightGray
             )
         }
     }

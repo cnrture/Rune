@@ -33,7 +33,7 @@ fun TPTextField(
             .clip(RoundedCornerShape(8.dp))
             .border(
                 width = 1.dp,
-                color = TPTheme.colors.white,
+                color = TPTheme.colors.outline,
                 shape = RoundedCornerShape(8.dp)
             ),
         value = value,

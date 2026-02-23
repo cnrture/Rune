@@ -12,7 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+
 import androidx.compose.ui.unit.dp
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -65,7 +65,7 @@ fun SkillDockPanel(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Assignment,
                         contentDescription = "PR Tracker",
-                        tint = TPTheme.colors.white,
+                        tint = TPTheme.colors.lightGray,
                     )
                 }
                 if (!isCommandsTab) {
@@ -73,26 +73,26 @@ fun SkillDockPanel(
                         Icon(
                             imageVector = if (tab.showOnlyFavorites) Icons.Filled.Star else Icons.Outlined.StarBorder,
                             contentDescription = "Toggle Favorites",
-                            tint = if (tab.showOnlyFavorites) Color(0xFFFFD700) else TPTheme.colors.white,
+                            tint = if (tab.showOnlyFavorites) TPTheme.colors.warning else TPTheme.colors.lightGray,
                         )
                     }
                     IconButton(onClick = { viewModel.onEvent(SkillDockEvent.RefreshSkills) }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh",
-                            tint = TPTheme.colors.white,
+                            tint = TPTheme.colors.lightGray,
                         )
                     }
                 }
             },
             elevation = 4.dp,
-            backgroundColor = TPTheme.colors.black,
+            backgroundColor = TPTheme.colors.surfaceDim,
         )
 
         TabRow(
             selectedTabIndex = state.activeTab.ordinal,
-            backgroundColor = TPTheme.colors.black,
-            contentColor = TPTheme.colors.white,
+            backgroundColor = TPTheme.colors.surfaceDim,
+            contentColor = TPTheme.colors.blue,
         ) {
             Tab(
                 selected = state.activeTab == SkillDockTab.SKILLS,
@@ -162,7 +162,7 @@ private fun EmptyView(onOpenSettings: () -> Unit) {
             Text(
                 text = "No skills found",
                 style = MaterialTheme.typography.h6,
-                color = TPTheme.colors.white.copy(alpha = 0.6f)
+                color = TPTheme.colors.lightGray
             )
             Spacer(modifier = Modifier.size(8.dp))
             TextButton(
