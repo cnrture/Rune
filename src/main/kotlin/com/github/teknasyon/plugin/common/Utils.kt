@@ -100,7 +100,8 @@ object Utils {
     ): List<File> {
         try {
             val settingsGradleFile = getSettingsGradleFile(project)
-            val sourceFile = getSourceDirectoryFromSelected(project, selectedSrc)
+            val selectedSrcPath = selectedSrc
+            val sourceFile = getSourceDirectoryFromSelected(project, selectedSrcPath)
 
             if (settingsGradleFile != null) {
                 val moduleName = moduleName.trim()

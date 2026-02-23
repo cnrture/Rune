@@ -25,6 +25,8 @@ import com.github.teknasyon.plugin.data.FeatureTemplate
 import com.github.teknasyon.plugin.data.ModuleTemplate
 import com.github.teknasyon.plugin.service.SettingsService
 import com.github.teknasyon.plugin.theme.TPTheme
+import com.github.teknasyon.plugin.toolwindow.ai.SkillDockEvent
+import com.github.teknasyon.plugin.toolwindow.ai.SkillDockViewModel
 import com.github.teknasyon.plugin.toolwindow.manager.settings.dialog.*
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
@@ -32,10 +34,13 @@ import com.intellij.openapi.project.Project
 import java.util.*
 
 @Composable
-fun SettingsContent(project: Project) {
+fun SettingsContent(
+    project: Project,
+    viewModel: SkillDockViewModel,
+) {
     val settings = SettingsService.getInstance()
     var currentSettings by mutableStateOf(settings.state.copy())
-    var selectedTab by mutableStateOf("templates")
+    var selectedTab by mutableStateOf("ai_tools")
 
     var refreshTrigger by remember { mutableStateOf(0) }
     val moduleTemplates by remember(refreshTrigger) {
@@ -44,6 +49,8 @@ fun SettingsContent(project: Project) {
     val featureTemplates by remember(refreshTrigger) {
         mutableStateOf(settings.getFeatureTemplates())
     }
+
+    val state by viewModel.state.collectAsState()
 
     val triggerRefresh = { refreshTrigger++ }
 
@@ -77,6 +84,12 @@ fun SettingsContent(project: Project) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TPTabRow(
+                    text = "AI Tools",
+                    isSelected = selectedTab == "ai_tools",
+                    color = TPTheme.colors.lightGray,
+                    onTabSelected = { selectedTab = "ai_tools" }
+                )
+                TPTabRow(
                     text = "Module",
                     isSelected = selectedTab == "templates",
                     color = TPTheme.colors.lightGray,
@@ -99,6 +112,18 @@ fun SettingsContent(project: Project) {
                     .verticalScroll(rememberScrollState())
             ) {
                 when (selectedTab) {
+                    "ai_tools" -> {
+                        AIToolsTab(
+                            currentSkillsPath = state.skillsTab.rootPath,
+                            currentAgentsPath = state.agentsTab.rootPath,
+                            project = project,
+                            onSave = { skillsPath, agentsPath ->
+                                viewModel.onEvent(SkillDockEvent.SaveSkillsRootPath(skillsPath))
+                                viewModel.onEvent(SkillDockEvent.SaveAgentsRootPath(agentsPath))
+                            },
+                        )
+                    }
+
                     "templates" -> {
                         ModuleTemplatesTab(
                             project = project,
@@ -731,6 +756,97 @@ private fun FeatureTemplateCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun AIToolsTab(
+    currentSkillsPath: String,
+    currentAgentsPath: String,
+    project: Project,
+    onSave: (skillsPath: String, agentsPath: String) -> Unit,
+) {
+    var skillsPath by remember { mutableStateOf(currentSkillsPath) }
+    var agentsPath by remember { mutableStateOf(currentAgentsPath) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        PathRow(
+            label = "Skills Root Path",
+            path = skillsPath,
+            onPathChange = { skillsPath = it },
+            project = project,
+            browseTitle = "Select Skills Directory",
+        )
+        PathRow(
+            label = "Agents Root Path",
+            path = agentsPath,
+            onPathChange = { agentsPath = it },
+            project = project,
+            browseTitle = "Select Agents Directory",
+        )
+        Spacer(modifier = Modifier.size(12.dp))
+        TPActionCard(
+            modifier = Modifier.align(Alignment.End),
+            title = "Save",
+            icon = Icons.Rounded.Save,
+            type = TPActionCardType.MEDIUM,
+            actionColor = TPTheme.colors.blue,
+            onClick = { onSave(skillsPath.trim(), agentsPath.trim()) },
+            isEnabled = skillsPath.isNotBlank() || agentsPath.isNotBlank(),
+        )
+    }
+}
+
+@Composable
+private fun PathRow(
+    label: String,
+    path: String,
+    onPathChange: (String) -> Unit,
+    project: Project,
+    browseTitle: String,
+) {
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.caption,
+            color = TPTheme.colors.white.copy(alpha = 0.6f),
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = path,
+                onValueChange = onPathChange,
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = TPTheme.colors.white,
+                    focusedBorderColor = TPTheme.colors.white.copy(alpha = 0.6f),
+                    unfocusedBorderColor = TPTheme.colors.white.copy(alpha = 0.6f),
+                    cursorColor = TPTheme.colors.white,
+                    placeholderColor = TPTheme.colors.white.copy(alpha = 0.6f),
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            val descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor()
+                                .withTitle(browseTitle)
+                            FileChooser.chooseFile(descriptor, project, null) { file ->
+                                onPathChange(file.path)
+                            }
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.FolderOpen,
+                            contentDescription = "Browse",
+                            tint = TPTheme.colors.white.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            )
         }
     }
 }

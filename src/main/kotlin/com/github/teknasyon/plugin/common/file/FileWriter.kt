@@ -375,13 +375,14 @@ class FileWriter() {
         if (categoryBlocks.containsKey(moduleCategory)) {
             val (blockStart, blockEnd) = categoryBlocks[moduleCategory]!!
 
-            val lastLine = settingsFileContent[blockEnd]
+            val insertPosition = blockEnd
+            val lastLine = settingsFileContent[insertPosition]
 
             val baseIndentation = lastLine.takeWhile { it.isWhitespace() }
 
             var continuationIndentation = Constants.EMPTY
-            if (blockEnd > blockStart) {
-                for (i in blockStart + 1..blockEnd) {
+            if (insertPosition > blockStart) {
+                for (i in blockStart + 1..insertPosition) {
                     val line = settingsFileContent[i].trim()
                     if (line.startsWith("':") && !line.startsWith("include")) {
                         continuationIndentation = settingsFileContent[i].takeWhile { it.isWhitespace() }
@@ -399,18 +400,18 @@ class FileWriter() {
             val trimmedLastLine = lastLine.trim()
 
             if (trimmedLastLine.endsWith(",")) {
-                settingsFileContent.add(blockEnd + 1, "$continuationIndentation'$modulePathAsString'")
+                settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
             } else if (trimmedLastLine.contains("include") &&
                 (trimmedLastLine.endsWith("'") || trimmedLastLine.endsWith("\""))
             ) {
-                settingsFileContent[blockEnd] = "${lastLine},"
-                settingsFileContent.add(blockEnd + 1, "$continuationIndentation'$modulePathAsString'")
+                settingsFileContent[insertPosition] = "${lastLine},"
+                settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
             } else if (trimmedLastLine.endsWith("'") || trimmedLastLine.endsWith("\"")) {
-                settingsFileContent[blockEnd] = "${lastLine},"
-                settingsFileContent.add(blockEnd + 1, "$continuationIndentation'$modulePathAsString'")
+                settingsFileContent[insertPosition] = "${lastLine},"
+                settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
             } else {
                 val includeStatement = constructIncludeStatement(modulePathAsString, settingsFileContent)
-                settingsFileContent.add(blockEnd + 1, "$baseIndentation$includeStatement")
+                settingsFileContent.add(insertPosition + 1, "$baseIndentation$includeStatement")
             }
 
             return settingsFileContent
