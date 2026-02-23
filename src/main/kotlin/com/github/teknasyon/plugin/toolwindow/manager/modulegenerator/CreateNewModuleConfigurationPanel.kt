@@ -115,7 +115,7 @@ fun CreateNewModuleConfigurationPanel(
                 .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
             ModuleTypeNameContent(
                 moduleTypeSelectionState = moduleType,
                 packageName = packageName,
@@ -125,7 +125,7 @@ fun CreateNewModuleConfigurationPanel(
                 onModuleTypeSelected = onModuleTypeSelected,
                 onModuleNameChanged = onModuleNameChanged,
             )
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.size(32.dp))
             TemplateSelectionContent(
                 templates = templates,
                 selectedTemplate = selectedTemplate,
@@ -134,7 +134,7 @@ fun CreateNewModuleConfigurationPanel(
                 onTemplateSelected = onTemplateSelected,
                 onNameChanged = onNameChanged,
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
             DetectedModulesContent(
                 project = project,
                 isAnalyzingState = isAnalyzingState,
@@ -149,7 +149,7 @@ fun CreateNewModuleConfigurationPanel(
                 selectedModules = selectedModules,
                 onCheckedModule = onCheckedModule,
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),

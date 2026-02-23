@@ -74,7 +74,7 @@ fun JungleContent() {
                                 tint = TPTheme.colors.white
                             )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.size(8.dp))
                         Text(
                             text = "Back",
                             color = TPTheme.colors.white,

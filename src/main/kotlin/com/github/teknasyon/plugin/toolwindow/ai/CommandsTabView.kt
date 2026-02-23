@@ -121,7 +121,7 @@ private fun CommandCard(command: ClaudeCommand, onRun: () -> Unit) {
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = command.description,
                 color = TPTheme.colors.lightGray,

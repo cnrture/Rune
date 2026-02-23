@@ -69,7 +69,7 @@ fun TemplateCreatorContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.size(16.dp))
 
         Box(
             modifier = Modifier
@@ -89,13 +89,13 @@ fun TemplateCreatorContent(
                     value = templateName,
                     onValueChange = { templateName = it }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
                 TPText(
                     text = "File Content (use {NAME}, {PACKAGE}, {FILE_PACKAGE} placeholders):",
                     color = TPTheme.colors.lightGray,
                     style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.size(8.dp))
                 TPText(
                     text = "{NAME} -> Name of the file without extension",
                     color = TPTheme.colors.lightGray,
@@ -111,7 +111,7 @@ fun TemplateCreatorContent(
                     color = TPTheme.colors.lightGray,
                     style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.size(24.dp))
                 fileTemplates.forEachIndexed { index, fileTemplate ->
                     FileTemplateEditor(
                         fileTemplate = fileTemplate,
@@ -119,9 +119,9 @@ fun TemplateCreatorContent(
                         onUpdate = { fileTemplates[index] = it },
                         onDelete = { fileTemplates.removeAt(index) }
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.size(12.dp))
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.size(12.dp))
                 TPActionCard(
                     title = "Add File Template",
                     icon = Icons.Rounded.Add,
@@ -221,7 +221,7 @@ fun FeatureTemplateCreatorContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.size(16.dp))
 
         Box(
             modifier = Modifier
@@ -241,13 +241,13 @@ fun FeatureTemplateCreatorContent(
                     value = templateName,
                     onValueChange = { templateName = it }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
                 TPText(
                     text = "File Content (use {NAME}, {PACKAGE}, {FILE_PACKAGE} placeholders):",
                     color = TPTheme.colors.lightGray,
                     style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.size(8.dp))
                 TPText(
                     text = "{NAME} -> Name of the file without extension",
                     color = TPTheme.colors.lightGray,
@@ -263,7 +263,7 @@ fun FeatureTemplateCreatorContent(
                     color = TPTheme.colors.lightGray,
                     style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.size(24.dp))
                 fileTemplates.forEachIndexed { index, fileTemplate ->
                     FileTemplateEditor(
                         fileTemplate = fileTemplate,
@@ -271,9 +271,9 @@ fun FeatureTemplateCreatorContent(
                         onUpdate = { fileTemplates[index] = it },
                         onDelete = { fileTemplates.removeAt(index) }
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.size(12.dp))
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.size(12.dp))
                 TPActionCard(
                     title = "Add File Template",
                     icon = Icons.Rounded.Add,

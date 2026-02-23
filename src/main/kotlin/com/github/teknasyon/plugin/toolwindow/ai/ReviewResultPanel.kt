@@ -100,7 +100,7 @@ private fun TaskCard(task: ReviewTask, change: ReviewChange?) {
             }
 
             if (change != null) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.size(8.dp))
                 DiffView(before = change.before, after = change.after)
             }
         }

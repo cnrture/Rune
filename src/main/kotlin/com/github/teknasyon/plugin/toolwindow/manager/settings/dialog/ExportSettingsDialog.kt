@@ -58,7 +58,7 @@ fun ExportSettingsContent(
             )
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.size(8.dp))
 
         TPText(
             text = "Export all your templates and configurations to a JSON file",
@@ -66,7 +66,7 @@ fun ExportSettingsContent(
             style = TextStyle(fontSize = 14.sp)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.size(24.dp))
 
         TPText(
             text = "Export Location",
@@ -77,7 +77,7 @@ fun ExportSettingsContent(
             )
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.size(8.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -108,7 +108,7 @@ fun ExportSettingsContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.size(24.dp))
 
         TPText(
             text = "File Name",
@@ -119,7 +119,7 @@ fun ExportSettingsContent(
             )
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.size(8.dp))
 
         TPTextField(
             modifier = Modifier.fillMaxWidth(),
@@ -129,7 +129,7 @@ fun ExportSettingsContent(
             onValueChange = { fileName = it }
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.size(4.dp))
 
         TPText(
             text = "File will be saved as: $fileName.json",

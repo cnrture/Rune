@@ -101,7 +101,7 @@ fun ConfigurationPanel(
                 onValueChange = onFeatureNameChange,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
 
             TPText(
                 text = "Be sure to use camel case for the feature name (e.g. MyFeature)",
@@ -109,7 +109,7 @@ fun ConfigurationPanel(
                 style = TextStyle(fontWeight = FontWeight.SemiBold),
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
 
             if (availableTemplates.isNotEmpty()) {
                 TemplateSelectionContent(
@@ -122,7 +122,7 @@ fun ConfigurationPanel(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
 
             RootSelectionContent(
                 modifier = Modifier.fillMaxWidth(),
@@ -158,7 +158,7 @@ fun TemplateSelectionContent(
             )
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.size(8.dp))
 
         TPText(
             text = "Choose a template to auto-configure your module",
@@ -166,7 +166,7 @@ fun TemplateSelectionContent(
             style = TextStyle(fontSize = 12.sp)
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.size(12.dp))
 
         templates.forEach { template ->
             TemplateOption(
@@ -178,7 +178,7 @@ fun TemplateSelectionContent(
                 badge = if (template.id == defaultTemplateId) "Default" else "",
                 badgeColor = if (template.id == defaultTemplateId) TPTheme.colors.blue else TPTheme.colors.purple
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
         }
     }
 }
@@ -221,7 +221,7 @@ private fun TemplateOption(
                             fontWeight = FontWeight.Bold
                         )
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.size(8.dp))
 
                     if (badge.isNotEmpty()) {
                         Card(

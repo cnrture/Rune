@@ -278,7 +278,7 @@ private fun SessionTabBar(
                             fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                         )
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.size(6.dp))
                     Icon(
                         imageVector = Icons.Rounded.Close,
                         contentDescription = "Oturumu kapat",
@@ -326,7 +326,7 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
             tint = TPTheme.colors.purple,
             modifier = Modifier.size(48.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.size(16.dp))
         TPText(
             text = "Claude CLI Bulunamadı",
             color = TPTheme.colors.white,
@@ -335,13 +335,13 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
                 fontWeight = FontWeight.Bold
             )
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.size(8.dp))
         TPText(
             text = "Claude CLI kurulu değil. Aşağıdaki komutu çalıştırarak kurabilirsiniz:",
             color = TPTheme.colors.lightGray,
             style = TextStyle(fontSize = 14.sp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.size(16.dp))
 
         Row(
             modifier = Modifier
@@ -357,7 +357,7 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
                 color = TPTheme.colors.purple,
                 style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.size(12.dp))
             Icon(
                 imageVector = Icons.Rounded.ContentCopy,
                 contentDescription = "Copy",
@@ -371,7 +371,7 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.size(24.dp))
         TPText(
             text = "Tekrar Dene",
             color = TPTheme.colors.blue,
@@ -492,13 +492,13 @@ private fun TerminalInputBar(
                                 tint = TPTheme.colors.blue,
                                 modifier = Modifier.size(14.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.size(4.dp))
                             TPText(
                                 text = fileName,
                                 color = TPTheme.colors.blue,
                                 style = TextStyle(fontSize = 12.sp),
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.size(6.dp))
                             Icon(
                                 imageVector = Icons.Rounded.Close,
                                 contentDescription = "Remove image",

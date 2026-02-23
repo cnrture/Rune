@@ -31,25 +31,25 @@ fun ErrorView(
                 text = "⚠️",
                 style = MaterialTheme.typography.h3
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
             Text(
                 text = "Error",
                 style = MaterialTheme.typography.h6,
                 color = TPTheme.colors.red
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
             Text(
                 text = message,
                 style = MaterialTheme.typography.body2,
                 color = TPTheme.colors.white.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
             if (onOpenSettings != null) {
                 Button(onClick = onOpenSettings) {
                     Text("Open Settings")
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.size(8.dp))
             }
             Button(onClick = onRetry) {
                 Text("Retry")

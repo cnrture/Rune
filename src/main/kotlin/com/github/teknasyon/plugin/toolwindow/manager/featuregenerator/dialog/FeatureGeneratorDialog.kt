@@ -155,7 +155,7 @@ class FeatureGeneratorDialog(
                     ),
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
 
                 if (availableTemplates.isNotEmpty()) {
                     TemplateSelectionContent(
@@ -168,7 +168,7 @@ class FeatureGeneratorDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
 
                 Column(
                     modifier = Modifier
@@ -186,7 +186,7 @@ class FeatureGeneratorDialog(
                         onValueChange = { featureName.value = it },
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.size(8.dp))
 
                     TPText(
                         text = "Be sure to use camel case for the feature name (e.g. MyFeature)",
@@ -224,7 +224,7 @@ class FeatureGeneratorDialog(
                 )
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
 
             TPText(
                 text = "Choose a template to auto-configure your module",
@@ -232,7 +232,7 @@ class FeatureGeneratorDialog(
                 style = TextStyle(fontSize = 12.sp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
             templates.forEach { template ->
                 TemplateOption(
@@ -244,7 +244,7 @@ class FeatureGeneratorDialog(
                     badge = if (template.id == defaultTemplateId) "Default" else "",
                     badgeColor = if (template.id == defaultTemplateId) TPTheme.colors.blue else TPTheme.colors.purple
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.size(8.dp))
             }
         }
     }
@@ -287,7 +287,7 @@ class FeatureGeneratorDialog(
                                 fontWeight = FontWeight.Bold
                             )
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.size(8.dp))
 
                         if (badge.isNotEmpty()) {
                             Card(

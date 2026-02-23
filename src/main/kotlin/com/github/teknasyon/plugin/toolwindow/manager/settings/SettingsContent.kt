@@ -412,7 +412,7 @@ private fun ModuleTemplateCard(
                         )
                     )
                     if (template.id == defaultTemplateId) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.size(8.dp))
                         Card(
                             shape = RoundedCornerShape(4.dp),
                             backgroundColor = TPTheme.colors.blue.copy(alpha = 0.2f)
@@ -684,7 +684,7 @@ private fun FeatureTemplateCard(
                         )
                     )
                     if (template.id == defaultTemplateId) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.size(8.dp))
                         Card(
                             shape = RoundedCornerShape(4.dp),
                             backgroundColor = TPTheme.colors.blue.copy(alpha = 0.2f)
@@ -785,7 +785,7 @@ private fun AIToolsTab(
             project = project,
             browseTitle = "Select Agents Directory",
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.size(12.dp))
         TPActionCard(
             modifier = Modifier.align(Alignment.End),
             title = "Save",

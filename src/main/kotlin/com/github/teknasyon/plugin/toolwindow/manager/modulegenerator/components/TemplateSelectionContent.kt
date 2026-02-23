@@ -49,7 +49,7 @@ fun TemplateSelectionContent(
             )
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.size(8.dp))
 
         TPText(
             text = "Choose a template to auto-configure your module",
@@ -70,7 +70,7 @@ fun TemplateSelectionContent(
             badgeColor = TPTheme.colors.lightGray
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.size(12.dp))
 
         templates.forEach { template ->
             TemplateOption(
@@ -84,7 +84,7 @@ fun TemplateSelectionContent(
                 nameState = nameState,
                 onNameChanged = onNameChanged,
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
         }
     }
 }
@@ -129,7 +129,7 @@ private fun TemplateOption(
                             fontWeight = FontWeight.Bold
                         )
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.size(8.dp))
 
                     if (badge.isNotEmpty()) {
                         Card(
@@ -146,14 +146,14 @@ private fun TemplateOption(
                     }
                 }
                 if (nameState != null && onNameChanged != null && isSelected) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.size(12.dp))
                     TPTextField(
                         color = TPTheme.colors.blue,
                         placeholder = "{NAME} value",
                         value = nameState,
                         onValueChange = { onNameChanged.invoke(it) },
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.size(8.dp))
                     TPText(
                         text = "If you use {NAME} in your template, it will be replaced with this value.",
                         color = TPTheme.colors.blue,

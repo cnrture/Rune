@@ -256,7 +256,7 @@ class ModuleGeneratorDialog(
                     .padding(padding)
                     .verticalScroll(rememberScrollState()),
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
                 ModuleTypeNameContent(
                     moduleTypeSelectionState = state.moduleType,
                     packageName = state.packageName,
@@ -267,7 +267,7 @@ class ModuleGeneratorDialog(
                     onModuleNameChanged = callbacks.onModuleNameChanged,
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.size(32.dp))
 
                 RootSelectionContent(
                     selectedSrc = state.selectedSrc,
@@ -275,7 +275,7 @@ class ModuleGeneratorDialog(
                     isFileTreeButtonEnabled = false,
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
 
                 DetectedModulesContent(
                     project = state.project,
@@ -292,7 +292,7 @@ class ModuleGeneratorDialog(
                     onCheckedModule = callbacks.onCheckedModule,
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
 
                 Column(
                     modifier = Modifier.fillMaxWidth(),

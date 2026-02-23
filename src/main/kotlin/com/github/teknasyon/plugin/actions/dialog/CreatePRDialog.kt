@@ -48,8 +48,8 @@ class CreatePRDialog(
     private val repo: String,
     private val onConfirm: (reviewers: List<String>, labels: List<String>) -> Unit,
 ) : TPDialogWrapper(
-    width = 500,
-    height = 600,
+    width = 600,
+    height = 500,
 ) {
 
     private var state = mutableStateOf(PRDialogState())
@@ -140,7 +140,7 @@ class CreatePRDialog(
                     ),
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
 
                 when {
                     currentState.isLoading -> LoadingContent()
@@ -158,7 +158,7 @@ class CreatePRDialog(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = TPTheme.colors.blue)
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
                 TPText(
                     text = "Fetching GitHub data...",
                     color = TPTheme.colors.lightGray,
@@ -173,15 +173,14 @@ class CreatePRDialog(
         Column(modifier = Modifier.weight(1f)) {
             currentState.errorMessage?.let { error ->
                 ErrorBanner(error)
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.size(12.dp))
             }
 
-            Column(
+            Row(
                 modifier = Modifier.weight(1f),
             ) {
                 SectionContent(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .weight(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .border(
@@ -189,7 +188,6 @@ class CreatePRDialog(
                             color = TPTheme.colors.gray,
                             shape = RoundedCornerShape(8.dp),
                         )
-                        .verticalScroll(rememberScrollState())
                         .padding(12.dp),
                     title = "Reviewers",
                     filterValue = currentState.reviewerFilter,
@@ -205,11 +203,10 @@ class CreatePRDialog(
                     },
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
 
                 SectionContent(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .weight(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .border(
@@ -217,7 +214,6 @@ class CreatePRDialog(
                             color = TPTheme.colors.gray,
                             shape = RoundedCornerShape(8.dp),
                         )
-                        .verticalScroll(rememberScrollState())
                         .padding(12.dp),
                     title = "Labels",
                     filterValue = currentState.labelFilter,
@@ -234,7 +230,7 @@ class CreatePRDialog(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -248,7 +244,7 @@ class CreatePRDialog(
                     type = TPActionCardType.MEDIUM,
                     onClick = { close(Constants.DEFAULT_EXIT_CODE) },
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.size(12.dp))
                 TPActionCard(
                     title = "Create PR",
                     icon = Icons.Rounded.CheckCircle,
@@ -282,7 +278,7 @@ class CreatePRDialog(
                 color = TPTheme.colors.red,
                 style = TextStyle(fontSize = 12.sp),
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
             TPActionCard(
                 title = "Retry",
                 icon = Icons.Rounded.Refresh,
@@ -316,7 +312,7 @@ class CreatePRDialog(
                 ),
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.size(12.dp))
 
             TPTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -325,7 +321,7 @@ class CreatePRDialog(
                 placeholder = filterPlaceholder,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
 
             val filtered = items.filter {
                 filterValue.isBlank() || it.contains(filterValue, ignoreCase = true)
@@ -338,13 +334,19 @@ class CreatePRDialog(
                     style = TextStyle(fontSize = 12.sp),
                 )
             } else {
-                filtered.forEach { item ->
-                    TPCheckbox(
-                        modifier = Modifier.fillMaxWidth(),
-                        checked = item in selectedItems,
-                        label = item,
-                        onCheckedChange = { onToggle(item) },
-                    )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    filtered.forEach { item ->
+                        TPCheckbox(
+                            modifier = Modifier.fillMaxWidth(),
+                            checked = item in selectedItems,
+                            label = item,
+                            onCheckedChange = { onToggle(item) },
+                        )
+                    }
                 }
             }
         }

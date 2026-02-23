@@ -240,7 +240,7 @@ class TPToolWindowFactory : ToolWindowFactory {
                             isTextVisible = isExpanded,
                             onClick = { isExportDialogVisible = true }
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.size(12.dp))
                         TPActionCard(
                             title = "Import Settings",
                             icon = Icons.Rounded.FileDownload,
@@ -330,7 +330,7 @@ class TPToolWindowFactory : ToolWindowFactory {
                 modifier = Modifier.size(18.dp)
             )
             if (isExpanded) {
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.size(4.dp))
                 TPText(
                     text = title,
                     color = if (isSelected) TPTheme.colors.white else TPTheme.colors.lightGray.copy(alpha = 0.4f),

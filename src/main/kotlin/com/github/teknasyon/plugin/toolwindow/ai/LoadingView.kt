@@ -23,7 +23,7 @@ fun LoadingView(modifier: Modifier = Modifier) {
             CircularProgressIndicator(
                 color = TPTheme.colors.blue
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
             Text(
                 text = "Loading skills...",
                 style = MaterialTheme.typography.body2,

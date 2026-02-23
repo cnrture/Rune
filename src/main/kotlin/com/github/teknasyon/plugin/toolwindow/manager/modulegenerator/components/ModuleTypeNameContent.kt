@@ -44,7 +44,7 @@ fun ModuleTypeNameContent(
             )
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.size(8.dp))
 
         TPText(
             text = "Select module type, provide package name and module name",

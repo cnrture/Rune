@@ -102,7 +102,7 @@ fun TPActionCard(
         }
 
         if (icon != null && title != null && isTextVisible) {
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.size(4.dp))
         }
 
         if (isTextVisible) {

@@ -164,7 +164,7 @@ private fun EmptyView(onOpenSettings: () -> Unit) {
                 style = MaterialTheme.typography.h6,
                 color = TPTheme.colors.white.copy(alpha = 0.6f)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.size(8.dp))
             TextButton(
                 onClick = onOpenSettings,
                 colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.blue)

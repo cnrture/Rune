@@ -68,7 +68,7 @@ fun FeatureTemplateReviewContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.size(16.dp))
 
         Box(
             modifier = Modifier
@@ -86,14 +86,14 @@ fun FeatureTemplateReviewContent(
                     text = template.name,
                     color = if (template.isDefault) TPTheme.colors.lightGray.copy(alpha = 0.5f) else TPTheme.colors.white,
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.size(24.dp))
                 template.fileTemplates.forEach { fileTemplate ->
                     FileTemplateEditor(
                         fileTemplate = fileTemplate,
                         isReview = true,
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.size(12.dp))
                 }
             }
         }
@@ -145,7 +145,7 @@ fun ModuleTemplateReviewContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.size(16.dp))
 
         Box(
             modifier = Modifier
@@ -163,14 +163,14 @@ fun ModuleTemplateReviewContent(
                     text = template.name,
                     color = if (template.isDefault) TPTheme.colors.lightGray.copy(alpha = 0.5f) else TPTheme.colors.white,
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.size(24.dp))
                 template.fileTemplates.forEach { fileTemplate ->
                     FileTemplateEditor(
                         fileTemplate = fileTemplate,
                         isReview = true,
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.size(12.dp))
                 }
             }
         }
