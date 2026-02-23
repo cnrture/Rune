@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.components.*
+import com.github.teknasyon.plugin.service.GitHubCacheService
 import com.github.teknasyon.plugin.theme.TPTheme
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -54,9 +55,24 @@ class CreatePRDialog(
 
     private var state = mutableStateOf(PRDialogState())
 
+    private val cacheService = GitHubCacheService.getInstance()
+
     init {
         title = "Create Review PR"
-        fetchGitHubData()
+        loadData()
+    }
+
+    private fun loadData() {
+        val cached = cacheService.getRepoCache(owner, repo)
+        if (cached != null) {
+            state.value = state.value.copy(
+                isLoading = false,
+                collaborators = cached.collaborators.sorted(),
+                labels = cached.labels.sorted(),
+            )
+        } else {
+            fetchGitHubData()
+        }
     }
 
     private fun fetchGitHubData() {
@@ -91,6 +107,10 @@ class CreatePRDialog(
             } catch (e: Exception) {
                 val labelError = "Failed to fetch labels: ${e.message}"
                 error = if (error != null) "$error\n$labelError" else labelError
+            }
+
+            if (error == null) {
+                cacheService.saveRepoCache(owner, repo, collaborators, labels)
             }
 
             state.value = state.value.copy(
@@ -237,6 +257,14 @@ class CreatePRDialog(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                TPActionCard(
+                    title = "Refresh",
+                    icon = Icons.Rounded.Refresh,
+                    actionColor = TPTheme.colors.hintGray,
+                    type = TPActionCardType.MEDIUM,
+                    onClick = { fetchGitHubData() },
+                )
+                Spacer(modifier = Modifier.weight(1f))
                 TPActionCard(
                     title = "Cancel",
                     icon = Icons.Rounded.Cancel,
