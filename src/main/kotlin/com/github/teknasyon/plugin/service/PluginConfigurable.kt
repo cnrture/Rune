@@ -9,8 +9,8 @@ import com.intellij.ui.dsl.builder.panel
 import javax.swing.JPasswordField
 import javax.swing.JTextField
 
-class SkillDockConfigurable(private val project: Project) :
-    BoundConfigurable("SkillDock") {
+class PluginConfigurable(private val project: Project) :
+    BoundConfigurable("Teknasyon Plugin Settings") {
 
     private val settingsService = SkillDockSettingsService.getInstance(project)
     private lateinit var skillsPathField: TextFieldWithBrowseButton
@@ -54,18 +54,6 @@ class SkillDockConfigurable(private val project: Project) :
                     cell(jiraTokenField)
                 }
                 row { comment("Used to auto-select Fix Version labels from Jira tickets when creating PRs") }
-            }
-
-            group("Favorites") {
-                row {
-                    val favoritesCount = settingsService.getFavorites().size
-                    label("Total favorites: $favoritesCount")
-                }
-                row {
-                    button("Clear All Favorites") {
-                        settingsService.clearFavorites()
-                    }
-                }
             }
         }
     }

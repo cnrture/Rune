@@ -30,7 +30,7 @@
         <!-- Settings Configurable -->
         <projectConfigurable
                 parentId="tools"
-                instance="com.github.teknasyon.plugin.service.SkillDockConfigurable"
+                instance="com.github.teknasyon.plugin.service.PluginConfigurable"
                 id="com.github.teknasyon.ai.settings"
                 displayName="SkillDock"/>
     </extensions>

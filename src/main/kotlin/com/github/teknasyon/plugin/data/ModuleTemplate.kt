@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ModuleTemplate(
-    val id: String,
-    val name: String,
+    val id: String = "",
+    val name: String = "",
     val fileTemplates: List<FileTemplate> = emptyList(),
     val isDefault: Boolean = false,
 ) {

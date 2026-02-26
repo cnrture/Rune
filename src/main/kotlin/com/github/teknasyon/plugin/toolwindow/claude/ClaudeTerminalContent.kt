@@ -34,6 +34,7 @@ import com.github.teknasyon.plugin.data.repository.SkillRepositoryImpl
 import com.github.teknasyon.plugin.domain.model.Skill
 import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
 import com.github.teknasyon.plugin.service.FileScanner
+import com.github.teknasyon.plugin.service.PluginConfigurable
 import com.github.teknasyon.plugin.service.SkillDockSettingsService
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.application.ApplicationManager
@@ -58,7 +59,6 @@ fun ClaudeTerminalContent(project: Project) {
 
     var showSkillsDialog by remember { mutableStateOf(false) }
     var showAgentsDialog by remember { mutableStateOf(false) }
-    var showSettingsDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         service.checkClaudeInstalled()
@@ -103,7 +103,7 @@ fun ClaudeTerminalContent(project: Project) {
                         service.ensureSession()
                     }
 
-                    val anyDialogOpen = showSkillsDialog || showAgentsDialog || showSettingsDialog
+                    val anyDialogOpen = showSkillsDialog || showAgentsDialog
 
                     if (state.sessions.isNotEmpty()) {
                         SessionTabBar(
@@ -112,7 +112,7 @@ fun ClaudeTerminalContent(project: Project) {
                             onSelectSession = { service.switchToSession(it) },
                             onCloseSession = { service.closeSession(it) },
                             onAddSession = { service.addNewSession() },
-                            onSettingsClick = { showSettingsDialog = true },
+                            onSettingsClick = { PluginConfigurable(project) },
                         )
 
                         if (anyDialogOpen) {
@@ -224,12 +224,6 @@ fun ClaudeTerminalContent(project: Project) {
                     showAgentsDialog = false
                     sendToTerminal(skill.filePath, false)
                 },
-            )
-        }
-        if (showSettingsDialog) {
-            SettingsDialog(
-                settingsService = settingsService,
-                onDismiss = { showSettingsDialog = false },
             )
         }
     }
@@ -717,97 +711,6 @@ private fun SkillPickerDialog(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SettingsDialog(
-    settingsService: SkillDockSettingsService,
-    onDismiss: () -> Unit,
-) {
-    var skillsPath by remember { mutableStateOf(settingsService.getSkillsRootPath()) }
-    var agentsPath by remember { mutableStateOf(settingsService.getAgentsRootPath()) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .zIndex(10f)
-            .background(TPTheme.colors.black.copy(alpha = 0.6f))
-            .clickable { onDismiss() },
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier
-                .clickable(enabled = false) {} // iç tıklamaları yutmak için
-                .padding(24.dp)
-                .fillMaxWidth()
-                .background(TPTheme.colors.gray, RoundedCornerShape(16.dp))
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Skill & Agent Path Settings",
-                style = MaterialTheme.typography.h6,
-                fontWeight = FontWeight.Bold,
-                color = TPTheme.colors.white,
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            Text("Skills Root Path", color = TPTheme.colors.lightGray, style = MaterialTheme.typography.caption)
-            Spacer(Modifier.height(4.dp))
-            OutlinedTextField(
-                value = skillsPath,
-                onValueChange = { skillsPath = it },
-                singleLine = true,
-                placeholder = { Text("/path/to/skills") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    textColor = TPTheme.colors.white,
-                    focusedBorderColor = TPTheme.colors.blue,
-                    unfocusedBorderColor = TPTheme.colors.hintGray,
-                    placeholderColor = TPTheme.colors.hintGray,
-                ),
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Text("Agents Root Path", color = TPTheme.colors.lightGray, style = MaterialTheme.typography.caption)
-            Spacer(Modifier.height(4.dp))
-            OutlinedTextField(
-                value = agentsPath,
-                onValueChange = { agentsPath = it },
-                singleLine = true,
-                placeholder = { Text("/path/to/agents") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    textColor = TPTheme.colors.white,
-                    focusedBorderColor = TPTheme.colors.blue,
-                    unfocusedBorderColor = TPTheme.colors.hintGray,
-                    placeholderColor = TPTheme.colors.hintGray,
-                ),
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.lightGray)
-                ) { Text("Cancel") }
-                Spacer(Modifier.width(8.dp))
-                TextButton(
-                    onClick = {
-                        settingsService.setSkillsRootPath(skillsPath.trim())
-                        settingsService.setAgentsRootPath(agentsPath.trim())
-                        onDismiss()
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = TPTheme.colors.blue)
-                ) { Text("Save") }
             }
         }
     }

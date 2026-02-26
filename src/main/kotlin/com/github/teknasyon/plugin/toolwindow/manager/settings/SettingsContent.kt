@@ -75,12 +75,6 @@ fun SettingsContent(project: Project) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TPTabRow(
-                    text = "AI Tools",
-                    isSelected = selectedTab == "ai_tools",
-                    color = TPTheme.colors.lightGray,
-                    onTabSelected = { selectedTab = "ai_tools" }
-                )
-                TPTabRow(
                     text = "Module",
                     isSelected = selectedTab == "templates",
                     color = TPTheme.colors.lightGray,
