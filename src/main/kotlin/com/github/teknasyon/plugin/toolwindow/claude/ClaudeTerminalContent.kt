@@ -5,6 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,7 +17,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.automirrored.rounded.*
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -64,6 +68,7 @@ fun ClaudeTerminalContent(project: Project) {
 
     var showSkillsDialog by remember { mutableStateOf(false) }
     var showAgentsDialog by remember { mutableStateOf(false) }
+    var showCommandsDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         service.checkClaudeInstalled()
@@ -108,7 +113,7 @@ fun ClaudeTerminalContent(project: Project) {
                         service.ensureSession()
                     }
 
-                    val anyDialogOpen = showSkillsDialog || showAgentsDialog
+                    val anyDialogOpen = showSkillsDialog || showAgentsDialog || showCommandsDialog
 
                     if (state.sessions.isNotEmpty()) {
                         SessionTabBar(
@@ -151,23 +156,30 @@ fun ClaudeTerminalContent(project: Project) {
                             TPActionCard(
                                 title = "Model",
                                 icon = Icons.Rounded.SmartToy,
-                                type = TPActionCardType.SMALL,
+                                type = TPActionCardType.EXTRA_SMALL,
                                 actionColor = TPTheme.colors.purple,
                                 onClick = { sendToTerminal("/model", true) },
                             )
                             TPActionCard(
                                 title = "Skills",
                                 icon = Icons.Rounded.AutoFixHigh,
-                                type = TPActionCardType.SMALL,
+                                type = TPActionCardType.EXTRA_SMALL,
                                 actionColor = TPTheme.colors.blue,
                                 onClick = { showSkillsDialog = true },
                             )
                             TPActionCard(
                                 title = "Agents",
                                 icon = Icons.Rounded.Psychology,
-                                type = TPActionCardType.SMALL,
+                                type = TPActionCardType.EXTRA_SMALL,
                                 actionColor = TPTheme.colors.blue,
                                 onClick = { showAgentsDialog = true },
+                            )
+                            TPActionCard(
+                                title = "Commands",
+                                icon = Icons.Rounded.Terminal,
+                                type = TPActionCardType.EXTRA_SMALL,
+                                actionColor = TPTheme.colors.purple,
+                                onClick = { showCommandsDialog = true },
                             )
                         }
 
@@ -240,6 +252,15 @@ fun ClaudeTerminalContent(project: Project) {
                 onSkillSelected = { skill ->
                     showAgentsDialog = false
                     sendToTerminal(skill.filePath, false)
+                },
+            )
+        }
+        if (showCommandsDialog) {
+            CommandPickerDialog(
+                onDismiss = { showCommandsDialog = false },
+                onCommandSelected = { command ->
+                    showCommandsDialog = false
+                    sendToTerminal(command, true)
                 },
             )
         }
@@ -451,7 +472,7 @@ private fun TerminalInputBar(
         ) {
             // File inject button
             Icon(
-                imageVector = Icons.Rounded.FileOpen,
+                imageVector = Icons.Rounded.AlternateEmail,
                 contentDescription = "Add active file path",
                 tint = TPTheme.colors.lightGray,
                 modifier = Modifier
@@ -754,6 +775,179 @@ private fun SkillPickerDialog(
                                 )
                             }
                             Divider(color = TPTheme.colors.hintGray.copy(alpha = 0.3f))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class ClaudeCommand(val command: String, val description: String, val icon: ImageVector)
+
+private val claudeCommands = listOf(
+    ClaudeCommand("/clear", "Clear conversation", Icons.Rounded.DeleteSweep),
+    ClaudeCommand("/compact", "Compact conversation", Icons.Rounded.Compress),
+    ClaudeCommand("/config", "Settings (Config)", Icons.Rounded.Settings),
+    ClaudeCommand("/context", "Context usage", Icons.Rounded.GridOn),
+    ClaudeCommand("/copy", "Copy last response", Icons.Rounded.ContentCopy),
+    ClaudeCommand("/cost", "Token usage", Icons.Rounded.AttachMoney),
+    ClaudeCommand("/debug", "Debug session", Icons.Rounded.BugReport),
+    ClaudeCommand("/desktop", "Switch to desktop", Icons.Rounded.DesktopWindows),
+    ClaudeCommand("/doctor", "Health check", Icons.Rounded.HealthAndSafety),
+    ClaudeCommand("/exit", "Exit REPL", Icons.AutoMirrored.Rounded.ExitToApp),
+    ClaudeCommand("/export", "Export conversation", Icons.Rounded.FileDownload),
+    ClaudeCommand("/help", "Usage help", Icons.AutoMirrored.Rounded.Help),
+    ClaudeCommand("/init", "Init CLAUDE.md", Icons.AutoMirrored.Rounded.NoteAdd),
+    ClaudeCommand("/mcp", "MCP servers", Icons.Rounded.Hub),
+    ClaudeCommand("/memory", "Edit memory files", Icons.Rounded.Memory),
+    ClaudeCommand("/model", "Change model", Icons.Rounded.SmartToy),
+    ClaudeCommand("/permissions", "Permissions", Icons.Rounded.Security),
+    ClaudeCommand("/plan", "Plan mode", Icons.Rounded.Map),
+    ClaudeCommand("/rename", "Rename session", Icons.Rounded.DriveFileRenameOutline),
+    ClaudeCommand("/resume", "Resume session", Icons.Rounded.PlayArrow),
+    ClaudeCommand("/rewind", "Rewind conversation", Icons.AutoMirrored.Rounded.Undo),
+    ClaudeCommand("/stats", "Usage stats", Icons.Rounded.BarChart),
+    ClaudeCommand("/status", "Settings (Status)", Icons.Rounded.Info),
+    ClaudeCommand("/statusline", "Status line UI", Icons.Rounded.LinearScale),
+    ClaudeCommand("/tasks", "Background tasks", Icons.Rounded.Checklist),
+    ClaudeCommand("/teleport", "Remote session", Icons.Rounded.Cloud),
+    ClaudeCommand("/theme", "Color theme", Icons.Rounded.Palette),
+    ClaudeCommand("/todos", "TODO items", Icons.AutoMirrored.Rounded.FormatListBulleted),
+    ClaudeCommand("/usage", "Usage limits", Icons.Rounded.DataUsage),
+)
+
+@Composable
+private fun CommandPickerDialog(
+    onDismiss: () -> Unit,
+    onCommandSelected: (String) -> Unit,
+) {
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filtered = remember(searchQuery) {
+        if (searchQuery.isBlank()) claudeCommands
+        else claudeCommands.filter {
+            it.command.contains(searchQuery, ignoreCase = true) ||
+                it.description.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(10f)
+            .background(TPTheme.colors.black.copy(alpha = 0.6f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .clickable(enabled = false) {}
+                .padding(24.dp)
+                .fillMaxWidth()
+                .heightIn(max = 500.dp)
+                .background(TPTheme.colors.gray, RoundedCornerShape(16.dp))
+                .padding(16.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Commands",
+                    style = MaterialTheme.typography.h6,
+                    fontWeight = FontWeight.Bold,
+                    color = TPTheme.colors.white,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = "Kapat",
+                    tint = TPTheme.colors.lightGray,
+                    modifier = Modifier.size(20.dp).clickable { onDismiss() }
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Search
+            BasicTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = TPTheme.colors.black,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                textStyle = TextStyle(color = TPTheme.colors.white),
+                cursorBrush = SolidColor(TPTheme.colors.white),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (searchQuery.isEmpty()) {
+                            Text(
+                                text = "Search...",
+                                color = TPTheme.colors.hintGray,
+                                style = MaterialTheme.typography.body2,
+                            )
+                        }
+                        innerTextField()
+                    }
+                },
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            if (filtered.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(100.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("Sonuç bulunamadı", color = TPTheme.colors.lightGray)
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(filtered, key = { it.command }) { cmd ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    color = TPTheme.colors.black.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(10.dp),
+                                )
+                                .clickable { onCommandSelected(cmd.command) }
+                                .padding(10.dp),
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = cmd.icon,
+                                    contentDescription = null,
+                                    tint = TPTheme.colors.purple,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = cmd.command,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TPTheme.colors.white,
+                                    style = TextStyle(fontSize = 12.sp),
+                                    maxLines = 1,
+                                )
+                            }
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = cmd.description,
+                                color = TPTheme.colors.hintGray,
+                                style = TextStyle(fontSize = 10.sp),
+                                maxLines = 1,
+                            )
                         }
                     }
                 }
