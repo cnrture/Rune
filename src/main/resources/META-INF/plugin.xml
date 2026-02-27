@@ -68,6 +68,15 @@
                           relative-to-action="TeknasyonAndroidStudioPlugin.GenerateCommitMessage"/>
         </action>
         <action
+                id="TeknasyonAndroidStudioPlugin.FixPRComments"
+                class="com.github.teknasyon.plugin.actions.FixPRCommentsAction"
+                text="Fix PR Comments"
+                description="Fetch unresolved PR comments and fix them with Claude"
+                icon="AllIcons.Actions.PreviewDetails">
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="after"
+                          relative-to-action="TeknasyonAndroidStudioPlugin.CreateReviewPR"/>
+        </action>
+        <action
                 id="TeknasyonAndroidStudioPlugin.AskClaude"
                 class="com.github.teknasyon.plugin.actions.AskClaudeAction"
                 text="Ask Claude"
