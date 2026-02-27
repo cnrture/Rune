@@ -1,7 +1,6 @@
 package com.github.teknasyon.plugin.common
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
 import java.io.File
 import com.github.teknasyon.plugin.common.file.File as ProjectFile
 
