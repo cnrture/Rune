@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextRange
@@ -69,6 +70,7 @@ fun ClaudeTerminalContent(project: Project) {
     var showSkillsDialog by remember { mutableStateOf(false) }
     var showAgentsDialog by remember { mutableStateOf(false) }
     var showCommandsDialog by remember { mutableStateOf(false) }
+    var showSCCommandsDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         service.checkClaudeInstalled()
@@ -113,7 +115,7 @@ fun ClaudeTerminalContent(project: Project) {
                         service.ensureSession()
                     }
 
-                    val anyDialogOpen = showSkillsDialog || showAgentsDialog || showCommandsDialog
+                    val anyDialogOpen = showSkillsDialog || showAgentsDialog || showCommandsDialog || showSCCommandsDialog
 
                     if (state.sessions.isNotEmpty()) {
                         SessionTabBar(
@@ -181,6 +183,15 @@ fun ClaudeTerminalContent(project: Project) {
                                 actionColor = TPTheme.colors.purple,
                                 onClick = { showCommandsDialog = true },
                             )
+                            if (state.superClaudeInstalled == true) {
+                                TPActionCard(
+                                    title = "SC Commands",
+                                    icon = Icons.Rounded.Bolt,
+                                    type = TPActionCardType.EXTRA_SMALL,
+                                    actionColor = TPTheme.colors.blue,
+                                    onClick = { showSCCommandsDialog = true },
+                                )
+                            }
                         }
 
                         val pendingInput by service.pendingInput.collectAsState()
@@ -261,6 +272,18 @@ fun ClaudeTerminalContent(project: Project) {
                 onCommandSelected = { command ->
                     showCommandsDialog = false
                     sendToTerminal(command, true)
+                },
+            )
+        }
+        if (showSCCommandsDialog) {
+            CommandPickerDialog(
+                title = "SC Commands",
+                commands = scCommands,
+                accentColor = TPTheme.colors.blue,
+                onDismiss = { showSCCommandsDialog = false },
+                onCommandSelected = { command ->
+                    showSCCommandsDialog = false
+                    sendToTerminal(command, false)
                 },
             )
         }
@@ -817,16 +840,49 @@ private val claudeCommands = listOf(
     ClaudeCommand("/usage", "Usage limits", Icons.Rounded.DataUsage),
 )
 
+private val scCommands = listOf(
+    ClaudeCommand("/sc:analyze", "Code analysis", Icons.Rounded.Analytics),
+    ClaudeCommand("/sc:brainstorm", "Requirements discovery", Icons.Rounded.Lightbulb),
+    ClaudeCommand("/sc:build", "Build & compile", Icons.Rounded.Build),
+    ClaudeCommand("/sc:business-panel", "Business panel analysis", Icons.Rounded.Business),
+    ClaudeCommand("/sc:cleanup", "Code cleanup", Icons.Rounded.CleaningServices),
+    ClaudeCommand("/sc:design", "System design", Icons.Rounded.Architecture),
+    ClaudeCommand("/sc:document", "Generate documentation", Icons.Rounded.Description),
+    ClaudeCommand("/sc:estimate", "Development estimates", Icons.Rounded.Timer),
+    ClaudeCommand("/sc:explain", "Code explanation", Icons.Rounded.School),
+    ClaudeCommand("/sc:git", "Git operations", Icons.Rounded.Hub),
+    ClaudeCommand("/sc:help", "SC help", Icons.AutoMirrored.Rounded.Help),
+    ClaudeCommand("/sc:implement", "Feature implementation", Icons.Rounded.Code),
+    ClaudeCommand("/sc:improve", "Code improvements", Icons.AutoMirrored.Rounded.TrendingUp),
+    ClaudeCommand("/sc:index", "Project indexing", Icons.Rounded.FindInPage),
+    ClaudeCommand("/sc:load", "Load session context", Icons.Rounded.Download),
+    ClaudeCommand("/sc:pm", "Project manager agent", Icons.Rounded.ManageAccounts),
+    ClaudeCommand("/sc:recommend", "Command recommendation", Icons.Rounded.Recommend),
+    ClaudeCommand("/sc:reflect", "Task reflection", Icons.Rounded.Psychology),
+    ClaudeCommand("/sc:research", "Deep web research", Icons.Rounded.Search),
+    ClaudeCommand("/sc:save", "Save session context", Icons.Rounded.Save),
+    ClaudeCommand("/sc:select-tool", "MCP tool selection", Icons.Rounded.Handyman),
+    ClaudeCommand("/sc:spawn", "Task orchestration", Icons.Rounded.AccountTree),
+    ClaudeCommand("/sc:spec-panel", "Spec review panel", Icons.Rounded.RateReview),
+    ClaudeCommand("/sc:task", "Task management", Icons.Rounded.Task),
+    ClaudeCommand("/sc:test", "Test execution", Icons.Rounded.Science),
+    ClaudeCommand("/sc:troubleshoot", "Issue diagnosis", Icons.Rounded.Troubleshoot),
+    ClaudeCommand("/sc:workflow", "Workflow generation", Icons.Rounded.Route),
+)
+
 @Composable
 private fun CommandPickerDialog(
+    title: String = "Commands",
+    commands: List<ClaudeCommand> = claudeCommands,
+    accentColor: Color = TPTheme.colors.purple,
     onDismiss: () -> Unit,
     onCommandSelected: (String) -> Unit,
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
-    val filtered = remember(searchQuery) {
-        if (searchQuery.isBlank()) claudeCommands
-        else claudeCommands.filter {
+    val filtered = remember(searchQuery, commands) {
+        if (searchQuery.isBlank()) commands
+        else commands.filter {
             it.command.contains(searchQuery, ignoreCase = true) ||
                 it.description.contains(searchQuery, ignoreCase = true)
         }
@@ -855,7 +911,7 @@ private fun CommandPickerDialog(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Commands",
+                    text = title,
                     style = MaterialTheme.typography.h6,
                     fontWeight = FontWeight.Bold,
                     color = TPTheme.colors.white,
@@ -929,7 +985,7 @@ private fun CommandPickerDialog(
                                 Icon(
                                     imageVector = cmd.icon,
                                     contentDescription = null,
-                                    tint = TPTheme.colors.purple,
+                                    tint = accentColor,
                                     modifier = Modifier.size(16.dp),
                                 )
                                 Spacer(Modifier.width(6.dp))
