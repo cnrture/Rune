@@ -2,9 +2,7 @@ package com.github.teknasyon.plugin.toolwindow.manager.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -21,11 +19,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.PopupProperties
 import com.github.teknasyon.plugin.common.Utils
 import com.github.teknasyon.plugin.components.*
-import com.github.teknasyon.plugin.data.FeatureTemplate
 import com.github.teknasyon.plugin.data.ModuleTemplate
 import com.github.teknasyon.plugin.service.SettingsService
 import com.github.teknasyon.plugin.theme.TPTheme
-import com.github.teknasyon.plugin.toolwindow.manager.settings.dialog.*
+import com.github.teknasyon.plugin.toolwindow.manager.settings.dialog.ModuleTemplateReviewContent
+import com.github.teknasyon.plugin.toolwindow.manager.settings.dialog.TemplateCreatorContent
+import com.github.teknasyon.plugin.toolwindow.manager.settings.dialog.TemplateEditorContent
 import com.intellij.openapi.project.Project
 import java.util.*
 
@@ -33,14 +32,10 @@ import java.util.*
 fun SettingsContent(project: Project) {
     val settings = SettingsService.getInstance()
     var currentSettings by mutableStateOf(settings.state.copy())
-    var selectedTab by mutableStateOf("templates")
 
     var refreshTrigger by remember { mutableStateOf(0) }
     val moduleTemplates by remember(refreshTrigger) {
         mutableStateOf(settings.getModuleTemplates())
-    }
-    val featureTemplates by remember(refreshTrigger) {
-        mutableStateOf(settings.getFeatureTemplates())
     }
 
     val triggerRefresh = { refreshTrigger++ }
@@ -70,121 +65,46 @@ fun SettingsContent(project: Project) {
 
             Spacer(modifier = Modifier.size(24.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TPTabRow(
-                    text = "Module",
-                    isSelected = selectedTab == "templates",
-                    color = TPTheme.colors.lightGray,
-                    onTabSelected = { selectedTab = "templates" }
-                )
-                TPTabRow(
-                    text = "Feature",
-                    isSelected = selectedTab == "feature_templates",
-                    color = TPTheme.colors.lightGray,
-                    onTabSelected = { selectedTab = "feature_templates" }
-                )
-            }
-
-            Spacer(modifier = Modifier.size(24.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                when (selectedTab) {
-                    "templates" -> {
-                        ModuleTemplatesTab(
-                            project = project,
-                            templates = moduleTemplates,
-                            defaultTemplateId = currentSettings.defaultModuleTemplateId,
-                            onTemplateDelete = { template ->
-                                if (!template.isDefault) {
-                                    settings.removeTemplate(template)
-                                    triggerRefresh()
-                                    Utils.showInfo(
-                                        title = "Teknasyon DevTools",
-                                        message = "Template '${template.name}' deleted successfully!",
-                                    )
-                                }
-                            },
-                            onRefreshTriggered = { triggerRefresh() },
-                            onSetDefault = { template ->
-                                settings.setDefaultModuleTemplate(template.id)
-                                triggerRefresh()
-                                Utils.showInfo(
-                                    title = "Teknasyon DevTools",
-                                    message = "Default template set to '${template.name}' successfully!",
-                                )
-                            },
-                            onImport = {
-                                Utils.importModuleTemplate(project) { template, message ->
-                                    if (template != null) {
-                                        val updatedTemplate = template.copy(
-                                            id = UUID.randomUUID().toString(),
-                                            isDefault = false
-                                        )
-                                        settings.addModuleTemplate(updatedTemplate)
-                                        triggerRefresh()
-                                    }
-                                    Utils.showInfo(
-                                        title = "Teknasyon DevTools",
-                                        message = message,
-                                    )
-                                }
-                            },
+            ModuleTemplatesTab(
+                project = project,
+                templates = moduleTemplates,
+                defaultTemplateId = currentSettings.defaultModuleTemplateId,
+                onTemplateDelete = { template ->
+                    if (!template.isDefault) {
+                        settings.removeTemplate(template)
+                        triggerRefresh()
+                        Utils.showInfo(
+                            title = "Teknasyon DevTools",
+                            message = "Template '${template.name}' deleted successfully!",
                         )
                     }
-
-                    "feature_templates" -> {
-                        FeatureTemplatesTab(
-                            project = project,
-                            templates = featureTemplates,
-                            defaultTemplateId = currentSettings.defaultFeatureTemplateId,
-                            onTemplateDelete = { template ->
-                                if (!template.isDefault) {
-                                    settings.removeFeatureTemplate(template)
-                                    triggerRefresh()
-                                    Utils.showInfo(
-                                        title = "Teknasyon DevTools",
-                                        message = "Feature template '${template.name}' deleted successfully!",
-                                    )
-                                }
-                            },
-                            onRefreshTriggered = { triggerRefresh() },
-                            onSetDefault = { template ->
-                                settings.setDefaultFeatureTemplate(template.id)
-                                triggerRefresh()
-                                Utils.showInfo(
-                                    title = "Teknasyon DevTools",
-                                    message = "Default template set to '${template.name}' successfully!",
-                                )
-                            },
-                            onImport = {
-                                Utils.importFeatureTemplate(project) { template, message ->
-                                    if (template != null) {
-                                        val updatedTemplate = template.copy(
-                                            id = UUID.randomUUID().toString(),
-                                            name = "${template.name} (Copy)",
-                                            isDefault = false
-                                        )
-                                        settings.addFeatureTemplate(updatedTemplate)
-                                        triggerRefresh()
-                                    }
-                                    Utils.showInfo(
-                                        title = "Teknasyon DevTools",
-                                        message = message,
-                                    )
-                                }
-                            },
+                },
+                onRefreshTriggered = { triggerRefresh() },
+                onSetDefault = { template ->
+                    settings.setDefaultModuleTemplate(template.id)
+                    triggerRefresh()
+                    Utils.showInfo(
+                        title = "Teknasyon DevTools",
+                        message = "Default template set to '${template.name}' successfully!",
+                    )
+                },
+                onImport = {
+                    Utils.importModuleTemplate(project) { template, message ->
+                        if (template != null) {
+                            val updatedTemplate = template.copy(
+                                id = UUID.randomUUID().toString(),
+                                isDefault = false
+                            )
+                            settings.addModuleTemplate(updatedTemplate)
+                            triggerRefresh()
+                        }
+                        Utils.showInfo(
+                            title = "Teknasyon DevTools",
+                            message = message,
                         )
                     }
-                }
-            }
+                },
+            )
         }
     }
 }
@@ -359,278 +279,6 @@ private fun ModuleTemplateCard(
     onExport: () -> Unit,
     onReview: () -> Unit,
     onDuplicate: (ModuleTemplate) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        backgroundColor = TPTheme.colors.gray,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TPText(
-                        text = template.name,
-                        color = TPTheme.colors.white,
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    if (template.id == defaultTemplateId) {
-                        Spacer(modifier = Modifier.size(8.dp))
-                        Card(
-                            shape = RoundedCornerShape(4.dp),
-                            backgroundColor = TPTheme.colors.blue.copy(alpha = 0.2f)
-                        ) {
-                            TPText(
-                                text = "Default",
-                                color = TPTheme.colors.blue,
-                                style = TextStyle(fontSize = 10.sp),
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            Box {
-                IconButton(onClick = { expanded = true }) {
-                    Icon(
-                        imageVector = Icons.Rounded.MoreVert,
-                        contentDescription = "More options",
-                        tint = TPTheme.colors.lightGray
-                    )
-                }
-                DropdownMenu(
-                    modifier = Modifier.background(
-                        color = TPTheme.colors.black,
-                        shape = RoundedCornerShape(0.dp)
-                    ),
-                    properties = PopupProperties(dismissOnClickOutside = true),
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    if (template.id != defaultTemplateId) {
-                        TPDropdownItem(
-                            text = "Set Default",
-                            icon = Icons.Rounded.Check,
-                            onClick = { expanded = false; onSetDefault() }
-                        )
-                    }
-                    if (template.id != "candroid_template") {
-                        TPDropdownItem(
-                            text = "Edit",
-                            icon = Icons.Rounded.Edit,
-                            onClick = { expanded = false; onEdit() }
-                        )
-                    } else {
-                        TPDropdownItem(
-                            text = "Review",
-                            icon = Icons.Rounded.RemoveRedEye,
-                            onClick = { expanded = false; onReview() }
-                        )
-                    }
-                    TPDropdownItem(
-                        text = "Duplicate",
-                        icon = Icons.Rounded.ContentCopy,
-                        onClick = { expanded = false; onDuplicate(template) }
-                    )
-                    TPDropdownItem(
-                        text = "Export",
-                        icon = Icons.Rounded.Upload,
-                        onClick = { expanded = false; onExport() }
-                    )
-                    if (!template.isDefault || template.id != "candroid_template") {
-                        TPDropdownItem(
-                            text = "Delete",
-                            icon = Icons.Rounded.Delete,
-                            onClick = { expanded = false; onDelete() }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FeatureTemplatesTab(
-    project: Project,
-    templates: List<FeatureTemplate>,
-    defaultTemplateId: String,
-    onTemplateDelete: (FeatureTemplate) -> Unit,
-    onRefreshTriggered: () -> Unit,
-    onSetDefault: (FeatureTemplate) -> Unit,
-    onImport: () -> Unit,
-) {
-    var isCreateDialogVisible by remember { mutableStateOf(Pair(false, FeatureTemplate.EMPTY)) }
-    var isEditDialogVisible by remember { mutableStateOf(Pair(false, FeatureTemplate.EMPTY)) }
-    var isReviewDialogVisible by remember { mutableStateOf(Pair(false, FeatureTemplate.EMPTY)) }
-    val settings = SettingsService.getInstance()
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TPText(
-                text = "Feature",
-                color = TPTheme.colors.white,
-                style = TextStyle(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TPActionCard(
-                    title = "Add Template",
-                    icon = Icons.Rounded.Add,
-                    type = TPActionCardType.SMALL,
-                    actionColor = TPTheme.colors.blue,
-                    onClick = { isCreateDialogVisible = Pair(true, FeatureTemplate.EMPTY) }
-                )
-                TPActionCard(
-                    title = "Import",
-                    icon = Icons.Rounded.FileDownload,
-                    type = TPActionCardType.SMALL,
-                    actionColor = TPTheme.colors.lightGray,
-                    onClick = onImport,
-                )
-            }
-        }
-
-        templates.forEach { template ->
-            FeatureTemplateCard(
-                template = template,
-                defaultTemplateId = defaultTemplateId,
-                onEdit = { isEditDialogVisible = Pair(true, template) },
-                onDelete = { if (!template.isDefault) onTemplateDelete(template) },
-                onSetDefault = { onSetDefault(template) },
-                onExport = {
-                    Utils.exportFeatureTemplate(project, template) { _, message ->
-                        Utils.showInfo("Teknasyon DevTools", message)
-                    }
-                },
-                onReview = { isReviewDialogVisible = Pair(true, template) },
-                onDuplicate = { templateToDuplicate ->
-                    val duplicatedTemplate = templateToDuplicate.copy(
-                        id = UUID.randomUUID().toString(),
-                        name = "${templateToDuplicate.name} (Copy)",
-                        isDefault = false
-                    )
-                    settings.addFeatureTemplate(duplicatedTemplate)
-                    onRefreshTriggered()
-                    Utils.showInfo(
-                        title = "Teknasyon DevTools",
-                        message = "Template duplicated as '${duplicatedTemplate.name}' successfully!",
-                    )
-                }
-            )
-        }
-
-        if (isEditDialogVisible.first) {
-            Dialog(
-                onDismissRequest = {},
-                properties = DialogProperties(
-                    dismissOnBackPress = false,
-                    dismissOnClickOutside = false,
-                    usePlatformDefaultWidth = false,
-                )
-            ) {
-                FeatureTemplateEditorContent(
-                    template = isEditDialogVisible.second,
-                    onCancelClick = {
-                        onRefreshTriggered()
-                        isEditDialogVisible = Pair(false, FeatureTemplate.EMPTY)
-                    },
-                    onApplyClick = { updatedTemplate ->
-                        settings.saveFeatureTemplate(updatedTemplate)
-                    },
-                    onOkayClick = { updatedTemplate ->
-                        settings.saveFeatureTemplate(updatedTemplate)
-                        Utils.showInfo(
-                            title = "Teknasyon DevTools",
-                            message = "Feature template '${updatedTemplate.name}' updated successfully!",
-                        )
-                        onRefreshTriggered()
-                        isEditDialogVisible = Pair(false, FeatureTemplate.EMPTY)
-                    },
-                )
-            }
-        }
-
-        if (isCreateDialogVisible.first) {
-            Dialog(
-                onDismissRequest = {},
-                properties = DialogProperties(
-                    dismissOnBackPress = false,
-                    dismissOnClickOutside = false,
-                    usePlatformDefaultWidth = false,
-                )
-            ) {
-                FeatureTemplateCreatorContent(
-                    onCancelClick = {
-                        onRefreshTriggered()
-                        isCreateDialogVisible = Pair(false, FeatureTemplate.EMPTY)
-                    },
-                    onApplyClick = { template ->
-                        settings.saveFeatureTemplate(template)
-                    },
-                    onOkayClick = { template ->
-                        settings.saveFeatureTemplate(template)
-                        Utils.showInfo(
-                            title = "Teknasyon DevTools",
-                            message = "Feature template '${template.name}' added successfully!",
-                        )
-                        onRefreshTriggered()
-                        isCreateDialogVisible = Pair(false, FeatureTemplate.EMPTY)
-                    }
-                )
-            }
-        }
-
-        if (isReviewDialogVisible.first) {
-            Dialog(
-                onDismissRequest = { isReviewDialogVisible = Pair(false, FeatureTemplate.EMPTY) },
-                properties = DialogProperties(
-                    dismissOnBackPress = false,
-                    dismissOnClickOutside = false,
-                    usePlatformDefaultWidth = false,
-                )
-            ) {
-                FeatureTemplateReviewContent(
-                    template = isReviewDialogVisible.second,
-                    onCancelClick = { isReviewDialogVisible = Pair(false, FeatureTemplate.EMPTY) },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun FeatureTemplateCard(
-    template: FeatureTemplate,
-    defaultTemplateId: String,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
-    onSetDefault: () -> Unit,
-    onExport: () -> Unit,
-    onReview: () -> Unit,
-    onDuplicate: (FeatureTemplate) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 

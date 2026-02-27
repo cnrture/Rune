@@ -12,34 +12,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.github.teknasyon.plugin.common.Constants
-import com.github.teknasyon.plugin.common.Utils
-import com.github.teknasyon.plugin.components.TPActionCard
-import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.components.TPText
-import com.github.teknasyon.plugin.data.SettingsState
 import com.github.teknasyon.plugin.service.SettingsService
 import com.github.teknasyon.plugin.theme.TPTheme
-import com.github.teknasyon.plugin.toolwindow.manager.featuregenerator.FeatureGeneratorContent
 import com.github.teknasyon.plugin.toolwindow.manager.jungle.JungleContent
 import com.github.teknasyon.plugin.toolwindow.manager.modulegenerator.ModuleGeneratorContent
 import com.github.teknasyon.plugin.toolwindow.manager.settings.SettingsContent
-import com.github.teknasyon.plugin.toolwindow.manager.settings.dialog.ExportSettingsContent
-import com.intellij.notification.NotificationType
-import com.intellij.openapi.fileChooser.FileChooser
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
@@ -70,28 +56,11 @@ class TPToolWindowFactory : ToolWindowFactory {
         ComposePanel().apply {
             setContent {
                 TPTheme {
-                    Column(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(TPTheme.colors.gray),
                     ) {
-                        TPText(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            text = "Teknasyon DevTools",
-                            style = TextStyle(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        TPTheme.colors.blue,
-                                        TPTheme.colors.purple,
-                                    ),
-                                    tileMode = TileMode.Mirror,
-                                ),
-                            ),
-                        )
                         MainContent(project)
                     }
                 }
@@ -105,7 +74,6 @@ class TPToolWindowFactory : ToolWindowFactory {
     private fun MainContent(project: Project) {
         var selectedSection by remember { mutableStateOf("jungle") }
         var isExpanded by remember { mutableStateOf(settings.state.isActionsExpanded) }
-        var isExportDialogVisible by remember { mutableStateOf(false) }
 
         Row(
             modifier = Modifier
@@ -185,14 +153,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                         )
 
                         SidebarButton(
-                            title = "Feature",
-                            icon = Icons.Rounded.FileOpen,
-                            isSelected = selectedSection == "feature",
-                            isExpanded = isExpanded,
-                            onClick = { selectedSection = "feature" }
-                        )
-
-                        SidebarButton(
                             title = "Settings",
                             icon = Icons.Rounded.Settings,
                             isSelected = selectedSection == "settings",
@@ -200,32 +160,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                             onClick = { selectedSection = "settings" }
                         )
 
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        TPActionCard(
-                            title = "Export Settings",
-                            icon = Icons.Rounded.FileUpload,
-                            type = TPActionCardType.SMALL,
-                            actionColor = TPTheme.colors.blue,
-                            isTextVisible = isExpanded,
-                            onClick = { isExportDialogVisible = true }
-                        )
-                        Spacer(modifier = Modifier.size(12.dp))
-                        TPActionCard(
-                            title = "Import Settings",
-                            icon = Icons.Rounded.FileDownload,
-                            type = TPActionCardType.SMALL,
-                            actionColor = TPTheme.colors.lightGray,
-                            isTextVisible = isExpanded,
-                            onClick = {
-                                importSettings(settings) { newSettings ->
-                                    settings.loadState(newSettings)
-                                }
-                            }
-                        )
                     }
                 }
             }
@@ -237,31 +171,9 @@ class TPToolWindowFactory : ToolWindowFactory {
             ) {
                 when (selectedSection) {
                     "module" -> ModuleGeneratorContent(project)
-                    "feature" -> FeatureGeneratorContent(project)
                     "jungle" -> JungleContent()
                     "settings" -> SettingsContent(project)
                 }
-            }
-        }
-
-        if (isExportDialogVisible) {
-            Dialog(
-                onDismissRequest = { isExportDialogVisible = false },
-                properties = DialogProperties(
-                    usePlatformDefaultWidth = true
-                )
-            ) {
-                ExportSettingsContent(
-                    settings = settings,
-                    onExport = { success, message ->
-                        if (success) isExportDialogVisible = false
-                        Utils.showInfo(
-                            message = message,
-                            type = if (success) NotificationType.INFORMATION else NotificationType.ERROR,
-                        )
-                    },
-                    onCancel = { isExportDialogVisible = false }
-                )
             }
         }
     }
@@ -286,18 +198,6 @@ class TPToolWindowFactory : ToolWindowFactory {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-            if (isSelected) {
-                Box(
-                    modifier = Modifier
-                        .width(3.dp)
-                        .height(18.dp)
-                        .background(
-                            color = TPTheme.colors.blue,
-                            shape = RoundedCornerShape(2.dp)
-                        )
-                )
-                Spacer(modifier = Modifier.size(4.dp))
-            }
             Icon(
                 imageVector = icon,
                 contentDescription = null,
@@ -313,26 +213,6 @@ class TPToolWindowFactory : ToolWindowFactory {
                         fontSize = 14.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                     )
-                )
-            }
-        }
-    }
-
-    private fun importSettings(settings: SettingsService, onSuccess: (SettingsState) -> Unit) {
-        val project = ProjectManager.getInstance().defaultProject
-        val descriptor = FileChooserDescriptorFactory.createSingleFileDescriptor("json")
-        descriptor.title = "Import Settings"
-        FileChooser.chooseFile(descriptor, project, null) { file ->
-            if (settings.importFromFile(file.path)) {
-                Utils.showInfo(
-                    message = "Settings imported successfully!",
-                    type = NotificationType.INFORMATION,
-                )
-                onSuccess(settings.state)
-            } else {
-                Utils.showInfo(
-                    message = "Failed to import settings. Please check the file format.",
-                    type = NotificationType.ERROR,
                 )
             }
         }

@@ -118,14 +118,12 @@ fun ModuleGeneratorContent(project: Project) {
                 TPTabRow(
                     modifier = Modifier.weight(1f),
                     text = tabs[0],
-                    color = TPTheme.colors.blue,
                     isSelected = selectedTab == 0,
                     onTabSelected = { selectedTab = 0 }
                 )
                 TPTabRow(
                     modifier = Modifier.weight(1f),
                     text = tabs[1],
-                    color = TPTheme.colors.blue,
                     isSelected = selectedTab == 1,
                     onTabSelected = { selectedTab = 1 }
                 )

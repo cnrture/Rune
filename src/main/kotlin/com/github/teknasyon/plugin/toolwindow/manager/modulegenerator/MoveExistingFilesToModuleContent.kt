@@ -18,6 +18,7 @@ import com.github.teknasyon.plugin.common.Utils
 import com.github.teknasyon.plugin.common.file.FileWriter
 import com.github.teknasyon.plugin.common.file.LibraryDependencyFinder
 import com.github.teknasyon.plugin.components.TPActionCard
+import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.data.PluginListItem
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.github.teknasyon.plugin.toolwindow.manager.modulegenerator.components.*
@@ -94,6 +95,7 @@ fun MoveExistingFilesToModuleContent(
                         title = "Create",
                         icon = Icons.Rounded.Create,
                         actionColor = TPTheme.colors.blue,
+                        type = TPActionCardType.MEDIUM,
                         onClick = {
                             if (Utils.validateModuleInput(packageName, moduleNameState) && selectedSrc.isNotEmpty()) {
                                 Utils.createModule(

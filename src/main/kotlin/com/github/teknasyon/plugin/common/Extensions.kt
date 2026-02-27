@@ -13,10 +13,6 @@ fun Project.rootDirectoryStringDropLast(): String =
 
 fun Project.rootDirectoryString(): String = basePath!!
 
-fun List<File>.refreshFileSystem() {
-    VfsUtil.markDirtyAndRefresh(false, true, true, *this.toTypedArray())
-}
-
 fun File.toProjectFile(): ProjectFile = object : ProjectFile {
     private val numberOfFiles = listFiles()?.size ?: 0
     override val name: String = this@toProjectFile.name

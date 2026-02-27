@@ -1,8 +1,6 @@
 package com.github.teknasyon.plugin.common.file
 
 import com.github.teknasyon.plugin.common.Constants
-import com.github.teknasyon.plugin.data.FeatureTemplate
-import com.github.teknasyon.plugin.data.FileTemplate
 import com.github.teknasyon.plugin.data.ModuleTemplate
 import com.github.teknasyon.plugin.toolwindow.template.GitIgnoreTemplate
 import com.github.teknasyon.plugin.toolwindow.template.ManifestTemplate
@@ -155,79 +153,6 @@ class FileWriter() {
         return listOf(filePath)
     }
 
-    fun createFeatureFiles(
-        file: File,
-        featureName: String,
-        packageName: String,
-        showErrorDialog: (String) -> Unit,
-        showSuccessDialog: () -> Unit,
-        selectedTemplate: FeatureTemplate,
-    ): List<File> {
-        return createFeatureFilesFromTemplate(
-            file = file,
-            featureName = featureName,
-            packageName = packageName,
-            template = selectedTemplate,
-            showErrorDialog = showErrorDialog,
-            showSuccessDialog = showSuccessDialog,
-        )
-    }
-
-    private fun createFeatureFilesFromTemplate(
-        file: File,
-        featureName: String,
-        packageName: String,
-        template: FeatureTemplate,
-        showErrorDialog: (String) -> Unit,
-        showSuccessDialog: () -> Unit,
-    ): List<File> {
-        val featureFile = Paths.get(file.absolutePath, featureName.lowercase()).toFile()
-        featureFile.mkdirs()
-
-        val filesCreated = mutableListOf<File>()
-
-        template.fileTemplates.forEach { fileTemplate: FileTemplate ->
-            val fileName = fileTemplate.fileName
-                .replace("{NAME}", featureName.replaceFirstChar { it.uppercase() })
-
-            val fileDir = if (fileTemplate.filePath.isNotEmpty()) {
-                val subDirPath = fileTemplate.filePath.replace(".", File.separator)
-                Paths.get(featureFile.absolutePath, subDirPath).toFile().apply { mkdirs() }
-            } else {
-                featureFile
-            }
-
-            val targetFile = File(fileDir, fileName)
-
-            val content = fileTemplate.fileContent
-                .replace("{NAME}", featureName.replaceFirstChar { it.uppercase() })
-                .replace("{PACKAGE}", packageName)
-                .replace(
-                    "{FILE_PACKAGE}",
-                    if (fileTemplate.filePath.isNotEmpty()) {
-                        "$packageName.${fileTemplate.filePath}"
-                    } else {
-                        packageName
-                    }
-                )
-
-            try {
-                val writer: Writer = FileWriter(targetFile)
-                writer.write(content)
-                writer.flush()
-                writer.close()
-                filesCreated.add(targetFile)
-            } catch (e: IOException) {
-                showErrorDialog("Error creating file ${fileName}: ${e.message}")
-            } catch (e: Exception) {
-                showErrorDialog("Unexpected error: ${e.message}")
-            }
-        }
-
-        showSuccessDialog()
-        return filesCreated
-    }
-
     private fun createDefaultPackages(moduleFile: File, packageName: String): List<File> {
         fun makePath(srcPath: File, packagePath: String): File {
             val packagePathFile = Paths.get(
@@ -375,14 +300,13 @@ class FileWriter() {
         if (categoryBlocks.containsKey(moduleCategory)) {
             val (blockStart, blockEnd) = categoryBlocks[moduleCategory]!!
 
-            val insertPosition = blockEnd
-            val lastLine = settingsFileContent[insertPosition]
+            val lastLine = settingsFileContent[blockEnd]
 
             val baseIndentation = lastLine.takeWhile { it.isWhitespace() }
 
             var continuationIndentation = Constants.EMPTY
-            if (insertPosition > blockStart) {
-                for (i in blockStart + 1..insertPosition) {
+            if (blockEnd > blockStart) {
+                for (i in blockStart + 1..blockEnd) {
                     val line = settingsFileContent[i].trim()
                     if (line.startsWith("':") && !line.startsWith("include")) {
                         continuationIndentation = settingsFileContent[i].takeWhile { it.isWhitespace() }
@@ -400,18 +324,18 @@ class FileWriter() {
             val trimmedLastLine = lastLine.trim()
 
             if (trimmedLastLine.endsWith(",")) {
-                settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
+                settingsFileContent.add(blockEnd + 1, "$continuationIndentation'$modulePathAsString'")
             } else if (trimmedLastLine.contains("include") &&
                 (trimmedLastLine.endsWith("'") || trimmedLastLine.endsWith("\""))
             ) {
-                settingsFileContent[insertPosition] = "${lastLine},"
-                settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
+                settingsFileContent[blockEnd] = "${lastLine},"
+                settingsFileContent.add(blockEnd + 1, "$continuationIndentation'$modulePathAsString'")
             } else if (trimmedLastLine.endsWith("'") || trimmedLastLine.endsWith("\"")) {
-                settingsFileContent[insertPosition] = "${lastLine},"
-                settingsFileContent.add(insertPosition + 1, "$continuationIndentation'$modulePathAsString'")
+                settingsFileContent[blockEnd] = "${lastLine},"
+                settingsFileContent.add(blockEnd + 1, "$continuationIndentation'$modulePathAsString'")
             } else {
                 val includeStatement = constructIncludeStatement(modulePathAsString, settingsFileContent)
-                settingsFileContent.add(insertPosition + 1, "$baseIndentation$includeStatement")
+                settingsFileContent.add(blockEnd + 1, "$baseIndentation$includeStatement")
             }
 
             return settingsFileContent

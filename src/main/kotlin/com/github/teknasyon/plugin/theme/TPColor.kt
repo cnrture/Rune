@@ -16,9 +16,7 @@ fun lightColors(
     hintGray: Color = Color(0xFF938F99),
     red: Color = Color(0xFFFF8A80),
     primaryContainer: Color = Color(0xFF1A2857),
-    surfaceDim: Color = Color(0xFF141218),
     outline: Color = Color(0xFF49454F),
-    warning: Color = Color(0xFFFFD740),
 ): TPColor = TPColor(
     white = white,
     black = black,
@@ -29,9 +27,7 @@ fun lightColors(
     hintGray = hintGray,
     red = red,
     primaryContainer = primaryContainer,
-    surfaceDim = surfaceDim,
     outline = outline,
-    warning = warning,
 )
 
 class TPColor(
@@ -44,9 +40,7 @@ class TPColor(
     hintGray: Color,
     red: Color,
     primaryContainer: Color,
-    surfaceDim: Color,
     outline: Color,
-    warning: Color,
 ) {
     private var _white: Color by mutableStateOf(white)
     val white: Color = _white
@@ -75,14 +69,8 @@ class TPColor(
     private var _primaryContainer: Color by mutableStateOf(primaryContainer)
     val primaryContainer: Color = _primaryContainer
 
-    private var _surfaceDim: Color by mutableStateOf(surfaceDim)
-    val surfaceDim: Color = _surfaceDim
-
     private var _outline: Color by mutableStateOf(outline)
     val outline: Color = _outline
-
-    private var _warning: Color by mutableStateOf(warning)
-    val warning: Color = _warning
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColors() }

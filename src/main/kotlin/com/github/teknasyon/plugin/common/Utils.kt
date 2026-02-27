@@ -3,7 +3,6 @@ package com.github.teknasyon.plugin.common
 import com.github.teknasyon.plugin.common.file.FileWriter
 import com.github.teknasyon.plugin.common.file.ImportAnalyzer
 import com.github.teknasyon.plugin.common.file.LibraryDependencyFinder
-import com.github.teknasyon.plugin.data.FeatureTemplate
 import com.github.teknasyon.plugin.data.ModuleTemplate
 import com.github.teknasyon.plugin.data.PluginListItem
 import com.intellij.notification.NotificationGroupManager
@@ -26,60 +25,6 @@ import javax.swing.SwingUtilities
 import kotlin.concurrent.thread
 
 object Utils {
-    fun validateFeatureInput(featureName: String, selectedSrc: String): Boolean =
-        featureName.isNotEmpty() && selectedSrc != Constants.DEFAULT_SRC_VALUE
-
-    fun createFeature(
-        project: Project,
-        selectedSrc: String,
-        featureName: String,
-        fileWriter: FileWriter,
-        selectedTemplate: FeatureTemplate,
-    ) {
-        try {
-            val projectRoot = project.rootDirectoryString()
-
-            val cleanSelectedPath = selectedSrc.let { path ->
-                val projectName = projectRoot.split(File.separator).last()
-                if (path.startsWith(projectName + File.separator)) {
-                    path.substring(projectName.length + 1)
-                } else {
-                    path
-                }
-            }
-
-            val packagePath = cleanSelectedPath
-                .replace(Regex("^.*?(/src/main/java/|/src/main/kotlin/)"), Constants.EMPTY)
-                .replace("/", ".")
-
-            fileWriter.createFeatureFiles(
-                file = File(projectRoot, cleanSelectedPath),
-                featureName = featureName,
-                packageName = packagePath.plus(".${featureName.lowercase()}"),
-                showErrorDialog = {
-                    showInfo(
-                        message = "Error creating feature: $it",
-                        type = NotificationType.ERROR
-                    )
-                },
-                showSuccessDialog = {
-                    showInfo(
-                        message = "Feature '$featureName' created successfully",
-                        type = NotificationType.INFORMATION
-                    )
-                    val currentlySelectedFile = project.getCurrentlySelectedFile(selectedSrc)
-                    listOf(currentlySelectedFile).refreshFileSystem()
-                },
-                selectedTemplate = selectedTemplate
-            )
-        } catch (e: Exception) {
-            showInfo(
-                message = "Error creating feature: ${e.message}",
-                type = NotificationType.ERROR
-            )
-        }
-    }
-
     fun validateModuleInput(packageName: String, moduleName: String): Boolean =
         packageName.isNotEmpty() && moduleName.isNotEmpty() && moduleName != Constants.DEFAULT_MODULE_NAME
 
@@ -100,8 +45,7 @@ object Utils {
     ): List<File> {
         try {
             val settingsGradleFile = getSettingsGradleFile(project)
-            val selectedSrcPath = selectedSrc
-            val sourceFile = getSourceDirectoryFromSelected(project, selectedSrcPath)
+            val sourceFile = getSourceDirectoryFromSelected(project, selectedSrc)
 
             if (settingsGradleFile != null) {
                 val moduleName = moduleName.trim()
@@ -640,60 +584,6 @@ object Utils {
             )
         notification.icon = IconLoader.getIcon("/META-INF/pluginIcon.svg", this::class.java)
         notification.notify(null)
-    }
-
-    fun exportFeatureTemplate(
-        project: Project,
-        template: FeatureTemplate,
-        onComplete: (Boolean, String) -> Unit,
-    ) {
-        try {
-            val descriptor = FileChooserDescriptorFactory
-                .createSingleFolderDescriptor()
-            descriptor.title = "Select Export Location"
-
-            FileChooser.chooseFile(descriptor, project, null) { file ->
-                try {
-                    val json = Json {
-                        prettyPrint = true
-                        encodeDefaults = true
-                    }
-                    val jsonString = json.encodeToString(FeatureTemplate.serializer(), template)
-                    val exportFile = File(file.path, "${template.name.replace(" ", "_")}_feature_template.json")
-                    exportFile.writeText(jsonString)
-                    onComplete(true, "Feature template exported successfully to: ${exportFile.absolutePath}")
-                } catch (e: Exception) {
-                    onComplete(false, "Error exporting feature template: ${e.message}")
-                }
-            }
-        } catch (e: Exception) {
-            onComplete(false, "Error during export: ${e.message}")
-        }
-    }
-
-    fun importFeatureTemplate(
-        project: Project,
-        onComplete: (FeatureTemplate?, String) -> Unit,
-    ) {
-        try {
-            val descriptor = FileChooserDescriptorFactory.createSingleFileDescriptor("json")
-            descriptor.title = "Select Feature Template File"
-
-            FileChooser.chooseFile(descriptor, project, null) { file ->
-                try {
-                    val jsonString = File(file.path).readText()
-                    val json = Json {
-                        ignoreUnknownKeys = true
-                    }
-                    val template = json.decodeFromString(FeatureTemplate.serializer(), jsonString)
-                    onComplete(template, "Feature template imported successfully!")
-                } catch (e: Exception) {
-                    onComplete(null, "Error importing feature template: ${e.message}")
-                }
-            }
-        } catch (e: Exception) {
-            onComplete(null, "Error during import: ${e.message}")
-        }
     }
 
     fun exportModuleTemplate(

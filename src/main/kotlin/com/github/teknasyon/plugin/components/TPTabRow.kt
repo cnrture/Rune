@@ -18,7 +18,6 @@ import com.github.teknasyon.plugin.theme.TPTheme
 fun TPTabRow(
     modifier: Modifier = Modifier,
     text: String,
-    color: Color,
     isSelected: Boolean,
     onTabSelected: () -> Unit,
 ) {
