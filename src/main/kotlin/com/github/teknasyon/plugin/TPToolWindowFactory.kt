@@ -82,7 +82,7 @@ class TPToolWindowFactory : ToolWindowFactory {
         ) {
             Card(
                 modifier = Modifier
-                    .width(if (isExpanded) 124.dp else 60.dp)
+                    .width(if (isExpanded) 124.dp else 44.dp)
                     .fillMaxHeight(),
                 backgroundColor = TPTheme.colors.gray,
                 elevation = 8.dp,
@@ -194,7 +194,7 @@ class TPToolWindowFactory : ToolWindowFactory {
                     shape = RoundedCornerShape(12.dp)
                 )
                 .clickable { onClick() }
-                .padding(horizontal = 6.dp, vertical = 12.dp),
+                .padding(horizontal = 4.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {

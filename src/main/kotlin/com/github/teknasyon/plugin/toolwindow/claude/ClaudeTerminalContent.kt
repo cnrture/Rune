@@ -148,12 +148,16 @@ fun ClaudeTerminalContent(project: Project) {
                             )
                         }
 
+                        Divider(color = TPTheme.colors.gray, thickness = 1.dp)
+
                         // Action buttons row
-                        Row(
+                        @OptIn(ExperimentalLayoutApi::class)
+                        FlowRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             TPActionCard(
                                 title = "Model",
@@ -303,7 +307,7 @@ private fun SessionTabBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(TPTheme.colors.black)
-            .padding(12.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -322,7 +326,7 @@ private fun SessionTabBar(
                             shape = RoundedCornerShape(6.dp)
                         )
                         .clickable { onSelectSession(session.id) }
-                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TPText(
@@ -499,7 +503,7 @@ private fun TerminalInputBar(
                 contentDescription = "Add active file path",
                 tint = TPTheme.colors.lightGray,
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(24.dp)
                     .clickable {
                         val path = onInjectFile() ?: return@clickable
                         val newText = if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
@@ -512,7 +516,7 @@ private fun TerminalInputBar(
                 contentDescription = "Add image",
                 tint = if (selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(24.dp)
                     .clickable { onPickImage() }
             )
         }
