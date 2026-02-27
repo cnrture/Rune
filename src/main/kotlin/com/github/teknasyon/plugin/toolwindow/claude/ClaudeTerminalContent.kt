@@ -9,7 +9,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.*
+import androidx.compose.material.Divider
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.*
@@ -36,12 +39,12 @@ import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
 import com.github.teknasyon.plugin.service.FileScanner
 import com.github.teknasyon.plugin.service.PluginConfigurable
 import com.github.teknasyon.plugin.service.PluginSettingsService
-import com.intellij.openapi.options.ShowSettingsUtil
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.awt.Toolkit
@@ -741,12 +744,10 @@ private fun SkillPickerDialog(
                                     modifier = Modifier
                                         .size(18.dp)
                                         .clickable {
-                                            val vf = LocalFileSystem.getInstance()
-                                                .findFileByPath(skill.filePath)
+                                            val vf = LocalFileSystem.getInstance().findFileByPath(skill.filePath)
                                             if (vf != null) {
                                                 ApplicationManager.getApplication().invokeLater {
-                                                    FileEditorManager.getInstance(project)
-                                                        .openFile(vf, true)
+                                                    FileEditorManager.getInstance(project).openFile(vf, true)
                                                 }
                                             }
                                         }
