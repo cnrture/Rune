@@ -36,6 +36,7 @@ import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
 import com.github.teknasyon.plugin.service.FileScanner
 import com.github.teknasyon.plugin.service.PluginConfigurable
 import com.github.teknasyon.plugin.service.PluginSettingsService
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileChooser.FileChooser
@@ -112,7 +113,10 @@ fun ClaudeTerminalContent(project: Project) {
                             onSelectSession = { service.switchToSession(it) },
                             onCloseSession = { service.closeSession(it) },
                             onAddSession = { service.addNewSession() },
-                            onSettingsClick = { PluginConfigurable(project) },
+                            onSettingsClick = {
+                                ShowSettingsUtil.getInstance()
+                                    .editConfigurable(project, PluginConfigurable(project))
+                            },
                         )
 
                         if (anyDialogOpen) {
