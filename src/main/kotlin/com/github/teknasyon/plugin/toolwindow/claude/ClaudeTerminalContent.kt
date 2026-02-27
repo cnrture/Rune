@@ -22,8 +22,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -35,7 +35,7 @@ import com.github.teknasyon.plugin.domain.model.Skill
 import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
 import com.github.teknasyon.plugin.service.FileScanner
 import com.github.teknasyon.plugin.service.PluginConfigurable
-import com.github.teknasyon.plugin.service.SkillDockSettingsService
+import com.github.teknasyon.plugin.service.PluginSettingsService
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileChooser.FileChooser
@@ -50,11 +50,11 @@ import javax.swing.SwingUtilities
 fun ClaudeTerminalContent(project: Project) {
     val service = remember { ClaudeSessionService.getInstance(project) }
     val state by service.state.collectAsState()
-    val settingsService = remember { SkillDockSettingsService.getInstance(project) }
+    val settingsService = remember { PluginSettingsService.getInstance(project) }
     val scanSkillsUseCase = remember {
         val fileScanner = FileScanner(project)
         val repository = SkillRepositoryImpl(fileScanner, settingsService)
-        ScanSkillsUseCase(repository, settingsService)
+        ScanSkillsUseCase(repository)
     }
 
     var showSkillsDialog by remember { mutableStateOf(false) }
@@ -181,7 +181,14 @@ fun ClaudeTerminalContent(project: Project) {
                                     .apply {
                                         title = "Select Images"
                                         withFileFilter { file ->
-                                            file.extension?.lowercase() in listOf("png", "jpg", "jpeg", "gif", "webp", "bmp")
+                                            file.extension?.lowercase() in listOf(
+                                                "png",
+                                                "jpg",
+                                                "jpeg",
+                                                "gif",
+                                                "webp",
+                                                "bmp"
+                                            )
                                         }
                                     }
                                 FileChooser.chooseFiles(descriptor, project, null) { files ->
@@ -519,7 +526,8 @@ private fun TerminalInputBar(
                         if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
                             if (event.isShiftPressed) {
                                 val cursor = inputValue.selection.start
-                                val newText = inputValue.text.substring(0, cursor) + "\n" + inputValue.text.substring(cursor)
+                                val newText =
+                                    inputValue.text.substring(0, cursor) + "\n" + inputValue.text.substring(cursor)
                                 inputValue = TextFieldValue(newText, TextRange(cursor + 1))
                                 true
                             } else {

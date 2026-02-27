@@ -8,14 +8,14 @@ import com.intellij.openapi.project.Project
 
 @Service(Service.Level.PROJECT)
 @State(
-    name = "SkillDockSettings",
-    storages = [Storage("skilldock.xml")]
+    name = "TeknasyonAndroidStudioPluginSetting",
+    storages = [Storage("teknasyonandroidstudioplugin.xml")]
 )
-class SkillDockSettingsService : PersistentStateComponent<SkillDockSettingsService.State> {
+class PluginSettingsService :
+    PersistentStateComponent<PluginSettingsService.State> {
     data class State(
         var rootPath: String = "",
         var agentsRootPath: String = "",
-        var favoriteSkills: MutableSet<String> = mutableSetOf(),
     )
 
     private var state = State()
@@ -37,15 +37,10 @@ class SkillDockSettingsService : PersistentStateComponent<SkillDockSettingsServi
     }
 
     fun getAgentsRootPath(): String = state.agentsRootPath
-    fun addFavorite(skillPath: String) = state.favoriteSkills.add(skillPath)
-    fun removeFavorite(skillPath: String) = state.favoriteSkills.remove(skillPath)
-    fun isFavorite(skillPath: String): Boolean = state.favoriteSkills.contains(skillPath)
-    fun getFavorites(): Set<String> = state.favoriteSkills.toSet()
-    fun clearFavorites() = state.favoriteSkills.clear()
 
     companion object {
-        fun getInstance(project: Project): SkillDockSettingsService {
-            return project.getService(SkillDockSettingsService::class.java)
+        fun getInstance(project: Project): PluginSettingsService {
+            return project.getService(PluginSettingsService::class.java)
         }
     }
 }

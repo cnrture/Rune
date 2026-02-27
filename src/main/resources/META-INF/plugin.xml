@@ -15,10 +15,10 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="SkillDock" displayType="BALLOON" isLogByDefault="false"/>
+        <notificationGroup id="TeknasyonAndroidStudioPlugin" displayType="BALLOON" isLogByDefault="false"/>
         <toolWindow
                 factoryClass="com.github.teknasyon.plugin.TPToolWindowFactory"
-                id="TPDevTools"
+                id="Teknasyon Plugin"
                 anchor="right"
                 icon="/icons/pluginIcon.svg"/>
         <toolWindow
@@ -32,7 +32,7 @@
                 parentId="tools"
                 instance="com.github.teknasyon.plugin.service.PluginConfigurable"
                 id="com.github.teknasyon.ai.settings"
-                displayName="SkillDock"/>
+                displayName="Teknasyon Plugin"/>
     </extensions>
 
     <actions>
@@ -51,7 +51,7 @@
             <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewDir"/>
         </action>
         <action
-                id="SkillDock.GenerateCommitMessage"
+                id="TeknasyonAndroidStudioPlugin.GenerateCommitMessage"
                 class="com.github.teknasyon.plugin.actions.GenerateCommitMessageAction"
                 text="Generate Commit Message with Claude"
                 description="Generate a conventional commit message from staged changes using Claude AI"
@@ -59,16 +59,16 @@
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>
         <action
-                id="SkillDock.CreateReviewPR"
+                id="TeknasyonAndroidStudioPlugin.CreateReviewPR"
                 class="com.github.teknasyon.plugin.actions.CreateReviewPRAction"
                 text="Create Review PR"
                 description="Create review branch from base, push current branch, and open a PR"
                 icon="AllIcons.Vcs.Branch">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="after"
-                          relative-to-action="SkillDock.GenerateCommitMessage"/>
+                          relative-to-action="TeknasyonAndroidStudioPlugin.GenerateCommitMessage"/>
         </action>
         <action
-                id="SkillDock.AskClaude"
+                id="TeknasyonAndroidStudioPlugin.AskClaude"
                 class="com.github.teknasyon.plugin.actions.AskClaudeAction"
                 text="Ask Claude"
                 description="Send selected code to Claude terminal"

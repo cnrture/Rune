@@ -12,7 +12,7 @@ import javax.swing.JTextField
 class PluginConfigurable(private val project: Project) :
     BoundConfigurable("Teknasyon Plugin Settings") {
 
-    private val settingsService = SkillDockSettingsService.getInstance(project)
+    private val settingsService = PluginSettingsService.getInstance(project)
     private lateinit var skillsPathField: TextFieldWithBrowseButton
     private lateinit var agentsPathField: TextFieldWithBrowseButton
     private lateinit var jiraEmailField: JTextField

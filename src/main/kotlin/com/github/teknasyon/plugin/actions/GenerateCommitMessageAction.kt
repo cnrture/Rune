@@ -34,7 +34,7 @@ class GenerateCommitMessageAction : AnAction() {
                 if (diff.isBlank()) {
                     ApplicationManager.getApplication().invokeLater {
                         NotificationGroupManager.getInstance()
-                            .getNotificationGroup("SkillDock")
+                            .getNotificationGroup("TeknasyonAndroidStudioPlugin")
                             .createNotification("No changes found in the repository.", NotificationType.WARNING)
                             .notify(project)
                     }

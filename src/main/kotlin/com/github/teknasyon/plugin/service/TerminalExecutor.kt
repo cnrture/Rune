@@ -19,7 +19,7 @@ class TerminalExecutorImpl : TerminalExecutor {
                 val manager = TerminalToolWindowManager.getInstance(project)
                 val widget = manager.createLocalShellWidget(
                     project.basePath ?: "",
-                    "SkillDock"
+                    "TeknasyonAndroidStudioPlugin"
                 )
                 widget.executeCommand(command)
             } catch (_: Exception) {

@@ -2,13 +2,13 @@ package com.github.teknasyon.plugin.data.repository
 
 import com.github.teknasyon.plugin.domain.model.SkillFolder
 import com.github.teknasyon.plugin.service.FileScanner
-import com.github.teknasyon.plugin.service.SkillDockSettingsService
+import com.github.teknasyon.plugin.service.PluginSettingsService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 class SkillRepositoryImpl(
     private val fileScanner: FileScanner,
-    private val settingsService: SkillDockSettingsService,
+    private val settingsService: PluginSettingsService,
 ) : SkillRepository {
 
     override fun scanSkills(

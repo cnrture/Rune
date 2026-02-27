@@ -260,7 +260,7 @@ class CreateReviewPRAction : AnAction() {
     private fun notify(project: Project, message: String, type: NotificationType) {
         ApplicationManager.getApplication().invokeLater {
             NotificationGroupManager.getInstance()
-                .getNotificationGroup("SkillDock")
+                .getNotificationGroup("TeknasyonAndroidStudioPlugin")
                 .createNotification(message, type)
                 .notify(project)
         }
