@@ -43,6 +43,7 @@ import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import javax.swing.SwingUtilities
@@ -214,6 +215,7 @@ fun ClaudeTerminalContent(project: Project) {
         if (showSkillsDialog) {
             SkillPickerDialog(
                 title = "Skills",
+                project = project,
                 scanSkillsUseCase = scanSkillsUseCase,
                 rootPath = settingsService.getSkillsRootPath(),
                 strictFilter = true,
@@ -227,6 +229,7 @@ fun ClaudeTerminalContent(project: Project) {
         if (showAgentsDialog) {
             SkillPickerDialog(
                 title = "Agents",
+                project = project,
                 scanSkillsUseCase = scanSkillsUseCase,
                 rootPath = settingsService.getAgentsRootPath(),
                 strictFilter = false,
@@ -576,6 +579,7 @@ private fun TerminalInputBar(
 @Composable
 private fun SkillPickerDialog(
     title: String,
+    project: Project,
     scanSkillsUseCase: ScanSkillsUseCase,
     rootPath: String,
     strictFilter: Boolean,
@@ -648,18 +652,30 @@ private fun SkillPickerDialog(
             Spacer(Modifier.height(12.dp))
 
             // Search
-            OutlinedTextField(
+            BasicTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Ara...") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    textColor = TPTheme.colors.white,
-                    focusedBorderColor = TPTheme.colors.blue,
-                    unfocusedBorderColor = TPTheme.colors.hintGray,
-                    placeholderColor = TPTheme.colors.hintGray,
-                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = TPTheme.colors.black,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                textStyle = TextStyle(color = TPTheme.colors.white),
+                cursorBrush = SolidColor(TPTheme.colors.white),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (searchQuery.isEmpty()) {
+                            Text(
+                                text = "Search...",
+                                color = TPTheme.colors.hintGray,
+                                style = MaterialTheme.typography.body2,
+                            )
+                        }
+                        innerTextField()
+                    }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -713,11 +729,28 @@ private fun SkillPickerDialog(
                                         Text(
                                             text = skill.description,
                                             color = TPTheme.colors.lightGray,
-                                            style = MaterialTheme.typography.caption,
-                                            maxLines = 1,
+                                            style = MaterialTheme.typography.caption.copy(fontSize = 10.sp),
                                         )
                                     }
                                 }
+                                @Suppress("DEPRECATION")
+                                Icon(
+                                    imageVector = Icons.Rounded.OpenInNew,
+                                    contentDescription = "Open in editor",
+                                    tint = TPTheme.colors.hintGray,
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable {
+                                            val vf = LocalFileSystem.getInstance()
+                                                .findFileByPath(skill.filePath)
+                                            if (vf != null) {
+                                                ApplicationManager.getApplication().invokeLater {
+                                                    FileEditorManager.getInstance(project)
+                                                        .openFile(vf, true)
+                                                }
+                                            }
+                                        }
+                                )
                             }
                             Divider(color = TPTheme.colors.hintGray.copy(alpha = 0.3f))
                         }
