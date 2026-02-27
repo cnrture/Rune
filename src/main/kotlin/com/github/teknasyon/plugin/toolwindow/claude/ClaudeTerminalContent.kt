@@ -277,7 +277,7 @@ fun ClaudeTerminalContent(project: Project) {
         }
         if (showSCCommandsDialog) {
             CommandPickerDialog(
-                title = "SC Commands",
+                title = "SuperClaude",
                 commands = scCommands,
                 accentColor = TPTheme.colors.blue,
                 onDismiss = { showSCCommandsDialog = false },
