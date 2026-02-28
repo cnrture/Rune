@@ -27,6 +27,9 @@
                 anchor="right"
                 icon="/icons/claudeIcon.svg"/>
 
+        <editorNotificationProvider
+                implementation="com.github.teknasyon.plugin.actions.SkillBestPracticesNotificationProvider"/>
+
         <!-- Settings Configurable -->
         <projectConfigurable
                 parentId="tools"
