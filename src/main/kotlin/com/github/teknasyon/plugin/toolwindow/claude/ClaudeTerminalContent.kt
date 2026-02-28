@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.github.teknasyon.plugin.actions.dialog.CreateSkillDialog
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.data.repository.SkillRepositoryImpl
 import com.github.teknasyon.plugin.domain.model.Skill
@@ -111,6 +112,9 @@ fun ClaudeTerminalContent(project: Project) {
                             onSelectSession = { service.switchToSession(it) },
                             onCloseSession = { service.closeSession(it) },
                             onAddSession = { service.addNewSession() },
+                            onCreateSkillClick = {
+                                CreateSkillDialog(project).show()
+                            },
                             onSettingsClick = {
                                 ShowSettingsUtil.getInstance()
                                     .editConfigurable(project, PluginConfigurable(project))
@@ -203,6 +207,7 @@ private fun SessionTabBar(
     onSelectSession: (Int) -> Unit,
     onCloseSession: (Int) -> Unit,
     onAddSession: () -> Unit,
+    onCreateSkillClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onModelClick: () -> Unit,
 ) {
@@ -274,6 +279,17 @@ private fun SessionTabBar(
             color = TPTheme.colors.purple,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
+        )
+
+        Spacer(modifier = Modifier.width(6.dp))
+
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.NoteAdd,
+            contentDescription = "Create New Skill",
+            tint = TPTheme.colors.lightGray,
+            modifier = Modifier
+                .size(24.dp)
+                .clickable { onCreateSkillClick() }
         )
 
         Spacer(modifier = Modifier.width(6.dp))
