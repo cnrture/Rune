@@ -103,7 +103,7 @@ class CreateSkillDialog(
     private fun descriptionWarnings(description: String): List<String> {
         if (description.isBlank()) return emptyList()
         val warnings = mutableListOf<String>()
-        if (description.startsWith("I ") || description.startsWith("You ")) {
+        if (description.startsWith("I ") || description.startsWith("You ") || description.startsWith("We ")) {
             warnings.add("Description should be in third person")
         }
         if (description.length in 1..19) {
@@ -112,6 +112,16 @@ class CreateSkillDialog(
         val vagueStarts = listOf("helps with", "does stuff", "processes data")
         if (vagueStarts.any { description.lowercase().startsWith(it) }) {
             warnings.add("Description is too vague, describe specific capabilities")
+        }
+        val metaPrefixes = listOf("this skill", "this agent", "a skill that", "an agent that")
+        if (metaPrefixes.any { description.lowercase().startsWith(it) }) {
+            warnings.add("Start with what it does directly, e.g. 'Processes PDFs...' instead of 'This skill...'")
+        }
+        if (Regex("\\b20\\d{2}\\b").containsMatchIn(description)) {
+            warnings.add("Avoid time-sensitive information like specific years")
+        }
+        if (description.contains("\\")) {
+            warnings.add("Use forward slashes (/) instead of backslashes in paths")
         }
         return warnings
     }
