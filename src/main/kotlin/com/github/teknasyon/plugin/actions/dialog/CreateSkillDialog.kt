@@ -81,6 +81,7 @@ class CreateSkillDialog(
     private fun nameErrors(name: String): List<String> {
         if (name.isBlank()) return listOf("Name is required")
         val errors = mutableListOf<String>()
+        if (name.contains('<') || name.contains('>')) errors.add("Name cannot contain XML tags")
         if (name.length > 64) errors.add("Name must be 64 characters or less")
         if (!nameRegex.matches(name)) errors.add("Only lowercase letters, numbers, and hyphens allowed (e.g. my-skill)")
         reservedWords.forEach { word ->
@@ -93,6 +94,7 @@ class CreateSkillDialog(
         if (description.isBlank()) return listOf("Description is required")
         val errors = mutableListOf<String>()
         if (description.length > 1024) errors.add("Description must be 1024 characters or less")
+        if (Regex("<[^>]+>").containsMatchIn(description)) errors.add("Description cannot contain XML tags")
         return errors
     }
 
@@ -105,7 +107,32 @@ class CreateSkillDialog(
         if (description.length in 1..19) {
             warnings.add("Description seems too short, be more specific")
         }
+        val vagueStarts = listOf("helps with", "does stuff", "processes data")
+        if (vagueStarts.any { description.lowercase().startsWith(it) }) {
+            warnings.add("Description is too vague, describe specific capabilities")
+        }
         return warnings
+    }
+
+    private val vagueNameWords = setOf("helper", "utils", "tools", "documents", "data", "files", "stuff", "misc")
+
+    private fun nameWarnings(name: String): List<String> {
+        if (name.isBlank() || nameErrors(name).isNotEmpty()) return emptyList()
+        val warnings = mutableListOf<String>()
+        val parts = name.split("-")
+        if (parts.any { it in vagueNameWords }) {
+            warnings.add("Avoid vague names, be more specific about what the skill does")
+        }
+        return warnings
+    }
+
+    private fun descriptionHints(description: String): List<String> {
+        if (description.isBlank() || descriptionErrors(description).isNotEmpty()) return emptyList()
+        val hints = mutableListOf<String>()
+        if (!description.lowercase().contains("when")) {
+            hints.add("Include when to use this skill, e.g. 'Use when...'")
+        }
+        return hints
     }
 
     private fun nameHints(name: String): List<String> {
@@ -150,9 +177,24 @@ class CreateSkillDialog(
             if (s.addWorkflow) {
                 appendLine()
                 appendLine("## Workflow")
-                appendLine("1. Step 1: ...")
-                appendLine("2. Step 2: ...")
-                appendLine("3. Step 3: ...")
+                appendLine()
+                appendLine("Copy this checklist and track progress:")
+                appendLine()
+                appendLine("```")
+                appendLine("Task Progress:")
+                appendLine("- [ ] Step 1: ...")
+                appendLine("- [ ] Step 2: ...")
+                appendLine("- [ ] Step 3: ...")
+                appendLine("```")
+                appendLine()
+                appendLine("**Step 1: ...**")
+                appendLine("<!-- Describe step details -->")
+                appendLine()
+                appendLine("**Step 2: ...**")
+                appendLine("<!-- Describe step details -->")
+                appendLine()
+                appendLine("**Step 3: ...**")
+                appendLine("<!-- Describe step details -->")
             }
 
             if (s.addExamples) {
@@ -288,7 +330,7 @@ class CreateSkillDialog(
                         Spacer(modifier = Modifier.size(4.dp))
                         ValidationMessages(
                             errors = nameErrors(currentState.name),
-                            warnings = emptyList(),
+                            warnings = nameWarnings(currentState.name),
                             hints = nameHints(currentState.name),
                         )
                     }
@@ -366,7 +408,7 @@ class CreateSkillDialog(
                         ValidationMessages(
                             errors = descriptionErrors(currentState.description),
                             warnings = descriptionWarnings(currentState.description),
-                            hints = emptyList(),
+                            hints = descriptionHints(currentState.description),
                         )
                     }
                     TPText(
