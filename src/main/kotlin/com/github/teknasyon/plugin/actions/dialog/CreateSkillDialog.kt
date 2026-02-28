@@ -64,7 +64,9 @@ class CreateSkillDialog(
     )
 
     private val nameRegex = Regex("^[a-z0-9]+(-[a-z0-9]+)*$")
+    private val xmlTagRegex = Regex("<[^>]+>")
     private val reservedWords = listOf("anthropic", "claude")
+    private val vagueNameWords = setOf("helper", "utils", "tools", "documents", "data", "files", "stuff", "misc")
 
     init {
         title = "Create New Skill"
@@ -94,7 +96,7 @@ class CreateSkillDialog(
         if (description.isBlank()) return listOf("Description is required")
         val errors = mutableListOf<String>()
         if (description.length > 1024) errors.add("Description must be 1024 characters or less")
-        if (Regex("<[^>]+>").containsMatchIn(description)) errors.add("Description cannot contain XML tags")
+        if (xmlTagRegex.containsMatchIn(description)) errors.add("Description cannot contain XML tags")
         return errors
     }
 
@@ -113,8 +115,6 @@ class CreateSkillDialog(
         }
         return warnings
     }
-
-    private val vagueNameWords = setOf("helper", "utils", "tools", "documents", "data", "files", "stuff", "misc")
 
     private fun nameWarnings(name: String): List<String> {
         if (name.isBlank() || nameErrors(name).isNotEmpty()) return emptyList()
