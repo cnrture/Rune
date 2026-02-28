@@ -11,6 +11,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Run tests
 ./gradlew check
 
+# Run a single test class
+./gradlew test --tests "com.github.teknasyon.plugin.SomeTest"
+
 # Build distribution ZIP
 ./gradlew buildPlugin
 
@@ -58,7 +61,16 @@ service/ (FileScanner, Settings, Jira, GitHub services)
 | `service/` | `FileScanner`, `SettingsService`, `PluginSettingsService`, `JiraService`, `GitHubCacheService` |
 | `components/` | Reusable Compose components (all prefixed `TP`: `TPTabRow`, `TPActionCard`, `TPText`, etc.) |
 | `theme/` | `TPTheme` / `TPColor` – always use `TPTheme.colors.*` for colors |
-| `actions/` | VCS actions: commit message generation with Claude, PR creation, Ask Claude from editor |
+| `actions/` | VCS actions, editor notifications, dialogs (commit message generation, PR creation, skill creation) |
+
+### Service access pattern
+
+No DI framework — services use companion `getInstance()`:
+```kotlin
+PluginSettingsService.getInstance(project)  // project-scoped
+ClaudeSessionService.getInstance(project)   // project-scoped
+SettingsService.getInstance()               // app-scoped
+```
 
 ### Settings persistence
 
@@ -86,12 +98,37 @@ Module and Feature generators use FreeMarker (2.3.34) templates. Templates are s
 |---|---|---|
 | `GenerateCommitMessageAction` | VCS commit dialog | Generates commit message from staged diff via Claude CLI |
 | `CreateReviewPRAction` | VCS commit dialog | Creates review branch and PR |
+| `FixPRCommentsAction` | VCS commit dialog | Auto-fix PR review comments |
 | `AskClaudeAction` | Editor right-click menu | Sends selected code to Claude terminal |
-| `FeatureGeneratorAction` | File > New menu | Creates a new feature from template |
-| `ModuleGeneratorAction` | File > New menu | Creates a new module with selected files |
+| `SkillBestPracticesNotificationProvider` | Opens SKILL.md files | Editor notification banner with validation actions |
 
 ### Compose Desktop notes
 
 - UI uses Jetpack Compose Desktop via `org.jetbrains.compose` plugin, rendered inside `ComposePanel` (Swing interop)
-- Skiko render API is set to SOFTWARE for compatibility
+- Skiko render API is set to SOFTWARE for compatibility: `System.setProperty("skiko.renderApi", "SOFTWARE")`
 - Always wrap composables in `TPTheme { }` and use `TPTheme.colors.*` for theming
+
+## Conventions
+
+### Error handling
+
+Repositories return `Result<T>` (success/failure) instead of throwing exceptions. External process calls (Claude CLI, git) use try-catch with `ProcessBuilder` and timeout handling via `Thread.join(timeout)` + `destroyForcibly()`.
+
+### Dialog validation pattern
+
+Dialogs like `CreateSkillDialog` use a state data class with computed validation functions (`nameErrors()`, `nameWarnings()`, `nameHints()`) that return nullable strings. The "Create" button is disabled until all error functions return null. Warnings and hints are displayed but don't block submission.
+
+### Editor notification providers
+
+Implement `EditorNotificationProvider` + `DumbAware` for file-specific banners. See `SkillBestPracticesNotificationProvider` for the pattern: check file name in `collectNotificationData()`, return `EditorNotificationPanel` with action links.
+
+### Caching
+
+`FileScanner` uses a 5-minute in-memory cache for directory scans. Call `invalidateCache()` explicitly when settings change (e.g., root path updates).
+
+## CI/CD
+
+GitHub Actions workflows in `.github/workflows/`:
+- **`build.yml`** — triggered on push to main and PRs: build, test, Qodana inspection, Plugin Verifier
+- **`release.yml`** — triggered on GitHub release: publish to JetBrains Marketplace
+- **`run-ui-tests.yml`** — manual trigger: robot server UI tests
