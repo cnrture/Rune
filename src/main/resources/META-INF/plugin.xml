@@ -1,0 +1,73 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.github.cnrture.rune</id>
+    <name>Rune</name>
+    <vendor>Caner Ture</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Rune Notification Group"
+                           displayType="BALLOON"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="RunePlugin" displayType="BALLOON" isLogByDefault="false"/>
+        <toolWindow
+                factoryClass="com.github.cnrture.rune.toolwindow.claude.ClaudeToolWindowFactory"
+                id="Claude"
+                anchor="right"
+                icon="/icons/pluginIcon.svg"/>
+
+        <editorNotificationProvider
+                implementation="com.github.cnrture.rune.actions.SkillBestPracticesNotificationProvider"/>
+
+        <!-- Settings Configurable -->
+        <projectConfigurable
+                parentId="tools"
+                instance="com.github.cnrture.rune.settings.PluginConfigurable"
+                id="com.github.cnrture.rune.settings"
+                displayName="Rune"/>
+    </extensions>
+
+    <actions>
+        <action
+                id="RunePlugin.GenerateCommitMessage"
+                class="com.github.cnrture.rune.actions.GenerateCommitMessageAction"
+                text="Generate Commit Message with Claude"
+                description="Generate a conventional commit message from staged changes using Claude AI"
+                icon="AllIcons.Actions.Lightning">
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
+        </action>
+        <action
+                id="RunePlugin.CreateReviewPR"
+                class="com.github.cnrture.rune.actions.CreateReviewPRAction"
+                text="Create Review PR"
+                description="Create review branch from base, push current branch, and open a PR"
+                icon="AllIcons.Vcs.Branch">
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="after"
+                          relative-to-action="RunePlugin.GenerateCommitMessage"/>
+        </action>
+        <action
+                id="RunePlugin.FixPRComments"
+                class="com.github.cnrture.rune.actions.FixPRCommentsAction"
+                text="Fix PR Comments"
+                description="Fetch unresolved PR comments and fix them with Claude"
+                icon="AllIcons.Actions.PreviewDetails">
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="after"
+                          relative-to-action="RunePlugin.CreateReviewPR"/>
+        </action>
+        <action
+                id="RunePlugin.AskClaude"
+                class="com.github.cnrture.rune.actions.AskClaudeAction"
+                text="Ask Claude with Rune"
+                description="Send selected code to Claude terminal"
+                icon="/icons/pluginIcon.svg">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ConsoleEditorPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
