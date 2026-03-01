@@ -13,6 +13,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.VcsDataKeys
+import com.github.cnrture.rune.settings.PluginSettingsService
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -41,13 +42,11 @@ class GenerateCommitMessageAction : AnAction() {
                     return
                 }
 
-                val jiraUrl = getJiraTicketUrl(projectDir)
-
                 indicator.text = "Generating commit message with Claude…"
-                val usedClaude = streamWithClaude(projectDir, diff, jiraUrl, project, commitDocument)
+                val usedClaude = streamWithClaude(projectDir, diff, project, commitDocument)
 
                 if (!usedClaude) {
-                    setDocumentText(project, commitDocument, generateFallbackMessage(diff, jiraUrl))
+                    setDocumentText(project, commitDocument, generateFallbackMessage(diff))
                 }
             }
         })
@@ -62,14 +61,13 @@ class GenerateCommitMessageAction : AnAction() {
     private fun streamWithClaude(
         projectDir: String,
         diff: String,
-        jiraUrl: String?,
         project: Project,
         commitDocument: Document,
     ): Boolean {
         val claudePath = findClaudeCli() ?: return false
         val truncatedDiff = if (diff.length > 8000) diff.take(8000) + "\n…(truncated)" else diff
-        val prompt = "Based on the following git diff, write a single conventional commit message " +
-            "(format: type: description). Output only the commit message, nothing else.\n\n$truncatedDiff"
+        val promptTemplate = PluginSettingsService.getInstance(project).getCommitMessagePrompt()
+        val prompt = promptTemplate.replace("{diff}", truncatedDiff)
 
         return try {
             val process = ProcessBuilder(claudePath, "-p", prompt)
@@ -100,11 +98,7 @@ class GenerateCommitMessageAction : AnAction() {
             }
 
             if (output.isNotBlank()) {
-                val finalMessage = buildString {
-                    append(output.toString().trim())
-                    if (jiraUrl != null) append("\n$jiraUrl")
-                }
-                setDocumentText(project, commitDocument, finalMessage)
+                setDocumentText(project, commitDocument, output.toString().trim())
                 true
             } else {
                 false
@@ -167,13 +161,7 @@ class GenerateCommitMessageAction : AnAction() {
         }
     }
 
-    private fun getJiraTicketUrl(projectDir: String): String? {
-        val branch = runGit(File(projectDir), "rev-parse", "--abbrev-ref", "HEAD")
-        val ticketId = Regex("[A-Z]+-\\d+").find(branch)?.value ?: return null
-        return "https://pozitim.atlassian.net/browse/$ticketId"
-    }
-
-    private fun generateFallbackMessage(diff: String, jiraUrl: String? = null): String {
+    private fun generateFallbackMessage(diff: String): String {
         val changedFiles = diff.lines()
             .filter { it.startsWith("diff --git") }
             .mapNotNull { it.split(" ").lastOrNull()?.split("/")?.lastOrNull() }
@@ -194,6 +182,6 @@ class GenerateCommitMessageAction : AnAction() {
             changedFiles.size == 1 -> "$type: update ${changedFiles.first()}"
             else -> "$type: update ${changedFiles.size} files"
         }
-        return if (jiraUrl != null) "$base\n\n$jiraUrl" else base
+        return base
     }
 }
