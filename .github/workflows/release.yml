@@ -1,6 +1,7 @@
 # GitHub Actions Workflow for building and distributing the plugin internally.
 # On GitHub Release: builds the plugin, uploads ZIP to release assets,
-# and deploys a custom plugin repository (updatePlugins.xml + plugin.zip) to gh-pages branch.
+# and deploys a custom plugin repository to a public distribution repo.
+# Requires PLUGIN_DEPLOY_TOKEN secret (classic PAT with repo scope).
 
 name: Release
 on:
@@ -76,64 +77,54 @@ jobs:
           ZIP_NAME=$(ls build/distributions/*.zip | head -1 | xargs basename)
           echo "filename=$ZIP_NAME" >> $GITHUB_OUTPUT
 
-      # Deploy updatePlugins.xml + plugin ZIP to gh-pages branch
-      # Both files on the same host so a single PAT authenticates XML + ZIP download
-      - name: Deploy Custom Plugin Repository
+      # Deploy updatePlugins.xml + plugin ZIP to public distribution repo
+      # This allows Android Studio to fetch the plugin without authentication
+      - name: Deploy to Distribution Repository
         env:
           VERSION: ${{ steps.properties.outputs.version }}
           ZIP_NAME: ${{ steps.zip.outputs.filename }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_TOKEN: ${{ secrets.PLUGIN_DEPLOY_TOKEN }}
         run: |
           SINCE_BUILD=$(grep -oP 'pluginSinceBuild=\K.*' gradle.properties)
           UNTIL_BUILD=$(grep -oP 'pluginUntilBuild=\K.*' gradle.properties)
-          REPO_OWNER="${{ github.repository_owner }}"
-          REPO_NAME="${{ github.event.repository.name }}"
+          DIST_REPO="Teknasyon/android-studio-plugin-releases"
 
-          # Prepare gh-pages content in a temp directory
-          mkdir -p /tmp/gh-pages
+          # Prepare distribution content
+          mkdir -p /tmp/plugin-dist
 
           # Copy the built plugin ZIP
-          cp "build/distributions/${ZIP_NAME}" /tmp/gh-pages/plugin.zip
+          cp "build/distributions/${ZIP_NAME}" /tmp/plugin-dist/plugin.zip
 
           # Generate updatePlugins.xml
-          # URL uses a {TOKEN} placeholder — team members replace this with their PAT
-          # Or if using raw.githubusercontent.com with basic auth, the host auth covers it
-          cat > /tmp/gh-pages/updatePlugins.xml << XMLEOF
+          cat > /tmp/plugin-dist/updatePlugins.xml << 'XMLEOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <plugins>
             <plugin
                 id="com.github.teknasyon.plugin"
-                url="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/gh-pages/plugin.zip"
-                version="${VERSION}">
+                url="https://raw.githubusercontent.com/DIST_REPO_PLACEHOLDER/main/plugin.zip"
+                version="VERSION_PLACEHOLDER">
               <name>Teknasyon Android Studio Plugin</name>
-              <description>Internal Teknasyon Android Studio Plugin - v${VERSION}</description>
-              <idea-version since-build="${SINCE_BUILD}" until-build="${UNTIL_BUILD}"/>
+              <description>Internal Teknasyon Android Studio Plugin</description>
+              <idea-version since-build="SINCE_PLACEHOLDER" until-build="UNTIL_PLACEHOLDER"/>
             </plugin>
           </plugins>
           XMLEOF
 
-          # Generate a simple index page
-          cat > /tmp/gh-pages/index.html << HTMLEOF
-          <!DOCTYPE html>
-          <html>
-          <body>
-            <h1>Teknasyon Android Studio Plugin Repository</h1>
-            <p>Current version: ${VERSION}</p>
-            <p>Add this URL as a custom plugin repository in Android Studio:</p>
-            <code>https://&lt;YOUR_PAT&gt;@raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/gh-pages/updatePlugins.xml</code>
-          </body>
-          </html>
-          HTMLEOF
+          # Replace placeholders
+          sed -i "s|DIST_REPO_PLACEHOLDER|${DIST_REPO}|g" /tmp/plugin-dist/updatePlugins.xml
+          sed -i "s|VERSION_PLACEHOLDER|${VERSION}|g" /tmp/plugin-dist/updatePlugins.xml
+          sed -i "s|SINCE_PLACEHOLDER|${SINCE_BUILD}|g" /tmp/plugin-dist/updatePlugins.xml
+          sed -i "s|UNTIL_PLACEHOLDER|${UNTIL_BUILD}|g" /tmp/plugin-dist/updatePlugins.xml
 
-          # Deploy to gh-pages branch (orphan — no history, keeps repo clean)
-          cd /tmp/gh-pages
-          git init -b gh-pages
+          # Push to distribution repo
+          cd /tmp/plugin-dist
+          git init -b main
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
           git add .
-          git commit -m "Plugin repository update - v${VERSION}"
-          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          git push origin gh-pages --force
+          git commit -m "Plugin v${VERSION}"
+          git remote add origin "https://x-access-token:${DEPLOY_TOKEN}@github.com/${DIST_REPO}.git"
+          git push origin main --force
 
       # Create a pull request
       - name: Create Pull Request
