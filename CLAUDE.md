@@ -47,7 +47,7 @@ domain/usecase (business logic)
     ↓
 data/repository (SkillRepository)
     ↓
-service/ (FileScanner, Settings, Jira, GitHub services)
+service/ (FileScanner, Settings, CliDiscovery, GitHub services)
 ```
 
 ### Key packages
@@ -57,13 +57,13 @@ service/ (FileScanner, Settings, Jira, GitHub services)
 | `toolwindow/` | `ClaudeToolWindowFactory`, `ClaudeSessionService`, `ClaudeTerminalContent` — terminal sessions, full Claude panel UI |
 | `domain/usecase/` | `ScanSkillsUseCase` |
 | `data/repository/` | `SkillRepositoryImpl` – scans markdown files, 5-minute cache |
-| `service/` | `FileScanner`, `PluginSettingsService`, `JiraService`, `GitHubCacheService` |
-| `components/` | Reusable Compose components (all prefixed `R`: `RActionCard`, `RCheckbox`, `RText`, `RTextField`, `RDialogWrapper`) |
+| `service/` | `FileScanner`, `PluginSettingsService`, `CliDiscoveryService`, `GitHubCacheService` |
+| `components/` | Reusable Compose components (all prefixed `R`: `RActionCard`, `RCheckbox`, `RText`, `RTextField`, `RDialogWrapper`, `RErrorBanner`) |
 | `theme/` | `RTheme` / `RColor` – always use `RTheme.colors.*` for colors |
 | `actions/` | VCS actions, editor notifications |
 | `actions/dialog/` | `CreateSkillDialog`, `CreatePRDialog`, `FixPRCommentsDialog` |
 | `settings/` | `PluginSettingsService`, `PluginConfigurable` (IDE Settings > Tools > Rune Settings) |
-| `common/` | `Constants`, `NoRippleTheme` |
+| `common/` | `Constants`, `NoRippleTheme`, `ProcessRunner` |
 
 ### Service access pattern
 
@@ -76,7 +76,7 @@ GitHubCacheService.getInstance()            // @Service(Service.Level.APP)
 
 ### Settings persistence
 
-**`PluginSettingsService`** (project-scoped, `runeplugin.xml`) – skills root path and agents root path. Configured via IDE Settings > Tools > Rune Settings (`PluginConfigurable`), which also includes Jira credentials (email + API token stored in IDE `PasswordSafe`).
+**`PluginSettingsService`** (project-scoped, `runeplugin.xml`) – skills root path, agents root path, and commit message prompt. Configured via IDE Settings > Tools > Rune Settings (`PluginConfigurable`).
 
 ### Claude terminal integration
 
@@ -90,7 +90,7 @@ GitHubCacheService.getInstance()            // @Service(Service.Level.APP)
 
 The `SessionManager` inner class manages a `CardLayout` + `JPanel` containing multiple `JBTerminalWidget` panels. New sessions automatically send `"claude\n"` to terminal after a 1.5s delay.
 
-CLI discovery: `bash -l -c "which claude"` (login shell for full PATH). `GenerateCommitMessageAction` runs `claude -p <prompt>` with a 30-second timeout.
+CLI discovery is handled by `CliDiscoveryService` — uses `bash -l -c "which claude"` (login shell for full PATH) with fallback to common install locations. `GenerateCommitMessageAction` runs `claude -p <prompt>` with a 30-second timeout. The prompt is configurable via `PluginSettingsService` using `{diff}` as a placeholder.
 
 ### Skill file format
 
@@ -104,8 +104,8 @@ Description parsing priority: `description:` frontmatter → `#` heading → fir
 
 | Action | Trigger | Description |
 |---|---|---|
-| `GenerateCommitMessageAction` | VCS commit dialog | Generates commit message from staged+unstaged diff via Claude CLI; extracts Jira ticket from branch name |
-| `CreateReviewPRAction` | VCS commit dialog | Detects base branch, creates `review/<branch>`, pushes, creates PR via `gh` CLI with reviewers/labels |
+| `GenerateCommitMessageAction` | VCS commit dialog | Generates commit message from staged+unstaged diff via Claude CLI with configurable prompt |
+| `CreateReviewPRAction` | VCS commit dialog | Detects base branch, pushes current branch, creates PR via `gh` CLI with selectable base branch, reviewers, and labels |
 | `FixPRCommentsAction` | VCS commit dialog | Fetches unresolved PR review threads via GitHub GraphQL API, sends fix prompt to Claude terminal |
 | `AskClaudeAction` | Editor right-click menu | Sends selected code with file context to Claude terminal via `pendingInput` flow |
 | `SkillBestPracticesNotificationProvider` | Opens SKILL.md files | Editor notification banner: "Open best practices" link + "Check with Claude" validation |
@@ -122,7 +122,7 @@ Description parsing priority: `description:` frontmatter → `#` heading → fir
 
 ### Error handling
 
-Repositories return `Result<T>` (success/failure) instead of throwing exceptions. External process calls (Claude CLI, git, gh) use try-catch with `ProcessBuilder` and timeout handling via `Thread.join(timeout)` + `destroyForcibly()`.
+Repositories return `Result<T>` (success/failure) instead of throwing exceptions. External process calls (Claude CLI, git, gh) use `ProcessRunner` utility: `ProcessRunner.run()` returns empty string on failure (silent mode), `ProcessRunner.runOrThrow()` throws on failure (used in dialogs). CLI discovery is centralized in `CliDiscoveryService`.
 
 ### Dialog validation pattern
 
@@ -140,18 +140,11 @@ Implement `EditorNotificationProvider` + `DumbAware` for file-specific banners. 
 ### External dependencies
 
 - **Gson** (`com.google.gson.JsonParser`) is used in `FixPRCommentsDialog` — bundled with IntelliJ Platform, not declared in `build.gradle.kts`
-- **FreeMarker** (2.3.34) is an explicit dependency
 - `compose.desktop.currentOs` excludes `kotlinx-coroutines-core/jvm/swing` to avoid conflict with IntelliJ's bundled coroutines
-
-### Hardcoded values
-
-- Jira base URL: `https://pozitim.atlassian.net` (in `JiraService`, `GenerateCommitMessageAction`, `CreateReviewPRAction`)
-- Jira ticket regex: `[A-Z]+-\d+` extracted from branch names
-- Auto-label mapping in `CreatePRDialog`: Jira prefix → GitHub label (e.g., `GR` → `revenue`)
 
 ## CI/CD
 
 GitHub Actions workflows in `.github/workflows/`:
-- **`build.yml`** — triggered on push to main and PRs: build, test, Qodana inspection, Plugin Verifier, draft release
+- **`build.yml`** — triggered on push to master and PRs: build, test, Qodana inspection, Plugin Verifier, draft release
 - **`release.yml`** — triggered on GitHub release: publish to JetBrains Marketplace (requires `PUBLISH_TOKEN`, `CERTIFICATE_CHAIN`, `PRIVATE_KEY`, `PRIVATE_KEY_PASSWORD` secrets)
 - **`run-ui-tests.yml`** — manual trigger: robot server UI tests on ubuntu/windows/macOS matrix

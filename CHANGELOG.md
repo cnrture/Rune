@@ -1,6 +1,6 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# Getcontact-Android-Studio-Plugin-Project Changelog
+# Rune Changelog
 
 ## [Unreleased]
 ### Added
