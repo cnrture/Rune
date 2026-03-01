@@ -17,7 +17,7 @@ object JiraService {
     private const val JIRA_BASE_URL = "https://pozitim.atlassian.net"
 
     private val credentialAttributes = CredentialAttributes(
-        generateServiceName("TPDevTools", "JiraCredentials")
+        generateServiceName("Rune", "JiraCredentials")
     )
 
     fun getEmail(): String? {
