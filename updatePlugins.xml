@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Custom Plugin Repository for private distribution.
+  This file is auto-updated by the release workflow and deployed to gh-pages branch.
+  Team members access it via: https://<PAT>@raw.githubusercontent.com/OWNER/REPO/gh-pages/updatePlugins.xml
+-->
+<plugins>
+  <plugin
+      id="com.github.teknasyon.plugin"
+      url="https://raw.githubusercontent.com/Teknasyon/Getcontact-Android-Studio-Plugin-Project/gh-pages/plugin.zip"
+      version="0.0.1">
+    <name>Teknasyon Android Studio Plugin</name>
+    <description>Internal Teknasyon Android Studio Plugin</description>
+    <idea-version since-build="241" until-build="253.*"/>
+  </plugin>
+</plugins>

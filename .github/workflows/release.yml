@@ -1,6 +1,6 @@
-# GitHub Actions Workflow created for handling the release process based on the draft release prepared with the Build workflow.
-# Running the publishPlugin task requires all following secrets to be provided: PUBLISH_TOKEN, PRIVATE_KEY, PRIVATE_KEY_PASSWORD, CERTIFICATE_CHAIN.
-# See https://plugins.jetbrains.com/docs/intellij/plugin-signing.html for more information.
+# GitHub Actions Workflow for building and distributing the plugin internally.
+# On GitHub Release: builds the plugin, uploads ZIP to release assets,
+# and deploys a custom plugin repository (updatePlugins.xml + plugin.zip) to gh-pages branch.
 
 name: Release
 on:
@@ -9,9 +9,8 @@ on:
 
 jobs:
 
-  # Prepare and publish the plugin to JetBrains Marketplace repository
   release:
-    name: Publish Plugin
+    name: Build & Deploy Plugin
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -44,10 +43,13 @@ jobs:
           ${{ github.event.release.body }}
           EOM
           )"
-          
+
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          VERSION=$(grep -oP 'pluginVersion=\K.*' gradle.properties)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       # Update the Unreleased section with the current release note
       - name: Patch Changelog
@@ -57,14 +59,9 @@ jobs:
         run: |
           ./gradlew patchChangelog --release-note="$CHANGELOG"
 
-      # Publish the plugin to JetBrains Marketplace
-      - name: Publish Plugin
-        env:
-          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
-          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
-        run: ./gradlew publishPlugin
+      # Build the plugin
+      - name: Build Plugin
+        run: ./gradlew buildPlugin
 
       # Upload artifact as a release asset
       - name: Upload Release Asset
@@ -72,12 +69,83 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
 
+      # Find the exact ZIP filename from build output
+      - name: Get ZIP filename
+        id: zip
+        run: |
+          ZIP_NAME=$(ls build/distributions/*.zip | head -1 | xargs basename)
+          echo "filename=$ZIP_NAME" >> $GITHUB_OUTPUT
+
+      # Deploy updatePlugins.xml + plugin ZIP to gh-pages branch
+      # Both files on the same host so a single PAT authenticates XML + ZIP download
+      - name: Deploy Custom Plugin Repository
+        env:
+          VERSION: ${{ steps.properties.outputs.version }}
+          ZIP_NAME: ${{ steps.zip.outputs.filename }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SINCE_BUILD=$(grep -oP 'pluginSinceBuild=\K.*' gradle.properties)
+          UNTIL_BUILD=$(grep -oP 'pluginUntilBuild=\K.*' gradle.properties)
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+
+          # Prepare gh-pages content in a temp directory
+          mkdir -p /tmp/gh-pages
+
+          # Copy the built plugin ZIP
+          cp "build/distributions/${ZIP_NAME}" /tmp/gh-pages/plugin.zip
+
+          # Generate updatePlugins.xml
+          # URL uses a {TOKEN} placeholder — team members replace this with their PAT
+          # Or if using raw.githubusercontent.com with basic auth, the host auth covers it
+          cat > /tmp/gh-pages/updatePlugins.xml << XMLEOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plugins>
+            <plugin
+                id="com.github.teknasyon.plugin"
+                url="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/gh-pages/plugin.zip"
+                version="${VERSION}">
+              <name>Teknasyon Android Studio Plugin</name>
+              <description>Internal Teknasyon Android Studio Plugin - v${VERSION}</description>
+              <idea-version since-build="${SINCE_BUILD}" until-build="${UNTIL_BUILD}"/>
+            </plugin>
+          </plugins>
+          XMLEOF
+
+          # Generate a simple index page
+          cat > /tmp/gh-pages/index.html << HTMLEOF
+          <!DOCTYPE html>
+          <html>
+          <body>
+            <h1>Teknasyon Android Studio Plugin Repository</h1>
+            <p>Current version: ${VERSION}</p>
+            <p>Add this URL as a custom plugin repository in Android Studio:</p>
+            <code>https://&lt;YOUR_PAT&gt;@raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/gh-pages/updatePlugins.xml</code>
+          </body>
+          </html>
+          HTMLEOF
+
+          # Deploy to gh-pages branch (orphan — no history, keeps repo clean)
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+
+          cd /tmp/gh-pages
+          git init
+          git checkout -b gh-pages
+          git add .
+          git commit -m "Plugin repository update - v${VERSION}"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git push origin gh-pages --force
+
       # Create a pull request
       - name: Create Pull Request
         if: ${{ steps.properties.outputs.changelog != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cd ${{ github.workspace }}
+          git checkout ${{ github.event.release.tag_name }}
+
           VERSION="${{ github.event.release.tag_name }}"
           BRANCH="changelog-update-$VERSION"
           LABEL="release changelog"
@@ -88,7 +156,7 @@ jobs:
           git checkout -b $BRANCH
           git commit -am "Changelog update - $VERSION"
           git push --set-upstream origin $BRANCH
-          
+
           gh label create "$LABEL" \
             --description "Pull requests with release changelog update" \
             --force \
