@@ -88,7 +88,7 @@ fun ClaudeTerminalContent(project: Project) {
                         contentAlignment = Alignment.Center
                     ) {
                         RText(
-                            text = "Claude CLI kontrol ediliyor...",
+                            text = "Checking Claude CLI...",
                             color = RTheme.colors.lightGray
                         )
                     }
@@ -248,7 +248,7 @@ private fun SessionTabBar(
                     Spacer(modifier = Modifier.size(6.dp))
                     Icon(
                         imageVector = Icons.Rounded.Close,
-                        contentDescription = "Oturumu kapat",
+                        contentDescription = "Close session",
                         tint = if (isActive) RTheme.colors.lightGray else RTheme.colors.hintGray,
                         modifier = Modifier
                             .size(14.dp)
@@ -258,7 +258,7 @@ private fun SessionTabBar(
             }
             Icon(
                 imageVector = Icons.Rounded.Add,
-                contentDescription = "Yeni oturum",
+                contentDescription = "New session",
                 tint = RTheme.colors.lightGray,
                 modifier = Modifier
                     .size(24.dp)
@@ -296,7 +296,7 @@ private fun SessionTabBar(
 
         Icon(
             imageVector = Icons.Rounded.Settings,
-            contentDescription = "Ayarlar",
+            contentDescription = "Settings",
             tint = RTheme.colors.lightGray,
             modifier = Modifier
                 .size(24.dp)
@@ -324,7 +324,7 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
         )
         Spacer(modifier = Modifier.size(16.dp))
         RText(
-            text = "Claude CLI Bulunamadı",
+            text = "Claude CLI Not Found",
             color = RTheme.colors.white,
             style = TextStyle(
                 fontSize = 18.sp,
@@ -333,7 +333,7 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
         )
         Spacer(modifier = Modifier.size(8.dp))
         RText(
-            text = "Claude CLI kurulu değil. Aşağıdaki komutu çalıştırarak kurabilirsiniz:",
+            text = "Claude CLI is not installed. Run the following command to install:",
             color = RTheme.colors.lightGray,
             style = TextStyle(fontSize = 14.sp)
         )
@@ -369,7 +369,7 @@ private fun ClaudeInstallGuide(onRetry: () -> Unit) {
 
         Spacer(modifier = Modifier.size(24.dp))
         RText(
-            text = "Tekrar Dene",
+            text = "Try Again",
             color = RTheme.colors.blue,
             style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
             modifier = Modifier
@@ -894,7 +894,7 @@ private fun UnifiedCommandPalette(
                     modifier = Modifier.fillMaxWidth().height(80.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("Sonuç bulunamadı", color = RTheme.colors.lightGray, fontSize = 13.sp)
+                    Text("No results found", color = RTheme.colors.lightGray, fontSize = 13.sp)
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
