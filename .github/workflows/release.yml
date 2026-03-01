@@ -126,12 +126,10 @@ jobs:
           HTMLEOF
 
           # Deploy to gh-pages branch (orphan — no history, keeps repo clean)
+          cd /tmp/gh-pages
+          git init -b gh-pages
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
-
-          cd /tmp/gh-pages
-          git init
-          git checkout -b gh-pages
           git add .
           git commit -m "Plugin repository update - v${VERSION}"
           git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
