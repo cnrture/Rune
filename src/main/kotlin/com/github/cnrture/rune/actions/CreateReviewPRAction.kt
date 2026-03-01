@@ -26,39 +26,26 @@ class CreateReviewPRAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
 
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Preparing review PR…", false) {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Preparing PR…", false) {
             override fun run(indicator: ProgressIndicator) {
                 val dir = File(project.basePath ?: return)
 
                 // 1. Current branch
                 val currentBranch = runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
-                val reviewBranch = "review/$currentBranch"
 
                 // 2. Detect base branch automatically
                 indicator.text = "Detecting base branch…"
                 val baseBranch = detectBaseBranch(dir, currentBranch)
-                indicator.text = "Base branch: $baseBranch"
 
                 // 3. Fetch remote refs
                 indicator.text = "Fetching remote…"
                 runGit(dir, "fetch", "origin")
 
-                // 4. Create review branch on remote from base (skip if already exists)
-                val reviewExists = runGit(dir, "ls-remote", "--heads", "origin", reviewBranch).isNotBlank()
-                if (!reviewExists) {
-                    indicator.text = "Creating $reviewBranch from $baseBranch…"
-                    val result = runGit(dir, "push", "origin", "origin/$baseBranch:refs/heads/$reviewBranch")
-                    if (result.contains("error") || result.contains("fatal")) {
-                        notify(project, "Failed to create $reviewBranch: $result", NotificationType.ERROR)
-                        return
-                    }
-                }
-
-                // 5. Push current branch
+                // 4. Push current branch
                 indicator.text = "Pushing $currentBranch…"
                 runGit(dir, "push", "-u", "origin", currentBranch)
 
-                // 6. Find gh CLI
+                // 5. Find gh CLI
                 val ghPath = findGhCli()
                 if (ghPath == null) {
                     notify(
@@ -69,7 +56,7 @@ class CreateReviewPRAction : AnAction() {
                     return
                 }
 
-                // 7. Parse owner/repo
+                // 6. Parse owner/repo
                 val ownerRepo = parseOwnerRepo(dir)
                 if (ownerRepo == null) {
                     notify(
@@ -80,24 +67,22 @@ class CreateReviewPRAction : AnAction() {
                     return
                 }
 
-                // 8. Extract Jira ticket ID from branch name
-                val ticketId = Regex("[A-Z]+-\\d+").find(currentBranch)?.value
-
-                // 9. Open dialog on EDT for reviewer/label selection
+                // 7. Open dialog on EDT for base branch, reviewer/label selection
                 ApplicationManager.getApplication().invokeLater {
                     val dialog = CreatePRDialog(
                         ghPath = ghPath,
                         dir = dir,
                         owner = ownerRepo.first,
                         repo = ownerRepo.second,
-                        ticketId = ticketId,
-                        onConfirm = { reviewers, labels ->
+                        currentBranch = currentBranch,
+                        detectedBaseBranch = baseBranch,
+                        onConfirm = { selectedBaseBranch, reviewers, labels ->
                             createPR(
                                 project = project,
                                 dir = dir,
                                 ghPath = ghPath,
                                 currentBranch = currentBranch,
-                                reviewBranch = reviewBranch,
+                                baseBranch = selectedBaseBranch,
                                 reviewers = reviewers,
                                 labels = labels,
                             )
@@ -114,24 +99,22 @@ class CreateReviewPRAction : AnAction() {
         dir: File,
         ghPath: String,
         currentBranch: String,
-        reviewBranch: String,
+        baseBranch: String,
         reviewers: List<String>,
         labels: List<String>,
     ) {
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Creating review PR…", false) {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Creating PR…", false) {
             override fun run(indicator: ProgressIndicator) {
-                indicator.text = "Creating PR $currentBranch → $reviewBranch…"
-
-                val jiraUrl = getJiraTicketUrl(dir)
+                indicator.text = "Creating PR $currentBranch → $baseBranch…"
 
                 val cmd = mutableListOf(
                     ghPath,
                     "pr", "create",
                     "--assignee", "@me",
-                    "--base", reviewBranch,
+                    "--base", baseBranch,
                     "--head", currentBranch,
                     "--title", currentBranch,
-                    "--body", jiraUrl ?: "",
+                    "--body", "",
                 )
 
                 if (reviewers.isNotEmpty()) {
@@ -211,12 +194,12 @@ class CreateReviewPRAction : AnAction() {
         }
 
         // Method 2: find closest common ancestor among known branches
-        val candidates = listOf("develop", "main", "master", "staging", "release")
+        val candidates = listOf("main", "master", "develop", "staging", "release")
         return candidates.minByOrNull { candidate ->
             val mergeBase = runGit(dir, "merge-base", "HEAD", "origin/$candidate").trim()
             if (mergeBase.isBlank()) Int.MAX_VALUE
             else runGit(dir, "rev-list", "--count", "$mergeBase..HEAD").trim().toIntOrNull() ?: Int.MAX_VALUE
-        } ?: "develop"
+        } ?: "main"
     }
 
     private fun findGhCli(): String? {
@@ -231,12 +214,6 @@ class CreateReviewPRAction : AnAction() {
             listOf("/usr/local/bin/gh", "/usr/bin/gh", "/opt/homebrew/bin/gh")
                 .firstOrNull { File(it).exists() }
         }
-    }
-
-    private fun getJiraTicketUrl(dir: File): String? {
-        val branch = runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
-        val ticketId = Regex("[A-Z]+-\\d+").find(branch)?.value ?: return null
-        return "https://pozitim.atlassian.net/browse/$ticketId"
     }
 
     private fun runGit(dir: File, vararg args: String): String {

@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.sp
 import com.github.cnrture.rune.common.Constants
 import com.github.cnrture.rune.components.*
 import com.github.cnrture.rune.service.GitHubCacheService
-import com.github.cnrture.rune.service.JiraService
 import com.github.cnrture.rune.theme.RTheme
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -41,6 +40,7 @@ data class PRDialogState(
     val selectedLabels: Set<String> = emptySet(),
     val reviewerFilter: String = "",
     val labelFilter: String = "",
+    val baseBranch: String = "",
     val errorMessage: String? = null,
     val isCreatingLabel: Boolean = false,
 )
@@ -50,19 +50,20 @@ class CreatePRDialog(
     private val dir: File,
     private val owner: String,
     private val repo: String,
-    private val ticketId: String? = null,
-    private val onConfirm: (reviewers: List<String>, labels: List<String>) -> Unit,
+    private val currentBranch: String,
+    detectedBaseBranch: String,
+    private val onConfirm: (baseBranch: String, reviewers: List<String>, labels: List<String>) -> Unit,
 ) : RDialogWrapper(
     width = 600,
-    height = 500,
+    height = 550,
 ) {
 
-    private var state = mutableStateOf(PRDialogState())
+    private var state = mutableStateOf(PRDialogState(baseBranch = detectedBaseBranch))
 
     private val cacheService = GitHubCacheService.getInstance()
 
     init {
-        title = "Create Review PR"
+        title = "Create PR"
         loadData()
     }
 
@@ -74,46 +75,8 @@ class CreatePRDialog(
                 collaborators = cached.collaborators.sorted(),
                 labels = cached.labels.sorted(),
             )
-            autoSelectLabels(cached.labels)
         } else {
             fetchGitHubData()
-        }
-    }
-
-    private fun autoSelectLabels(labels: List<String>) {
-        if (ticketId == null) return
-
-        // Team label mapping: ticket prefix -> label name
-        val teamLabelMap = mapOf(
-            "GR" to "revenue",
-            "COM" to "spam-protection",
-        )
-
-        val prefix = ticketId.substringBefore("-")
-        val teamLabel = teamLabelMap[prefix.uppercase()]
-        if (teamLabel != null) {
-            val match = labels.firstOrNull { it.equals(teamLabel, ignoreCase = true) }
-            if (match != null) {
-                state.value = state.value.copy(
-                    selectedLabels = state.value.selectedLabels + match,
-                )
-            }
-        }
-
-        // Fix version from Jira
-        if (!JiraService.hasCredentials()) return
-        kotlin.concurrent.thread {
-            val fixVersions = JiraService.fetchFixVersions(ticketId)
-            if (fixVersions.isNotEmpty()) {
-                val matchingLabels = labels.filter { label ->
-                    fixVersions.any { it.contains(label, ignoreCase = true) }
-                }.toSet()
-                if (matchingLabels.isNotEmpty()) {
-                    state.value = state.value.copy(
-                        selectedLabels = state.value.selectedLabels + matchingLabels,
-                    )
-                }
-            }
         }
     }
 
@@ -161,10 +124,6 @@ class CreatePRDialog(
                 labels = labels,
                 errorMessage = error,
             )
-
-            if (error == null) {
-                autoSelectLabels(labels)
-            }
         }
     }
 
@@ -219,7 +178,7 @@ class CreatePRDialog(
             ) {
                 RText(
                     modifier = Modifier.fillMaxWidth(),
-                    text = "Create Review PR",
+                    text = "Create PR",
                     style = TextStyle(
                         color = RTheme.colors.blue,
                         fontSize = 24.sp,
@@ -263,6 +222,47 @@ class CreatePRDialog(
                 ErrorBanner(error)
                 Spacer(modifier = Modifier.size(12.dp))
             }
+
+            // Branch info
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(1.dp, RTheme.colors.gray, RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    RText(
+                        text = "Branch",
+                        color = RTheme.colors.white,
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                    )
+                    Spacer(modifier = Modifier.size(4.dp))
+                    RText(
+                        text = "$currentBranch → ${currentState.baseBranch}",
+                        color = RTheme.colors.lightGray,
+                        style = TextStyle(fontSize = 12.sp),
+                    )
+                }
+                Spacer(modifier = Modifier.size(12.dp))
+                Column {
+                    RText(
+                        text = "Base Branch",
+                        color = RTheme.colors.hintGray,
+                        style = TextStyle(fontSize = 11.sp),
+                    )
+                    Spacer(modifier = Modifier.size(4.dp))
+                    RTextField(
+                        modifier = Modifier.width(160.dp),
+                        value = currentState.baseBranch,
+                        onValueChange = { state.value = state.value.copy(baseBranch = it) },
+                        placeholder = "main",
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.size(12.dp))
 
             Row(
                 modifier = Modifier.weight(1f),
@@ -352,6 +352,7 @@ class CreatePRDialog(
                     type = RActionCardType.MEDIUM,
                     onClick = {
                         onConfirm(
+                            state.value.baseBranch,
                             state.value.selectedReviewers.toList(),
                             state.value.selectedLabels.toList(),
                         )
