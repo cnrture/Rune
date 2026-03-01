@@ -10,199 +10,157 @@ Generated: 2026-03-01
 Rune/
 ├── src/main/kotlin/com/github/cnrture/rune/
 │   ├── actions/
-│   │   ├── AskClaudeAction.kt                  ← Editor sag-tik → seçili kodu Claude'a gönderir
-│   │   ├── GenerateCommitMessageAction.kt       ← Claude CLI ile commit mesaji olusturur
-│   │   ├── CreateReviewPRAction.kt              ← Review branch + PR olusturur
-│   │   ├── FixPRCommentsAction.kt               ← PR review yorumlarini otomatik düzeltir
-│   │   ├── SkillBestPracticesNotificationProvider.kt ← SKILL.md dosyalari icin editor banner
+│   │   ├── AskClaudeAction.kt                  ← Editor right-click → sends selected code to Claude
+│   │   ├── GenerateCommitMessageAction.kt       ← Generates commit message via Claude CLI
+│   │   ├── CreateReviewPRAction.kt              ← Detects base branch + creates PR via gh CLI
+│   │   ├── FixPRCommentsAction.kt               ← Auto-fixes PR review comments
+│   │   ├── SkillBestPracticesNotificationProvider.kt ← Editor banner for SKILL.md files
 │   │   └── dialog/
-│   │       ├── CreatePRDialog.kt                ← PR olusturma dialogu (GitHub entegrasyonu)
-│   │       ├── CreateSkillDialog.kt             ← Skill dosyasi olusturma dialogu
-│   │       └── FixPRCommentsDialog.kt           ← PR yorumlari düzeltme dialogu
+│   │       ├── CreatePRDialog.kt                ← PR creation dialog (GitHub integration)
+│   │       ├── CreateSkillDialog.kt             ← Skill file creation dialog
+│   │       └── FixPRCommentsDialog.kt           ← PR comment fix dialog
 │   ├── common/
-│   │   ├── Constants.kt                         ← Global sabitler
-│   │   └── NoRippleTheme.kt                     ← Compose ripple temasi
-│   ├── components/                              ← Ortak Compose bilesenleri (R prefix)
-│   │   ├── RActionCard.kt                       ← Eylem karti bileseni
-│   │   ├── RCheckbox.kt                         ← Checkbox bileseni
-│   │   ├── RDialogWrapper.kt                    ← Dialog wrapper bileseni
-│   │   ├── RText.kt                             ← Metin bileseni
-│   │   └── RTextField.kt                        ← Metin alani bileseni
+│   │   ├── Constants.kt                         ← Global constants
+│   │   ├── NoRippleTheme.kt                     ← Compose ripple theme
+│   │   └── ProcessRunner.kt                     ← Unified process execution utility
+│   ├── components/                              ← Shared Compose components (R prefix)
+│   │   ├── RActionCard.kt                       ← Action card component
+│   │   ├── RCheckbox.kt                         ← Checkbox component
+│   │   ├── RDialogWrapper.kt                    ← Dialog wrapper component
+│   │   ├── RErrorBanner.kt                      ← Error banner with retry button
+│   │   ├── RText.kt                             ← Text component
+│   │   └── RTextField.kt                        ← Text field component
 │   ├── data/repository/
 │   │   ├── SkillRepository.kt                   ← Repository interface
-│   │   └── SkillRepositoryImpl.kt               ← FileScanner delegasyonu, Result wrapping
+│   │   └── SkillRepositoryImpl.kt               ← FileScanner delegation, Result wrapping
 │   ├── domain/
 │   │   ├── model/
-│   │   │   ├── Skill.kt                         ← Skill veri modeli (name, commandName, description, filePath, isFavorite)
-│   │   │   └── SkillFolder.kt                   ← Agac yapisinda klasör modeli (skills + subFolders)
+│   │   │   ├── Skill.kt                         ← Skill data model (name, commandName, description, filePath, isFavorite)
+│   │   │   └── SkillFolder.kt                   ← Tree structure folder model (skills + subFolders)
 │   │   └── usecase/
-│   │       └── ScanSkillsUseCase.kt             ← Root path kontrolü → SkillRepository.scanSkills()
+│   │       └── ScanSkillsUseCase.kt             ← Root path validation → SkillRepository.scanSkills()
 │   ├── service/
-│   │   ├── FileScanner.kt                       ← Dosya sistemi tarayicisi (5dk in-memory cache)
-│   │   ├── GitHubCacheService.kt                ← GitHub API veri cache servisi
-│   │   └── JiraService.kt                       ← Jira entegrasyon servisi
+│   │   ├── CliDiscoveryService.kt               ← CLI path discovery (claude, gh) with fallback locations
+│   │   ├── FileScanner.kt                       ← File system scanner (5min in-memory cache)
+│   │   └── GitHubCacheService.kt                ← GitHub API data cache service
 │   ├── settings/
-│   │   ├── PluginSettingsService.kt             ← Proje ayarlari (runeplugin.xml) — rootPath, agentsRootPath
-│   │   └── PluginConfigurable.kt               ← IDE Settings > Tools > Rune sayfasi
+│   │   ├── PluginSettingsService.kt             ← Project settings (runeplugin.xml) — rootPath, agentsRootPath, commitMessagePrompt
+│   │   └── PluginConfigurable.kt                ← IDE Settings > Tools > Rune page
 │   ├── theme/
-│   │   ├── RColor.kt                            ← Renk paleti tanimlari
+│   │   ├── RColor.kt                            ← Color palette definitions
 │   │   └── RTheme.kt                            ← MaterialTheme wrapper (RTheme.colors.*)
 │   └── toolwindow/
-│       ├── ClaudeToolWindowFactory.kt           ← "Claude" tool window fabrikasi (sag panel)
-│       ├── ClaudeSessionService.kt              ← Coklu terminal oturum yönetimi (StateFlow)
-│       └── ClaudeTerminalContent.kt             ← Ana Claude UI: session tabs, terminal, input bar, dialogs
+│       ├── ClaudeToolWindowFactory.kt           ← "Claude" tool window factory (right panel)
+│       ├── ClaudeSessionService.kt              ← Multi-session terminal management (StateFlow)
+│       └── ClaudeTerminalContent.kt             ← Main Claude UI: session tabs, terminal, input bar, command palette
 ├── src/main/resources/
 │   ├── META-INF/plugin.xml                      ← Plugin manifest
-│   └── icons/pluginIcon.svg                     ← Plugin ikonu
+│   └── icons/pluginIcon.svg                     ← Plugin icon
 ├── .github/workflows/
 │   ├── build.yml                                ← CI: build + test + Qodana + Plugin Verifier
-│   ├── release.yml                              ← CD: JetBrains Marketplace yayinlama
-│   └── run-ui-tests.yml                         ← Robot server UI testleri
-├── build.gradle.kts                             ← Ana build yapilandirmasi
-├── settings.gradle.kts                          ← Gradle ayarlari
-├── gradle.properties                            ← Plugin/platform özellikleri
-└── gradle/libs.versions.toml                    ← Versiyon katalogu
+│   ├── release.yml                              ← CD: JetBrains Marketplace publishing
+│   └── run-ui-tests.yml                         ← Robot server UI tests
+├── build.gradle.kts                             ← Main build configuration
+├── settings.gradle.kts                          ← Gradle settings
+├── gradle.properties                            ← Plugin/platform properties
+└── gradle/libs.versions.toml                    ← Version catalog
 ```
 
-**Toplam**: 30 Kotlin kaynak dosyasi | ~4,700 LOC
+**Total**: 31 Kotlin source files
 
 ---
 
 ## Entry Points
 
-| Dosya | Amac |
-|-------|------|
-| `plugin.xml` | Plugin manifest: 1 tool window, 5 action, 1 configurable, terminal bagimliligi |
-| `ClaudeToolWindowFactory.kt` | "Claude" tool window — gömülü Claude CLI terminali (sag panel) |
+| File | Purpose |
+|------|---------|
+| `plugin.xml` | Plugin manifest: 1 tool window, 5 actions, 1 configurable, terminal dependency |
+| `ClaudeToolWindowFactory.kt` | "Claude" tool window — embedded Claude CLI terminal (right panel) |
 
 ---
 
 ## Core Modules
 
 ### 1. Claude Terminal (`toolwindow/`)
-- **ClaudeToolWindowFactory**: ComposePanel icinde tool window olusturur
-- **ClaudeSessionService**: Coklu terminal oturumu yönetimi (StateFlow tabanli reaktif state)
-- **ClaudeTerminalContent**: Ana UI — session tabs, SwingPanel terminal, action butonlari (Model, Skills, Agents, Commands), input bar
-- **Özellikler**: Coklu oturum (sekme bazli), Skills/Agents/Commands picker, görsel ekleme, dosya enjeksiyonu, Claude CLI kurulum kontrolü
+- **ClaudeToolWindowFactory**: Creates tool window inside ComposePanel
+- **ClaudeSessionService**: Multi-session terminal management (StateFlow-based reactive state)
+- **ClaudeTerminalContent**: Main UI — session tabs, SwingPanel terminal, action buttons (Model, Skills, Agents, Commands), input bar
+- **Features**: Multi-session (tab-based), Skills/Agents/Commands picker, image attachment, file injection, Claude CLI install check
 
 ### 2. IDE Actions (`actions/`)
-- **GenerateCommitMessageAction**: Staged diff → `claude -p` → commit mesaji (VCS menüsü, 30sn timeout)
-- **CreateReviewPRAction**: Auto base branch algilama → review branch → `gh pr create`
-- **FixPRCommentsAction**: PR review yorumlarini otomatik düzeltme
-- **AskClaudeAction**: Editör sag-tik → secili kodu Claude terminal'e gönderir
-- **SkillBestPracticesNotificationProvider**: SKILL.md dosyalari icin editor notification banner
+- **GenerateCommitMessageAction**: Staged diff → `claude -p` → commit message (VCS menu, 30s timeout, configurable prompt)
+- **CreateReviewPRAction**: Auto base branch detection → push → `gh pr create` with selectable base branch
+- **FixPRCommentsAction**: Auto-fix unresolved PR review comments
+- **AskClaudeAction**: Editor right-click → sends selected code to Claude terminal
+- **SkillBestPracticesNotificationProvider**: Editor notification banner for SKILL.md files
 
 ### 3. Dialogs (`actions/dialog/`)
-- **CreatePRDialog**: GitHub entegrasyonlu PR olusturma (487 satir)
-- **CreateSkillDialog**: Skill dosyasi olusturma — state-based dogrulama (nameErrors/nameWarnings/nameHints)
-- **FixPRCommentsDialog**: PR yorumlari düzeltme dialogu (690 satir)
+- **CreatePRDialog**: PR creation with GitHub integration — base branch selection, reviewer/label picker
+- **CreateSkillDialog**: Skill file creation — state-based validation (nameErrors/nameWarnings/nameHints)
+- **FixPRCommentsDialog**: PR comment fix dialog with thread selection
 
 ### 4. Domain Layer (`domain/`)
-- **Skill**: `name`, `commandName` (/dosya-adi), `description`, `filePath`, `isFavorite`
-- **SkillFolder**: Agac yapisi — `skills + subFolders`, `getAllSkills()` recursive traversal
-- **ScanSkillsUseCase**: Root path bos kontrolü → `SkillRepository.scanSkills()`
+- **Skill**: `name`, `commandName` (/file-name), `description`, `filePath`, `isFavorite`
+- **SkillFolder**: Tree structure — `skills + subFolders`, `getAllSkills()` recursive traversal
+- **ScanSkillsUseCase**: Root path validation → `SkillRepository.scanSkills()`
 
 ### 5. Data Layer (`data/repository/`)
 - **SkillRepository**: Interface — `scanSkills(rootPath, strictFilter): Result<List<SkillFolder>>`
-- **SkillRepositoryImpl**: FileScanner delegasyonu, Result wrapping
+- **SkillRepositoryImpl**: FileScanner delegation, Result wrapping
 
 ### 6. Services (`service/`)
-- **FileScanner**: VirtualFile sistemi ile `.md` tarama, 5dk in-memory cache
-  - `strictFilter=true` → sadece `SKILL.md` uzantili (Skills sekmesi)
-  - `strictFilter=false` → tüm `.md` dosyalari (Agents sekmesi)
-- **GitHubCacheService**: GitHub API verilerini cache'ler
-- **JiraService**: Branch adindan `[A-Z]+-\d+` ticket ID cikarir
+- **CliDiscoveryService**: Centralized CLI path discovery for `claude` and `gh` with fallback locations
+- **FileScanner**: VirtualFile system `.md` scanning, 5min in-memory cache
+  - `strictFilter=true` → only `SKILL.md` files (Skills tab)
+  - `strictFilter=false` → all `.md` files (Agents tab)
+- **GitHubCacheService**: Caches GitHub API data (collaborators, labels) per owner/repo
 
-### 7. Settings (`settings/`)
-- **PluginSettingsService** (PROJECT-scoped): `runeplugin.xml` → `rootPath`, `agentsRootPath`
-- **PluginConfigurable**: IDE Settings > Tools > Rune ayar sayfasi
+### 7. Common Utilities (`common/`)
+- **ProcessRunner**: Unified process execution — `run()` (silent), `runOrThrow()` (throwing), `git()` (shortcut)
+- **Constants**: Global constants
+- **NoRippleTheme**: Compose interaction source that disables ripple
 
-### 8. UI Components (`components/`)
-- R prefix: `RActionCard`, `RCheckbox`, `RDialogWrapper`, `RText`, `RTextField`
+### 8. Settings (`settings/`)
+- **PluginSettingsService** (PROJECT-scoped): `runeplugin.xml` → `rootPath`, `agentsRootPath`, `commitMessagePrompt`
+- **PluginConfigurable**: IDE Settings > Tools > Rune settings page
 
-### 9. Theme (`theme/`)
-- **RTheme**: MaterialTheme wrapper — `RTheme.colors.*` erisimi
+### 9. UI Components (`components/`)
+- R prefix: `RActionCard`, `RCheckbox`, `RDialogWrapper`, `RErrorBanner`, `RText`, `RTextField`
+
+### 10. Theme (`theme/`)
+- **RTheme**: MaterialTheme wrapper — `RTheme.colors.*` access
 - **RColor**: black, gray, blue, purple, white, lightGray, hintGray, red, primaryContainer
 
 ---
 
 ## Configuration
 
-| Dosya | Amac |
-|-------|------|
+| File | Purpose |
+|------|---------|
 | `gradle.properties` | `pluginGroup=com.github.cnrture.rune`, `platformType=AI`, `platformVersion=2025.2.2.3` |
-| `build.gradle.kts` | Compose Desktop, IntelliJ Platform, Serialization, FreeMarker |
+| `build.gradle.kts` | Compose Desktop, IntelliJ Platform |
 | `gradle/libs.versions.toml` | Kotlin 2.3.0, IntelliJ Platform 2.11.0, Compose 1.10.1 |
-| `plugin.xml` | 1 toolWindow, 5 action, 1 configurable, terminal bagimliligi |
+| `plugin.xml` | 1 toolWindow, 5 actions, 1 configurable, terminal dependency |
 
-**Build araligi**: `241` – `253.*` | **JVM**: Java 21 | **Gradle**: 8.13.2
-
----
-
-## Key Dependencies
-
-| Bagimlilik | Versiyon | Amac |
-|-----------|---------|------|
-| IntelliJ Platform Gradle Plugin | 2.11.0 | Plugin build sistemi |
-| Kotlin JVM | 2.3.0 | Dil destegi |
-| Jetpack Compose Desktop | 1.10.1 | UI framework (Skiko SOFTWARE render) |
-| FreeMarker | 2.3.34 | Sablon motoru |
-| kotlinx-serialization-json | 1.9.0 | JSON serilestirme |
-| Compose Material Icons Extended | 1.10.1 | Ikon kütüphanesi |
-| JUnit | 4.13.2 | Unit test framework |
+**Build range**: `241` – `253.*` | **JVM**: Java 21 | **Gradle**: 8.13.2
 
 ---
 
 ## Service Access Pattern
 
-DI framework yok — companion `getInstance()` ile erisim:
+No DI framework — companion `getInstance()` access:
 ```kotlin
 PluginSettingsService.getInstance(project)  // Project-scoped
 ClaudeSessionService.getInstance(project)   // Project-scoped
+GitHubCacheService.getInstance()            // App-scoped
 ```
 
 ---
 
 ## CI/CD
 
-| Workflow | Tetikleyici | Amac |
-|----------|------------|------|
-| `build.yml` | push to main, PR | Build + test + Qodana + Plugin Verifier |
-| `release.yml` | GitHub release | JetBrains Marketplace yayinlama |
-| `run-ui-tests.yml` | Manuel | Robot server UI testleri (port 8082) |
-
----
-
-## Architecture Summary
-
-```
-plugin.xml
-  └── ClaudeToolWindowFactory (right panel) ── Claude Terminal
-        └── ClaudeSessionService (multi-session, StateFlow)
-              └── JBTerminalWidget + ComposePanel
-
-Actions (VCS menu / Editor popup):
-  ├── GenerateCommitMessageAction ── claude -p "diff" → commit msg
-  ├── CreateReviewPRAction ── git + gh CLI → review PR
-  ├── FixPRCommentsAction ── PR review comment fix
-  └── AskClaudeAction ── selected code → Claude terminal
-
-Data Flow:
-  UI (Compose) → UseCase → Repository → FileScanner → State → UI
-```
-
-**UI**: Jetpack Compose Desktop (ComposePanel → JPanel)
-**Terminal**: JBTerminalWidget (LocalTerminalDirectRunner) ile `claude` CLI
-**Render**: `skiko.renderApi=SOFTWARE`
-
----
-
-## Quick Start
-
-```bash
-./gradlew runIde              # Sandbox IDE'de calistir
-./gradlew check               # Testleri calistir
-./gradlew buildPlugin         # Dagitim ZIP olustur
-./gradlew publishPlugin       # Marketplace'e yayinla
-./gradlew runPluginVerifier   # Plugin uyumluluk dogrulamasi
-```
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `build.yml` | push to master, PR | Build + test + Qodana + Plugin Verifier |
+| `release.yml` | GitHub release | JetBrains Marketplace publishing |
+| `run-ui-tests.yml` | Manual | Robot server UI tests (port 8082) |

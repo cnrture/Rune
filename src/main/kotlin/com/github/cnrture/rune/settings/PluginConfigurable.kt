@@ -54,7 +54,7 @@ class PluginConfigurable(private val project: Project) :
                     comment(
                         "Prompt sent to Claude when generating commit messages. " +
                             "Use <b>{diff}</b> as a placeholder for the git diff. " +
-                            "You can customize the format, add Jira ticket references, or any other instructions."
+                            "You can customize the format, add ticket references, or any other instructions."
                     )
                 }
                 row {

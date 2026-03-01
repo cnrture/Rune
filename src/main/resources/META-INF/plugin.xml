@@ -10,11 +10,6 @@
     <depends>org.jetbrains.plugins.terminal</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="Rune Notification Group"
-                           displayType="BALLOON"/>
-    </extensions>
-
-    <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="RunePlugin" displayType="BALLOON" isLogByDefault="false"/>
         <toolWindow
                 factoryClass="com.github.cnrture.rune.toolwindow.claude.ClaudeToolWindowFactory"
@@ -45,8 +40,8 @@
         <action
                 id="RunePlugin.CreateReviewPR"
                 class="com.github.cnrture.rune.actions.CreateReviewPRAction"
-                text="Create Review PR"
-                description="Create review branch from base, push current branch, and open a PR"
+                text="Create PR"
+                description="Push current branch and open a PR to a selectable base branch"
                 icon="AllIcons.Vcs.Branch">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="after"
                           relative-to-action="RunePlugin.GenerateCommitMessage"/>
