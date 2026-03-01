@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.github.cnrture.rune.actions.dialog.CreateSkillDialog
+import com.github.cnrture.rune.components.RActionCard
+import com.github.cnrture.rune.components.RActionCardType
 import com.github.cnrture.rune.components.RText
 import com.github.cnrture.rune.data.repository.SkillRepositoryImpl
 import com.github.cnrture.rune.domain.model.Skill
@@ -112,14 +114,10 @@ fun ClaudeTerminalContent(project: Project) {
                             onSelectSession = { service.switchToSession(it) },
                             onCloseSession = { service.closeSession(it) },
                             onAddSession = { service.addNewSession() },
-                            onCreateSkillClick = {
-                                CreateSkillDialog(project).show()
-                            },
                             onSettingsClick = {
                                 ShowSettingsUtil.getInstance()
                                     .editConfigurable(project, PluginConfigurable(project))
                             },
-                            onModelClick = { sendToTerminal("/model", true) },
                         )
 
                         if (showCommandPalette) {
@@ -178,6 +176,9 @@ fun ClaudeTerminalContent(project: Project) {
                             pendingInput = pendingInput,
                             onPendingInputConsumed = { service.consumePendingInput() },
                             onSlashClick = { showCommandPalette = !showCommandPalette },
+                            onChangeModelClick = { sendToTerminal("/model", true) },
+                            onCreateSkillClick = { CreateSkillDialog(project).show() },
+                            onUsageClick = { sendToTerminal("/usage", true) },
                         )
                     }
                 }
@@ -207,9 +208,7 @@ private fun SessionTabBar(
     onSelectSession: (Int) -> Unit,
     onCloseSession: (Int) -> Unit,
     onAddSession: () -> Unit,
-    onCreateSkillClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onModelClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -266,41 +265,14 @@ private fun SessionTabBar(
             )
         }
 
-        // Model badge
-        Text(
-            text = "model",
-            modifier = Modifier
-                .background(
-                    color = RTheme.colors.purple.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(4.dp)
-                )
-                .clickable { onModelClick() }
-                .padding(horizontal = 8.dp, vertical = 3.dp),
-            color = RTheme.colors.purple,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-
         Spacer(modifier = Modifier.width(6.dp))
 
-        Icon(
-            imageVector = Icons.AutoMirrored.Rounded.NoteAdd,
-            contentDescription = "Create New Skill",
-            tint = RTheme.colors.lightGray,
-            modifier = Modifier
-                .size(24.dp)
-                .clickable { onCreateSkillClick() }
-        )
-
-        Spacer(modifier = Modifier.width(6.dp))
-
-        Icon(
-            imageVector = Icons.Rounded.Settings,
-            contentDescription = "Settings",
-            tint = RTheme.colors.lightGray,
-            modifier = Modifier
-                .size(24.dp)
-                .clickable { onSettingsClick() }
+        RActionCard(
+            title = "Settings",
+            icon = Icons.Rounded.Settings,
+            actionColor = RTheme.colors.purple,
+            type = RActionCardType.EXTRA_SMALL,
+            onClick = { onSettingsClick() },
         )
     }
 }
@@ -394,6 +366,9 @@ private fun TerminalInputBar(
     pendingInput: String?,
     onPendingInputConsumed: () -> Unit,
     onSlashClick: () -> Unit,
+    onChangeModelClick: () -> Unit,
+    onCreateSkillClick: () -> Unit,
+    onUsageClick: () -> Unit,
 ) {
     var inputValue by remember { mutableStateOf(TextFieldValue("")) }
 
@@ -421,184 +396,216 @@ private fun TerminalInputBar(
         SwingUtilities.invokeLater { onClearImages() }
     }
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(RTheme.colors.gray)
             .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        // Left side icons — horizontal row
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            // File inject button
-            Icon(
-                imageVector = Icons.Rounded.AlternateEmail,
-                contentDescription = "Add active file path",
-                tint = RTheme.colors.lightGray,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable {
-                        val path = onInjectFile() ?: return@clickable
-                        val newText = if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
-                        inputValue = TextFieldValue(newText, TextRange(newText.length))
-                    }
+        Row {
+            RActionCard(
+                title = "Change Model",
+                icon = Icons.Rounded.SmartToy,
+                actionColor = RTheme.colors.purple,
+                type = RActionCardType.EXTRA_SMALL,
+                onClick = { onChangeModelClick() },
             )
-            // Image picker button
-            Icon(
-                imageVector = Icons.Rounded.Image,
-                contentDescription = "Add image",
-                tint = if (selectedImagePaths.isNotEmpty()) RTheme.colors.blue else RTheme.colors.lightGray,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onPickImage() }
+            Spacer(modifier = Modifier.size(8.dp))
+            RActionCard(
+                title = "Create Skill",
+                icon = Icons.Rounded.AutoFixHigh,
+                actionColor = RTheme.colors.blue,
+                type = RActionCardType.EXTRA_SMALL,
+                onClick = { onCreateSkillClick() },
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.size(8.dp))
+            RActionCard(
+                title = "Usage",
+                icon = Icons.Rounded.DataUsage,
+                actionColor = RTheme.colors.blue,
+                type = RActionCardType.EXTRA_SMALL,
+                onClick = { onUsageClick() },
             )
         }
-
-        // Middle area: image chips + input field
-        Column(
-            modifier = Modifier.weight(1f),
+        Spacer(modifier = Modifier.size(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            // Image chips
-            if (selectedImagePaths.isNotEmpty()) {
-                Row(
+            // Left side icons — horizontal row
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                // File inject button
+                Icon(
+                    imageVector = Icons.Rounded.AlternateEmail,
+                    contentDescription = "Add active file path",
+                    tint = RTheme.colors.lightGray,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    selectedImagePaths.forEach { path ->
-                        val fileName = path.substringAfterLast("/")
-                        Row(
-                            modifier = Modifier
-                                .background(
-                                    color = RTheme.colors.blue.copy(alpha = 0.15f),
-                                    shape = RoundedCornerShape(6.dp)
-                                )
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Image,
-                                contentDescription = null,
-                                tint = RTheme.colors.blue,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.size(4.dp))
-                            RText(
-                                text = fileName,
-                                color = RTheme.colors.blue,
-                                style = TextStyle(fontSize = 12.sp),
-                            )
-                            Spacer(modifier = Modifier.size(6.dp))
-                            Icon(
-                                imageVector = Icons.Rounded.Close,
-                                contentDescription = "Remove image",
-                                tint = RTheme.colors.blue,
+                        .size(24.dp)
+                        .clickable {
+                            val path = onInjectFile() ?: return@clickable
+                            val newText = if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
+                            inputValue = TextFieldValue(newText, TextRange(newText.length))
+                        }
+                )
+                // Image picker button
+                Icon(
+                    imageVector = Icons.Rounded.Image,
+                    contentDescription = "Add image",
+                    tint = if (selectedImagePaths.isNotEmpty()) RTheme.colors.blue else RTheme.colors.lightGray,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { onPickImage() }
+                )
+            }
+
+            // Middle area: image chips + input field
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                // Image chips
+                if (selectedImagePaths.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        selectedImagePaths.forEach { path ->
+                            val fileName = path.substringAfterLast("/")
+                            Row(
                                 modifier = Modifier
-                                    .size(14.dp)
-                                    .clickable { onRemoveImage(path) }
-                            )
+                                    .background(
+                                        color = RTheme.colors.blue.copy(alpha = 0.15f),
+                                        shape = RoundedCornerShape(6.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Image,
+                                    contentDescription = null,
+                                    tint = RTheme.colors.blue,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.size(4.dp))
+                                RText(
+                                    text = fileName,
+                                    color = RTheme.colors.blue,
+                                    style = TextStyle(fontSize = 12.sp),
+                                )
+                                Spacer(modifier = Modifier.size(6.dp))
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = "Remove image",
+                                    tint = RTheme.colors.blue,
+                                    modifier = Modifier
+                                        .size(14.dp)
+                                        .clickable { onRemoveImage(path) }
+                                )
+                            }
                         }
                     }
                 }
+
+                // Input field
+                BasicTextField(
+                    value = inputValue,
+                    onValueChange = { newValue ->
+                        val wasEmpty = inputValue.text.isEmpty()
+                        inputValue = newValue
+                        if (wasEmpty && newValue.text == "/") {
+                            onSlashClick()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(RTheme.colors.black)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .onPreviewKeyEvent { event ->
+                            if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
+                                if (event.isShiftPressed) {
+                                    val cursor = inputValue.selection.start
+                                    val newText =
+                                        inputValue.text.substring(0, cursor) + "\n" + inputValue.text.substring(cursor)
+                                    inputValue = TextFieldValue(newText, TextRange(cursor + 1))
+                                    true
+                                } else {
+                                    doSend()
+                                    true
+                                }
+                            } else false
+                        },
+                    textStyle = TextStyle(
+                        color = RTheme.colors.white,
+                        fontSize = 14.sp,
+                    ),
+                    cursorBrush = SolidColor(RTheme.colors.white),
+                    decorationBox = { innerTextField ->
+                        Row(
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.Start,
+                        ) {
+                            Box(
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                if (inputValue.text.isEmpty()) {
+                                    RText(
+                                        text = "Write your message here...",
+                                        color = RTheme.colors.hintGray,
+                                        style = TextStyle(fontSize = 14.sp),
+                                    )
+                                }
+                                innerTextField()
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .background(RTheme.colors.primaryContainer, RoundedCornerShape(6.dp))
+                                    .clickable { onSlashClick() }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                ) {
+                                    RText(
+                                        text = "/",
+                                        color = RTheme.colors.white,
+                                        style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Rounded.UnfoldMore,
+                                        contentDescription = null,
+                                        tint = RTheme.colors.white,
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    minLines = 4,
+                )
             }
 
-            // Input field
-            BasicTextField(
-                value = inputValue,
-                onValueChange = { newValue ->
-                    val wasEmpty = inputValue.text.isEmpty()
-                    inputValue = newValue
-                    if (wasEmpty && newValue.text == "/") {
-                        onSlashClick()
-                    }
-                },
+            // Send button
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.Send,
+                contentDescription = "Send",
+                tint = if (hasContent) RTheme.colors.blue else RTheme.colors.hintGray,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(RTheme.colors.black)
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .onPreviewKeyEvent { event ->
-                        if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
-                            if (event.isShiftPressed) {
-                                val cursor = inputValue.selection.start
-                                val newText =
-                                    inputValue.text.substring(0, cursor) + "\n" + inputValue.text.substring(cursor)
-                                inputValue = TextFieldValue(newText, TextRange(cursor + 1))
-                                true
-                            } else {
-                                doSend()
-                                true
-                            }
-                        } else false
-                    },
-                textStyle = TextStyle(
-                    color = RTheme.colors.white,
-                    fontSize = 14.sp,
-                ),
-                cursorBrush = SolidColor(RTheme.colors.white),
-                decorationBox = { innerTextField ->
-                    Row(
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.Start,
-                    ) {
-                        Box(
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            if (inputValue.text.isEmpty()) {
-                                RText(
-                                    text = "Write your message here...",
-                                    color = RTheme.colors.hintGray,
-                                    style = TextStyle(fontSize = 14.sp),
-                                )
-                            }
-                            innerTextField()
-                        }
-                        Box(
-                            modifier = Modifier
-                                .background(RTheme.colors.primaryContainer, RoundedCornerShape(6.dp))
-                                .clickable { onSlashClick() }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                            ) {
-                                RText(
-                                    text = "/",
-                                    color = RTheme.colors.white,
-                                    style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                                )
-                                Icon(
-                                    imageVector = Icons.Rounded.UnfoldMore,
-                                    contentDescription = null,
-                                    tint = RTheme.colors.white,
-                                    modifier = Modifier.size(14.dp),
-                                )
-                            }
-                        }
-                    }
-                },
-                minLines = 4,
+                    .size(28.dp)
+                    .clickable { doSend() }
             )
         }
-
-        // Send button
-        Icon(
-            imageVector = Icons.AutoMirrored.Rounded.Send,
-            contentDescription = "Send",
-            tint = if (hasContent) RTheme.colors.blue else RTheme.colors.hintGray,
-            modifier = Modifier
-                .size(28.dp)
-                .clickable { doSend() }
-        )
     }
+
 }
 
 // --- Unified Command Palette ---
