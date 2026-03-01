@@ -1,6 +1,7 @@
 package com.github.cnrture.rune.actions
 
 import com.github.cnrture.rune.actions.dialog.FixPRCommentsDialog
+import com.github.cnrture.rune.service.CliDiscoveryService
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -9,7 +10,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 class FixPRCommentsAction : AnAction() {
 
@@ -23,7 +23,7 @@ class FixPRCommentsAction : AnAction() {
         val project = e.project ?: return
         val dir = File(project.basePath ?: return)
 
-        val ghPath = findGhCli()
+        val ghPath = CliDiscoveryService.findGhCli()
         if (ghPath == null) {
             notify(project)
             return
@@ -32,20 +32,6 @@ class FixPRCommentsAction : AnAction() {
         ApplicationManager.getApplication().invokeLater {
             val dialog = FixPRCommentsDialog(project, ghPath, dir)
             dialog.show()
-        }
-    }
-
-    private fun findGhCli(): String? {
-        return try {
-            val process = ProcessBuilder("bash", "-l", "-c", "which gh")
-                .redirectErrorStream(true)
-                .start()
-            process.outputStream.close()
-            process.waitFor(5, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim().ifBlank { null }
-        } catch (_: Exception) {
-            listOf("/usr/local/bin/gh", "/usr/bin/gh", "/opt/homebrew/bin/gh")
-                .firstOrNull { File(it).exists() }
         }
     }
 

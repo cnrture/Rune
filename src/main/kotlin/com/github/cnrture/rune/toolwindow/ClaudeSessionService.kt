@@ -267,13 +267,5 @@ private fun doCheckSuperClaudeInstalled(): Boolean {
 }
 
 private fun doCheckClaudeInstalled(): Boolean {
-    return try {
-        val process = ProcessBuilder("/bin/sh", "-c", "which claude")
-            .redirectErrorStream(true)
-            .start()
-        val exitCode = process.waitFor()
-        exitCode == 0
-    } catch (_: Exception) {
-        false
-    }
+    return com.github.cnrture.rune.service.CliDiscoveryService.isClaudeInstalled()
 }

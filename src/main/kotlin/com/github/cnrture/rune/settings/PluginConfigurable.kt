@@ -1,15 +1,12 @@
 package com.github.cnrture.rune.settings
 
-import com.github.cnrture.rune.service.JiraService
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.dsl.builder.panel
-import javax.swing.JPasswordField
 import javax.swing.JTextArea
-import javax.swing.JTextField
 
 class PluginConfigurable(private val project: Project) :
     BoundConfigurable("Rune Settings") {
@@ -18,8 +15,6 @@ class PluginConfigurable(private val project: Project) :
     private lateinit var skillsPathField: TextFieldWithBrowseButton
     private lateinit var agentsPathField: TextFieldWithBrowseButton
     private lateinit var commitPromptField: JTextArea
-    private lateinit var jiraEmailField: JTextField
-    private lateinit var jiraTokenField: JPasswordField
 
     override fun createPanel(): DialogPanel {
         return panel {
@@ -68,18 +63,6 @@ class PluginConfigurable(private val project: Project) :
                     }
                 }
             }
-
-            group("Jira Integration") {
-                row("Email:") {
-                    jiraEmailField = JTextField(JiraService.getEmail() ?: "", 30)
-                    cell(jiraEmailField)
-                }
-                row("API Token:") {
-                    jiraTokenField = JPasswordField(30)
-                    cell(jiraTokenField)
-                }
-                row { comment("Used to auto-select Fix Version labels from Jira tickets when creating PRs") }
-            }
         }
     }
 
@@ -87,28 +70,18 @@ class PluginConfigurable(private val project: Project) :
         settingsService.setSkillsRootPath(skillsPathField.text.trim())
         settingsService.setAgentsRootPath(agentsPathField.text.trim())
         settingsService.setCommitMessagePrompt(commitPromptField.text.trim().ifBlank { PluginSettingsService.DEFAULT_COMMIT_PROMPT })
-
-        val email = jiraEmailField.text.trim()
-        val token = String(jiraTokenField.password).trim()
-        if (email.isNotBlank() && token.isNotBlank()) {
-            JiraService.saveCredentials(email, token)
-        }
     }
 
     override fun isModified(): Boolean {
         val promptModified = commitPromptField.text.trim() != settingsService.getCommitMessagePrompt()
         val pathsModified = skillsPathField.text.trim() != settingsService.getSkillsRootPath() ||
             agentsPathField.text.trim() != settingsService.getAgentsRootPath()
-        val jiraModified = jiraEmailField.text.trim() != (JiraService.getEmail() ?: "") ||
-            String(jiraTokenField.password).trim().isNotBlank()
-        return promptModified || pathsModified || jiraModified
+        return promptModified || pathsModified
     }
 
     override fun reset() {
         skillsPathField.text = settingsService.getSkillsRootPath()
         agentsPathField.text = settingsService.getAgentsRootPath()
         commitPromptField.text = settingsService.getCommitMessagePrompt()
-        jiraEmailField.text = JiraService.getEmail() ?: ""
-        jiraTokenField.text = ""
     }
 }

@@ -26,11 +26,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.cnrture.rune.common.Constants
+import com.github.cnrture.rune.common.ProcessRunner
 import com.github.cnrture.rune.components.*
 import com.github.cnrture.rune.service.GitHubCacheService
 import com.github.cnrture.rune.theme.RTheme
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 data class PRDialogState(
     val isLoading: Boolean = true,
@@ -150,17 +150,7 @@ class CreatePRDialog(
     }
 
     private fun runProcess(vararg cmd: String): String {
-        val process = ProcessBuilder(*cmd)
-            .directory(dir)
-            .redirectErrorStream(true)
-            .start()
-        process.outputStream.close()
-        val completed = process.waitFor(30, TimeUnit.SECONDS)
-        val output = process.inputStream.bufferedReader().readText().trim()
-        if (!completed || process.exitValue() != 0) {
-            throw RuntimeException(output.ifBlank { "Command timed out" })
-        }
-        return output
+        return ProcessRunner.runOrThrow(dir, *cmd)
     }
 
     @Composable
@@ -219,7 +209,7 @@ class CreatePRDialog(
     private fun ColumnScope.SelectionContent(currentState: PRDialogState) {
         Column(modifier = Modifier.weight(1f)) {
             currentState.errorMessage?.let { error ->
-                ErrorBanner(error)
+                RErrorBanner(error = error, onRetry = { fetchGitHubData() })
                 Spacer(modifier = Modifier.size(12.dp))
             }
 
@@ -363,32 +353,6 @@ class CreatePRDialog(
         }
     }
 
-    @Composable
-    private fun ErrorBanner(error: String) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = RTheme.colors.red.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(8.dp),
-                )
-                .padding(12.dp),
-        ) {
-            RText(
-                text = error,
-                color = RTheme.colors.red,
-                style = TextStyle(fontSize = 12.sp),
-            )
-            Spacer(modifier = Modifier.size(8.dp))
-            RActionCard(
-                title = "Retry",
-                icon = Icons.Rounded.Refresh,
-                actionColor = RTheme.colors.red,
-                type = RActionCardType.SMALL,
-                onClick = { fetchGitHubData() },
-            )
-        }
-    }
 
     @Composable
     private fun SectionContent(

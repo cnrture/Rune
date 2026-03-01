@@ -1,6 +1,8 @@
 package com.github.cnrture.rune.actions
 
 import com.github.cnrture.rune.actions.dialog.CreatePRDialog
+import com.github.cnrture.rune.common.ProcessRunner
+import com.github.cnrture.rune.service.CliDiscoveryService
 import com.intellij.ide.BrowserUtil
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -13,7 +15,6 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 class CreateReviewPRAction : AnAction() {
 
@@ -31,7 +32,7 @@ class CreateReviewPRAction : AnAction() {
                 val dir = File(project.basePath ?: return)
 
                 // 1. Current branch
-                val currentBranch = runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
+                val currentBranch = ProcessRunner.git(dir, "rev-parse", "--abbrev-ref", "HEAD")
 
                 // 2. Detect base branch automatically
                 indicator.text = "Detecting base branch…"
@@ -39,14 +40,14 @@ class CreateReviewPRAction : AnAction() {
 
                 // 3. Fetch remote refs
                 indicator.text = "Fetching remote…"
-                runGit(dir, "fetch", "origin")
+                ProcessRunner.git(dir, "fetch", "origin")
 
                 // 4. Push current branch
                 indicator.text = "Pushing $currentBranch…"
-                runGit(dir, "push", "-u", "origin", currentBranch)
+                ProcessRunner.git(dir, "push", "-u", "origin", currentBranch)
 
                 // 5. Find gh CLI
-                val ghPath = findGhCli()
+                val ghPath = CliDiscoveryService.findGhCli()
                 if (ghPath == null) {
                     notify(
                         project,
@@ -126,15 +127,15 @@ class CreateReviewPRAction : AnAction() {
                     cmd += labels.joinToString(",")
                 }
 
-                val prOutput = runProcess(dir, *cmd.toTypedArray())
+                val prOutput = ProcessRunner.run(dir, *cmd.toTypedArray())
 
                 val prUrl = prOutput.lines().firstOrNull { it.startsWith("https://github.com") }
                 if (prUrl != null) {
                     ApplicationManager.getApplication().invokeLater { BrowserUtil.browse(prUrl) }
                     notify(project, "PR created: $prUrl", NotificationType.INFORMATION)
                 } else {
-                    val existingUrl = runProcess(dir, ghPath, "pr", "view", "--json", "url", "--jq", ".url")
-                        .trim().takeIf { it.startsWith("https://") }
+                    val existingUrl = ProcessRunner.run(dir, ghPath, "pr", "view", "--json", "url", "--jq", ".url")
+                        .takeIf { it.startsWith("https://") }
                     if (existingUrl != null) {
                         ApplicationManager.getApplication().invokeLater { BrowserUtil.browse(existingUrl) }
                         notify(project, "PR already exists: $existingUrl", NotificationType.INFORMATION)
@@ -148,36 +149,28 @@ class CreateReviewPRAction : AnAction() {
 
     /**
      * Parses owner and repo name from the 'origin' remote URL.
-     * Supports both HTTPS (https://github.com/owner/repo.git) and SSH (git@github.com:owner/repo.git) formats.
+     * Supports both HTTPS and SSH formats.
      */
     private fun parseOwnerRepo(dir: File): Pair<String, String>? {
-        val remoteUrl = runGit(dir, "remote", "get-url", "origin").trim()
+        val remoteUrl = ProcessRunner.git(dir, "remote", "get-url", "origin")
         if (remoteUrl.isBlank()) return null
 
-        // SSH: git@github.com:owner/repo.git
         val sshMatch = Regex("""git@[^:]+:([^/]+)/(.+?)(?:\.git)?$""").find(remoteUrl)
-        if (sshMatch != null) {
-            return sshMatch.groupValues[1] to sshMatch.groupValues[2]
-        }
+        if (sshMatch != null) return sshMatch.groupValues[1] to sshMatch.groupValues[2]
 
-        // HTTPS: https://github.com/owner/repo.git
         val httpsMatch = Regex("""https?://[^/]+/([^/]+)/(.+?)(?:\.git)?$""").find(remoteUrl)
-        if (httpsMatch != null) {
-            return httpsMatch.groupValues[1] to httpsMatch.groupValues[2]
-        }
+        if (httpsMatch != null) return httpsMatch.groupValues[1] to httpsMatch.groupValues[2]
 
         return null
     }
 
     /**
      * Detects the base branch this branch was created from.
-     *
-     * Method 1: reflog — looks for "Created from <branch>" in the oldest reflog entry.
+     * Method 1: reflog — looks for "Created from" in the oldest reflog entry.
      * Method 2: merge-base — compares with common branches and picks the closest one.
      */
     private fun detectBaseBranch(dir: File, currentBranch: String): String {
-        // Method 1: reflog
-        val reflogLines = runGit(dir, "reflog", "show", "--format=%gs", currentBranch).lines()
+        val reflogLines = ProcessRunner.git(dir, "reflog", "show", "--format=%gs", currentBranch).lines()
         val createdFromEntry = reflogLines
             .lastOrNull { it.contains("Created from", ignoreCase = true) }
             ?: reflogLines.lastOrNull { it.startsWith("branch:") }
@@ -193,45 +186,12 @@ class CreateReviewPRAction : AnAction() {
             }
         }
 
-        // Method 2: find closest common ancestor among known branches
         val candidates = listOf("main", "master", "develop", "staging", "release")
         return candidates.minByOrNull { candidate ->
-            val mergeBase = runGit(dir, "merge-base", "HEAD", "origin/$candidate").trim()
+            val mergeBase = ProcessRunner.git(dir, "merge-base", "HEAD", "origin/$candidate")
             if (mergeBase.isBlank()) Int.MAX_VALUE
-            else runGit(dir, "rev-list", "--count", "$mergeBase..HEAD").trim().toIntOrNull() ?: Int.MAX_VALUE
+            else ProcessRunner.git(dir, "rev-list", "--count", "$mergeBase..HEAD").toIntOrNull() ?: Int.MAX_VALUE
         } ?: "main"
-    }
-
-    private fun findGhCli(): String? {
-        return try {
-            val process = ProcessBuilder("bash", "-l", "-c", "which gh")
-                .redirectErrorStream(true)
-                .start()
-            process.outputStream.close()
-            process.waitFor(5, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim().ifBlank { null }
-        } catch (_: Exception) {
-            listOf("/usr/local/bin/gh", "/usr/bin/gh", "/opt/homebrew/bin/gh")
-                .firstOrNull { File(it).exists() }
-        }
-    }
-
-    private fun runGit(dir: File, vararg args: String): String {
-        return runProcess(dir, "git", *args)
-    }
-
-    private fun runProcess(dir: File, vararg cmd: String): String {
-        return try {
-            val process = ProcessBuilder(*cmd)
-                .directory(dir)
-                .redirectErrorStream(true)
-                .start()
-            process.outputStream.close()
-            process.waitFor(30, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim()
-        } catch (_: Exception) {
-            ""
-        }
     }
 
     private fun notify(project: Project, message: String, type: NotificationType) {

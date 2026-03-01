@@ -1,5 +1,8 @@
 package com.github.cnrture.rune.actions
 
+import com.github.cnrture.rune.common.ProcessRunner
+import com.github.cnrture.rune.service.CliDiscoveryService
+import com.github.cnrture.rune.settings.PluginSettingsService
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -12,10 +15,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vcs.VcsDataKeys
-import com.github.cnrture.rune.settings.PluginSettingsService
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 class GenerateCommitMessageAction : AnAction() {
 
@@ -23,14 +23,17 @@ class GenerateCommitMessageAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val commitDocument = e.getData(VcsDataKeys.COMMIT_MESSAGE_DOCUMENT) ?: return
+        val commitDocument = e.getData(com.intellij.openapi.vcs.VcsDataKeys.COMMIT_MESSAGE_DOCUMENT) ?: return
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Generating commit message…", false) {
             override fun run(indicator: ProgressIndicator) {
                 val projectDir = project.basePath ?: return
+                val dir = File(projectDir)
 
                 indicator.text = "Getting changes…"
-                val diff = getAllChanges(projectDir)
+                val staged = ProcessRunner.git(dir, "diff", "--cached", timeoutSeconds = 10)
+                val unstaged = ProcessRunner.git(dir, "diff", timeoutSeconds = 10)
+                val diff = (staged + "\n" + unstaged).trim()
 
                 if (diff.isBlank()) {
                     ApplicationManager.getApplication().invokeLater {
@@ -43,7 +46,7 @@ class GenerateCommitMessageAction : AnAction() {
                 }
 
                 indicator.text = "Generating commit message with Claude…"
-                val usedClaude = streamWithClaude(projectDir, diff, project, commitDocument)
+                val usedClaude = streamWithClaude(dir, diff, project, commitDocument)
 
                 if (!usedClaude) {
                     setDocumentText(project, commitDocument, generateFallbackMessage(diff))
@@ -54,24 +57,24 @@ class GenerateCommitMessageAction : AnAction() {
 
     override fun update(e: AnActionEvent) {
         e.presentation.isEnabledAndVisible =
-            e.project != null && e.getData(VcsDataKeys.COMMIT_MESSAGE_DOCUMENT) != null
+            e.project != null && e.getData(com.intellij.openapi.vcs.VcsDataKeys.COMMIT_MESSAGE_DOCUMENT) != null
     }
 
     /** Returns true if claude was found and produced output. */
     private fun streamWithClaude(
-        projectDir: String,
+        dir: File,
         diff: String,
         project: Project,
         commitDocument: Document,
     ): Boolean {
-        val claudePath = findClaudeCli() ?: return false
+        val claudePath = CliDiscoveryService.findClaudeCli() ?: return false
         val truncatedDiff = if (diff.length > 8000) diff.take(8000) + "\n…(truncated)" else diff
         val promptTemplate = PluginSettingsService.getInstance(project).getCommitMessagePrompt()
         val prompt = promptTemplate.replace("{diff}", truncatedDiff)
 
         return try {
             val process = ProcessBuilder(claudePath, "-p", prompt)
-                .directory(File(projectDir))
+                .directory(dir)
                 .redirectErrorStream(true)
                 .start()
 
@@ -116,51 +119,6 @@ class GenerateCommitMessageAction : AnAction() {
         }
     }
 
-    private fun getAllChanges(projectDir: String): String {
-        val dir = File(projectDir)
-        val staged = runGit(dir, "diff", "--cached")
-        val unstaged = runGit(dir, "diff")
-        return (staged + "\n" + unstaged).trim()
-    }
-
-    private fun runGit(dir: File, vararg args: String): String {
-        return try {
-            // Use login shell so git is found even with minimal PATH
-            val cmd = listOf("git") + args.toList()
-            val process = ProcessBuilder(cmd)
-                .directory(dir)
-                .redirectErrorStream(true)
-                .start()
-            process.outputStream.close()
-            process.waitFor(10, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim()
-        } catch (_: Exception) {
-            ""
-        }
-    }
-
-    private fun findClaudeCli(): String? {
-        // Use a login shell so it picks up the user's PATH (nvm, homebrew, etc.)
-        return try {
-            val process = ProcessBuilder("bash", "-l", "-c", "which claude")
-                .redirectErrorStream(true)
-                .start()
-            process.outputStream.close()
-            process.waitFor(5, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim().ifBlank { null }
-        } catch (_: Exception) {
-            // Fallback: check common install locations directly
-            val home = System.getProperty("user.home")
-            listOf(
-                "/usr/local/bin/claude",
-                "/usr/bin/claude",
-                "$home/.npm-global/bin/claude",
-                "$home/.local/bin/claude",
-                "$home/.nvm/versions/node/$(ls $home/.nvm/versions/node 2>/dev/null | tail -1)/bin/claude",
-            ).firstOrNull { File(it).exists() }
-        }
-    }
-
     private fun generateFallbackMessage(diff: String): String {
         val changedFiles = diff.lines()
             .filter { it.startsWith("diff --git") }
@@ -177,11 +135,10 @@ class GenerateCommitMessageAction : AnAction() {
             else -> "fix"
         }
 
-        val base = when {
+        return when {
             changedFiles.isEmpty() -> "$type: update changes"
             changedFiles.size == 1 -> "$type: update ${changedFiles.first()}"
             else -> "$type: update ${changedFiles.size} files"
         }
-        return base
     }
 }

@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import com.github.cnrture.rune.common.Constants
+import com.github.cnrture.rune.common.ProcessRunner
 import com.github.cnrture.rune.components.*
 import com.github.cnrture.rune.theme.RTheme
 import com.github.cnrture.rune.toolwindow.claude.ClaudeSessionService
@@ -36,7 +37,6 @@ import com.google.gson.JsonParser
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 // region Data models
 
@@ -206,17 +206,7 @@ class FixPRCommentsDialog(
     }
 
     private fun runProcess(vararg cmd: String): String {
-        val process = ProcessBuilder(*cmd)
-            .directory(dir)
-            .redirectErrorStream(true)
-            .start()
-        process.outputStream.close()
-        val completed = process.waitFor(30, TimeUnit.SECONDS)
-        val output = process.inputStream.bufferedReader().readText().trim()
-        if (!completed || process.exitValue() != 0) {
-            throw RuntimeException(output.ifBlank { "Command timed out" })
-        }
-        return output
+        return ProcessRunner.runOrThrow(dir, *cmd)
     }
 
     // endregion
@@ -335,7 +325,7 @@ class FixPRCommentsDialog(
 
             // Error banner
             currentState.errorMessage?.let { error ->
-                ErrorBanner(error)
+                RErrorBanner(error = error, onRetry = { fetchPRComments() })
                 Spacer(modifier = Modifier.size(12.dp))
             }
 
@@ -659,32 +649,6 @@ class FixPRCommentsDialog(
         }
     }
 
-    @Composable
-    private fun ErrorBanner(error: String) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = RTheme.colors.red.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(8.dp),
-                )
-                .padding(12.dp),
-        ) {
-            RText(
-                text = error,
-                color = RTheme.colors.red,
-                style = TextStyle(fontSize = 12.sp),
-            )
-            Spacer(modifier = Modifier.size(8.dp))
-            RActionCard(
-                title = "Retry",
-                icon = Icons.Rounded.Refresh,
-                actionColor = RTheme.colors.red,
-                type = RActionCardType.SMALL,
-                onClick = { fetchPRComments() },
-            )
-        }
-    }
 
     // endregion
 }
