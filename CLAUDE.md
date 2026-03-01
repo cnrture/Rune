@@ -29,12 +29,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Target platform:** Android Studio (AI type), version `2025.2.2.3`. JVM toolchain: Java 21. Kotlin 2.3.0, Compose Desktop 1.10.1.
 
+**Note:** No tests exist yet (`src/test/` is empty). Test dependencies (JUnit, opentest4j, IntelliJ TestFramework) are configured in `build.gradle.kts`.
+
 ## Architecture
 
-IntelliJ Platform plugin for Android Studio, built with Kotlin and Jetpack Compose Desktop for UI. No DI framework — all dependencies are wired manually in factory classes.
+IntelliJ Platform plugin for Android Studio, built with Kotlin and Jetpack Compose Desktop for UI. No DI framework — all dependencies are wired manually.
 
-**Two independent tool windows** registered in `plugin.xml`:
-- **`ClaudeToolWindowFactory`** → "Claude" panel (right sidebar): Claude CLI terminal integration
+**One tool window** registered in `plugin.xml`:
+- **`ClaudeToolWindowFactory`** → "Claude" panel (right sidebar): Claude CLI terminal integration with multi-session support, skill/agent discovery, and command palette
 
 ### Layer structure
 
@@ -52,66 +54,75 @@ service/ (FileScanner, Settings, Jira, GitHub services)
 
 | Package | Responsibility |
 |---|---|
-| `toolwindow/claude/` | Claude terminal: session management, CLI commands, skill/agent pickers |
-| `toolwindow/manager/` | Module generator, Feature generator, Settings, Jungle |
-| `toolwindow/template/` | FreeMarker code generation (Gradle, Manifest, .gitignore, README) |
+| `toolwindow/` | `ClaudeToolWindowFactory`, `ClaudeSessionService`, `ClaudeTerminalContent` — terminal sessions, full Claude panel UI |
 | `domain/usecase/` | `ScanSkillsUseCase` |
 | `data/repository/` | `SkillRepositoryImpl` – scans markdown files, 5-minute cache |
-| `service/` | `FileScanner`, `SettingsService`, `PluginSettingsService`, `JiraService`, `GitHubCacheService` |
-| `components/` | Reusable Compose components (all prefixed `TP`: `TPTabRow`, `TPActionCard`, `TPText`, etc.) |
-| `theme/` | `TPTheme` / `TPColor` – always use `TPTheme.colors.*` for colors |
-| `actions/` | VCS actions, editor notifications, dialogs (commit message generation, PR creation, skill creation) |
+| `service/` | `FileScanner`, `PluginSettingsService`, `JiraService`, `GitHubCacheService` |
+| `components/` | Reusable Compose components (all prefixed `R`: `RActionCard`, `RCheckbox`, `RText`, `RTextField`, `RDialogWrapper`) |
+| `theme/` | `RTheme` / `RColor` – always use `RTheme.colors.*` for colors |
+| `actions/` | VCS actions, editor notifications |
+| `actions/dialog/` | `CreateSkillDialog`, `CreatePRDialog`, `FixPRCommentsDialog` |
+| `settings/` | `PluginSettingsService`, `PluginConfigurable` (IDE Settings > Tools > Rune Settings) |
+| `common/` | `Constants`, `NoRippleTheme` |
 
 ### Service access pattern
 
-No DI framework — services use companion `getInstance()`:
+Services use `@Service` annotations (auto-discovered by IntelliJ Platform Gradle Plugin, **not** declared in `plugin.xml`) with companion `getInstance()`:
 ```kotlin
-PluginSettingsService.getInstance(project)  // project-scoped
-ClaudeSessionService.getInstance(project)   // project-scoped
-SettingsService.getInstance()               // app-scoped
+PluginSettingsService.getInstance(project)  // @Service(Service.Level.PROJECT)
+ClaudeSessionService.getInstance(project)   // @Service(Service.Level.PROJECT)
+GitHubCacheService.getInstance()            // @Service(Service.Level.APP)
 ```
 
 ### Settings persistence
 
-Two independent settings services:
-- **`PluginSettingsService`** (project-scoped, `runeplugin.xml`) – skills/agents root paths. Configured via IDE Settings > Tools > Rune Settings (`PluginConfigurable`)
-- **`SettingsService`** (app-scoped, `gtcDevToolsSettings.xml`) – module/feature templates, UI state; auto-backs up to `~/.gtcdevtools/settings.json`
+**`PluginSettingsService`** (project-scoped, `runeplugin.xml`) – skills root path and agents root path. Configured via IDE Settings > Tools > Rune Settings (`PluginConfigurable`), which also includes Jira credentials (email + API token stored in IDE `PasswordSafe`).
 
 ### Claude terminal integration
 
-`ClaudeSessionService` manages terminal sessions (create, switch, close). `ClaudeTerminalContent.kt` renders the full Claude panel UI: session tabs, terminal view (SwingPanel), action buttons (Model, Skills, Agents, Commands), and input bar.
+`ClaudeSessionService` manages terminal sessions via `MutableStateFlow<ClaudeSessionState>`. State tracks: active sessions, Claude CLI installation status, and SuperClaude availability (`~/.claude/commands/` directory).
 
-The terminal finds `claude` CLI via PATH/shell with fallback to common install locations. `GenerateCommitMessageAction` runs `claude -p <prompt>` with a 30-second timeout to generate commit messages.
+`ClaudeTerminalContent.kt` (~900 lines) renders the full Claude panel UI:
+- **Session tabs** with add/close/switch
+- **Terminal view** (`JBTerminalWidget` in `SwingPanel` via `SessionManager` with `CardLayout`)
+- **UnifiedCommandPalette** — searchable overlay with skills, agents, 27 built-in Claude `/commands`, and SuperClaude `/sc:*` commands
+- **TerminalInputBar** — multi-line input with `@` file injection, image picker, slash command trigger, Enter to send
+
+The `SessionManager` inner class manages a `CardLayout` + `JPanel` containing multiple `JBTerminalWidget` panels. New sessions automatically send `"claude\n"` to terminal after a 1.5s delay.
+
+CLI discovery: `bash -l -c "which claude"` (login shell for full PATH). `GenerateCommitMessageAction` runs `claude -p <prompt>` with a 30-second timeout.
 
 ### Skill file format
 
-Skills are discovered by scanning a configurable root directory for `.md` files. Skills tab uses strict filtering (`SKILL.md` suffix); Agents tab accepts any `.md` file. The first non-empty line of the file body becomes `description`.
+Skills are discovered by `FileScanner` scanning a configurable root directory for `.md` files:
+- **Skills tab** uses strict filtering: only files named exactly `SKILL.md`
+- **Agents tab** accepts any `.md` file
 
-### Template system
-
-Module and Feature generators use FreeMarker (2.3.34) templates. Templates are serialized as `ModuleTemplate` / `FeatureTemplate` data classes (Kotlinx Serialization) and stored in `SettingsService`. Default templates are defined inline in `SettingsState.kt`. Variable substitution: `{NAME}` for module/feature name, `{FILE_PACKAGE}` for package.
+Description parsing priority: `description:` frontmatter → `#` heading → first non-blank paragraph line (max 100 chars).
 
 ### Plugin actions (registered in plugin.xml)
 
 | Action | Trigger | Description |
 |---|---|---|
-| `GenerateCommitMessageAction` | VCS commit dialog | Generates commit message from staged diff via Claude CLI |
-| `CreateReviewPRAction` | VCS commit dialog | Creates review branch and PR |
-| `FixPRCommentsAction` | VCS commit dialog | Auto-fix PR review comments |
-| `AskClaudeAction` | Editor right-click menu | Sends selected code to Claude terminal |
-| `SkillBestPracticesNotificationProvider` | Opens SKILL.md files | Editor notification banner with validation actions |
+| `GenerateCommitMessageAction` | VCS commit dialog | Generates commit message from staged+unstaged diff via Claude CLI; extracts Jira ticket from branch name |
+| `CreateReviewPRAction` | VCS commit dialog | Detects base branch, creates `review/<branch>`, pushes, creates PR via `gh` CLI with reviewers/labels |
+| `FixPRCommentsAction` | VCS commit dialog | Fetches unresolved PR review threads via GitHub GraphQL API, sends fix prompt to Claude terminal |
+| `AskClaudeAction` | Editor right-click menu | Sends selected code with file context to Claude terminal via `pendingInput` flow |
+| `SkillBestPracticesNotificationProvider` | Opens SKILL.md files | Editor notification banner: "Open best practices" link + "Check with Claude" validation |
 
 ### Compose Desktop notes
 
 - UI uses Jetpack Compose Desktop via `org.jetbrains.compose` plugin, rendered inside `ComposePanel` (Swing interop)
 - Skiko render API is set to SOFTWARE for compatibility: `System.setProperty("skiko.renderApi", "SOFTWARE")`
-- Always wrap composables in `TPTheme { }` and use `TPTheme.colors.*` for theming
+- Always wrap composables in `RTheme { }` and use `RTheme.colors.*` for theming
+- Only light colors are currently defined (no dark theme variant)
+- Dialogs extend `RDialogWrapper` which uses `ComposePanel` with custom dark background (`0xFF18181B`)
 
 ## Conventions
 
 ### Error handling
 
-Repositories return `Result<T>` (success/failure) instead of throwing exceptions. External process calls (Claude CLI, git) use try-catch with `ProcessBuilder` and timeout handling via `Thread.join(timeout)` + `destroyForcibly()`.
+Repositories return `Result<T>` (success/failure) instead of throwing exceptions. External process calls (Claude CLI, git, gh) use try-catch with `ProcessBuilder` and timeout handling via `Thread.join(timeout)` + `destroyForcibly()`.
 
 ### Dialog validation pattern
 
@@ -123,11 +134,24 @@ Implement `EditorNotificationProvider` + `DumbAware` for file-specific banners. 
 
 ### Caching
 
-`FileScanner` uses a 5-minute in-memory cache for directory scans. Call `invalidateCache()` explicitly when settings change (e.g., root path updates).
+- `FileScanner` uses a 5-minute in-memory cache for directory scans. Call `invalidateCache()` explicitly when settings change (e.g., root path updates).
+- `GitHubCacheService` persists collaborators and labels per `owner/repo` key in `githubCache.xml`.
+
+### External dependencies
+
+- **Gson** (`com.google.gson.JsonParser`) is used in `FixPRCommentsDialog` — bundled with IntelliJ Platform, not declared in `build.gradle.kts`
+- **FreeMarker** (2.3.34) is an explicit dependency
+- `compose.desktop.currentOs` excludes `kotlinx-coroutines-core/jvm/swing` to avoid conflict with IntelliJ's bundled coroutines
+
+### Hardcoded values
+
+- Jira base URL: `https://pozitim.atlassian.net` (in `JiraService`, `GenerateCommitMessageAction`, `CreateReviewPRAction`)
+- Jira ticket regex: `[A-Z]+-\d+` extracted from branch names
+- Auto-label mapping in `CreatePRDialog`: Jira prefix → GitHub label (e.g., `GR` → `revenue`)
 
 ## CI/CD
 
 GitHub Actions workflows in `.github/workflows/`:
-- **`build.yml`** — triggered on push to main and PRs: build, test, Qodana inspection, Plugin Verifier
-- **`release.yml`** — triggered on GitHub release: publish to JetBrains Marketplace
-- **`run-ui-tests.yml`** — manual trigger: robot server UI tests
+- **`build.yml`** — triggered on push to main and PRs: build, test, Qodana inspection, Plugin Verifier, draft release
+- **`release.yml`** — triggered on GitHub release: publish to JetBrains Marketplace (requires `PUBLISH_TOKEN`, `CERTIFICATE_CHAIN`, `PRIVATE_KEY`, `PRIVATE_KEY_PASSWORD` secrets)
+- **`run-ui-tests.yml`** — manual trigger: robot server UI tests on ubuntu/windows/macOS matrix
