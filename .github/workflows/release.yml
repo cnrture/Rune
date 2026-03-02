@@ -87,7 +87,7 @@ jobs:
         run: |
           SINCE_BUILD=$(grep -oP 'pluginSinceBuild=\K.*' gradle.properties)
           UNTIL_BUILD=$(grep -oP 'pluginUntilBuild=\K.*' gradle.properties)
-          DIST_REPO="Teknasyon/android-studio-plugin-releases"
+          DIST_REPO="Teknasyon/intellij-ai-plugin-releases"
 
           # Prepare distribution content
           mkdir -p /tmp/plugin-dist
