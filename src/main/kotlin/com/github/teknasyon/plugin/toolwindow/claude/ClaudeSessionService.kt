@@ -267,23 +267,26 @@ private fun doCheckSuperClaudeInstalled(): Boolean {
 }
 
 private fun doCheckClaudeInstalled(): Boolean {
-    // Use login shell so it picks up user's PATH (homebrew, nvm, etc.)
+    // Try login shell first (picks up user's PATH from profile)
+    // Then fallback to common install locations
     // GUI-launched IDE doesn't inherit terminal PATH
-    return try {
+    val foundViaShell = try {
         val process = ProcessBuilder("bash", "-l", "-c", "which claude")
             .redirectErrorStream(true)
             .start()
         process.outputStream.close()
-        val exitCode = process.waitFor()
-        exitCode == 0
+        process.waitFor() == 0
     } catch (_: Exception) {
-        // Fallback: check common install locations directly
-        val home = System.getProperty("user.home")
-        listOf(
-            "/usr/local/bin/claude",
-            "/usr/bin/claude",
-            "$home/.npm-global/bin/claude",
-            "$home/.local/bin/claude",
-        ).any { java.io.File(it).exists() }
+        false
     }
+    if (foundViaShell) return true
+
+    // Fallback: check common install locations directly
+    val home = System.getProperty("user.home")
+    return listOf(
+        "/usr/local/bin/claude",
+        "/usr/bin/claude",
+        "$home/.npm-global/bin/claude",
+        "$home/.local/bin/claude",
+    ).any { java.io.File(it).exists() }
 }
