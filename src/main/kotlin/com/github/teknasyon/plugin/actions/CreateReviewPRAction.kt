@@ -106,6 +106,7 @@ class CreateReviewPRAction : AnAction() {
                                 ghPath = ghPath,
                                 currentBranch = currentBranch,
                                 targetBranch = targetBranch,
+                                ownerRepo = ownerRepo,
                                 reviewers = reviewers,
                                 labels = labels,
                             )
@@ -123,6 +124,7 @@ class CreateReviewPRAction : AnAction() {
         ghPath: String,
         currentBranch: String,
         targetBranch: String,
+        ownerRepo: Pair<String, String>,
         reviewers: List<String>,
         labels: List<String>,
     ) {
@@ -132,28 +134,17 @@ class CreateReviewPRAction : AnAction() {
 
                 val jiraUrl = getJiraTicketUrl(dir)
 
-                val cmd = mutableListOf(
-                    ghPath,
-                    "pr", "create",
-                    "--assignee", "@me",
-                    "--base", targetBranch,
-                    "--head", currentBranch,
-                    "--title", currentBranch,
-                    "--body", jiraUrl ?: "",
-                )
+                // Check if a tag with the same name as targetBranch exists on remote.
+                // If so, gh pr create (GraphQL) fails with "Base ref must be a branch"
+                // because it resolves the ambiguous ref to the tag. Use REST API instead.
+                val hasTagCollision = runGit(dir, "ls-remote", "--tags", "origin", targetBranch).isNotBlank()
 
-                if (reviewers.isNotEmpty()) {
-                    cmd += "--reviewer"
-                    cmd += reviewers.joinToString(",")
-                }
-                if (labels.isNotEmpty()) {
-                    cmd += "--label"
-                    cmd += labels.joinToString(",")
+                val prUrl = if (hasTagCollision) {
+                    createPRviaRestApi(dir, ghPath, ownerRepo, currentBranch, targetBranch, jiraUrl, reviewers, labels)
+                } else {
+                    createPRviaGhCli(dir, ghPath, currentBranch, targetBranch, jiraUrl, reviewers, labels)
                 }
 
-                val prOutput = runProcess(dir, *cmd.toTypedArray())
-
-                val prUrl = prOutput.lines().firstOrNull { it.startsWith("https://github.com") }
                 if (prUrl != null) {
                     ApplicationManager.getApplication().invokeLater { BrowserUtil.browse(prUrl) }
                     notify(project, "PR created: $prUrl", NotificationType.INFORMATION)
@@ -164,11 +155,91 @@ class CreateReviewPRAction : AnAction() {
                         ApplicationManager.getApplication().invokeLater { BrowserUtil.browse(existingUrl) }
                         notify(project, "PR already exists: $existingUrl", NotificationType.INFORMATION)
                     } else {
-                        notify(project, "PR creation output:\n$prOutput", NotificationType.WARNING)
+                        notify(project, "PR creation failed. A tag with the same name as '$targetBranch' may exist on remote, causing ambiguity.", NotificationType.WARNING)
                     }
                 }
             }
         })
+    }
+
+    private fun createPRviaGhCli(
+        dir: File,
+        ghPath: String,
+        currentBranch: String,
+        targetBranch: String,
+        jiraUrl: String?,
+        reviewers: List<String>,
+        labels: List<String>,
+    ): String? {
+        val cmd = mutableListOf(
+            ghPath,
+            "pr", "create",
+            "--assignee", "@me",
+            "--base", targetBranch,
+            "--head", currentBranch,
+            "--title", currentBranch,
+            "--body", jiraUrl ?: "",
+        )
+
+        if (reviewers.isNotEmpty()) {
+            cmd += "--reviewer"
+            cmd += reviewers.joinToString(",")
+        }
+        if (labels.isNotEmpty()) {
+            cmd += "--label"
+            cmd += labels.joinToString(",")
+        }
+
+        val prOutput = runProcess(dir, *cmd.toTypedArray())
+        return prOutput.lines().firstOrNull { it.startsWith("https://github.com") }
+    }
+
+    /**
+     * Creates a PR via GitHub REST API (`gh api`), which resolves `base` to a branch
+     * even when a tag with the same name exists.
+     */
+    private fun createPRviaRestApi(
+        dir: File,
+        ghPath: String,
+        ownerRepo: Pair<String, String>,
+        currentBranch: String,
+        targetBranch: String,
+        jiraUrl: String?,
+        reviewers: List<String>,
+        labels: List<String>,
+    ): String? {
+        val (owner, repo) = ownerRepo
+
+        // Create PR via REST API
+        val createCmd = mutableListOf(
+            ghPath, "api",
+            "repos/$owner/$repo/pulls",
+            "--method", "POST",
+            "-f", "title=$currentBranch",
+            "-f", "head=$currentBranch",
+            "-f", "base=$targetBranch",
+            "-f", "body=${jiraUrl ?: ""}",
+            "--jq", ".html_url,.number",
+        )
+
+        val createOutput = runProcess(dir, *createCmd.toTypedArray()).trim()
+        val outputLines = createOutput.lines()
+        val prUrl = outputLines.firstOrNull { it.startsWith("https://github.com") } ?: return null
+        val prNumber = outputLines.lastOrNull()?.trim() ?: return prUrl
+
+        // Add assignee, reviewers, labels via gh pr edit
+        val editCmd = mutableListOf(ghPath, "pr", "edit", prNumber, "--add-assignee", "@me")
+        if (reviewers.isNotEmpty()) {
+            editCmd += "--add-reviewer"
+            editCmd += reviewers.joinToString(",")
+        }
+        if (labels.isNotEmpty()) {
+            editCmd += "--add-label"
+            editCmd += labels.joinToString(",")
+        }
+        runProcess(dir, *editCmd.toTypedArray())
+
+        return prUrl
     }
 
     /**
@@ -213,7 +284,7 @@ class CreateReviewPRAction : AnAction() {
                 ?.removePrefix("refs/heads/")
                 ?.removePrefix("origin/")
                 ?.trim()
-            if (!detected.isNullOrBlank() && detected != currentBranch) {
+            if (!detected.isNullOrBlank() && detected != currentBranch && isBranch(dir, detected)) {
                 return detected
             }
         }
@@ -225,6 +296,16 @@ class CreateReviewPRAction : AnAction() {
             if (mergeBase.isBlank()) Int.MAX_VALUE
             else runGit(dir, "rev-list", "--count", "$mergeBase..HEAD").trim().toIntOrNull() ?: Int.MAX_VALUE
         } ?: "develop"
+    }
+
+    /**
+     * Checks whether the given ref name is a branch (local or remote), not a tag.
+     */
+    private fun isBranch(dir: File, ref: String): Boolean {
+        val local = runGit(dir, "branch", "--list", ref).trim()
+        if (local.isNotBlank()) return true
+        val remote = runGit(dir, "branch", "--list", "--remotes", "origin/$ref").trim()
+        return remote.isNotBlank()
     }
 
     private fun findGhCli(): String? = CliUtils.findGhCli()

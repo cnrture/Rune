@@ -72,19 +72,24 @@ class GenerateCommitMessageAction : AnAction() {
         project: Project,
         commitDocument: Document,
     ): Boolean {
-        val claudePath = findClaudeCli() ?: return false
+        val claudePath = findClaudeCli()
+        if (claudePath == null) {
+            notify(project, "Claude CLI not found. Install it or check your PATH.", NotificationType.WARNING)
+            return false
+        }
+
         val truncatedDiff = if (diff.length > 8000) diff.take(8000) + "\n…(truncated)" else diff
         val promptTemplate = PluginSettingsService.getInstance(project).getCommitMessagePrompt()
         val prompt = promptTemplate.replace("{diff}", truncatedDiff)
 
         return try {
-            val process = ProcessBuilder(claudePath, "-p", prompt)
+            val process = ProcessBuilder(claudePath, "-p", "--output-format", "text", "-")
                 .directory(File(projectDir))
                 .redirectErrorStream(true)
                 .start()
 
-            // Close stdin so the process cannot block waiting for input
-            process.outputStream.close()
+            // Send prompt via stdin to avoid command-line length issues
+            process.outputStream.bufferedWriter().use { it.write(prompt) }
 
             val output = StringBuilder()
 
@@ -103,6 +108,7 @@ class GenerateCommitMessageAction : AnAction() {
             if (readerThread.isAlive) {
                 process.destroyForcibly()
                 readerThread.interrupt()
+                notify(project, "Claude timed out after ${Constants.TIMEOUT_CLAUDE_STREAM_MS / 1000}s.", NotificationType.WARNING)
             }
 
             if (output.isNotBlank()) {
@@ -113,9 +119,11 @@ class GenerateCommitMessageAction : AnAction() {
                 setDocumentText(project, commitDocument, finalMessage)
                 true
             } else {
+                notify(project, "Claude returned empty output.", NotificationType.WARNING)
                 false
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            notify(project, "Claude error: ${e.message}", NotificationType.WARNING)
             false
         }
     }
@@ -138,6 +146,15 @@ class GenerateCommitMessageAction : AnAction() {
     private fun runGit(dir: File, vararg args: String): String = CliUtils.runGit(dir, *args)
 
     private fun findClaudeCli(): String? = CliUtils.findClaudeCli()
+
+    private fun notify(project: Project, message: String, type: NotificationType) {
+        ApplicationManager.getApplication().invokeLater {
+            NotificationGroupManager.getInstance()
+                .getNotificationGroup("TeknasyonIntelliJPlugin")
+                .createNotification(message, type)
+                .notify(project)
+        }
+    }
 
     private fun getJiraTicketUrl(projectDir: String): String? {
         val branch = CliUtils.runGit(File(projectDir), "rev-parse", "--abbrev-ref", "HEAD")
