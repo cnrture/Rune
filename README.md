@@ -1,51 +1,164 @@
-# IntelliJ AI Plugin
+# 🤖 Teknasyon IntelliJ AI Plugin
 
 ![Build](https://github.com/Teknasyon/IntelliJ-AI-Plugin/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
-## Template ToDo list
-- [x] Create a new [IntelliJ Platform Plugin Template][template] project.
-- [ ] Get familiar with the [template documentation][template].
-- [ ] Adjust the [pluginGroup](./gradle.properties) and [pluginName](./gradle.properties), as well as the [id](./src/main/resources/META-INF/plugin.xml) and [sources package](./src/main/kotlin).
-- [ ] Adjust the plugin description in `README` (see [Tips][docs:plugin-description])
-- [ ] Review the [Legal Agreements](https://plugins.jetbrains.com/docs/marketplace/legal-agreements.html?from=IJPluginTemplate).
-- [ ] [Publish a plugin manually](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate) for the first time.
-- [ ] Set the `MARKETPLACE_ID` in the above README badges. You can obtain it once the plugin is published to JetBrains Marketplace.
-- [ ] Set the [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html?from=IJPluginTemplate) related [secrets](https://github.com/JetBrains/intellij-platform-plugin-template#environment-variables).
-- [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html?from=IJPluginTemplate).
-- [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
-
 <!-- Plugin description -->
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
-
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
-
-To keep everything working, do not remove `<!-- ... -->` sections. 
+JetBrains IDE'leri icin AI destekli gelistirme asistani. Claude CLI entegrasyonu, otomatik commit mesaji olusturma, PR yonetimi, skill/agent sistemi ve daha fazlasi. IntelliJ IDEA, Android Studio, WebStorm, PyCharm ve diger tum JetBrains IDE'lerinde calisir.
 <!-- Plugin description end -->
 
-## Installation
+## ✨ Ozellikler
 
-- Using the IDE built-in plugin system:
-  
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Teknasyon IntelliJ AI Plugin"</kbd> >
-  <kbd>Install</kbd>
-  
-- Using JetBrains Marketplace:
+### 🖥️ Claude Terminal Entegrasyonu
 
-  Go to [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID) and install it by clicking the <kbd>Install to ...</kbd> button in case your IDE is running.
+Plugin, IDE'nin sag paneline **Claude** tool window'u ekler. Bu panel icinde Claude CLI dogrudan calisir.
 
-  You can also download the [latest release](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID/versions) from JetBrains Marketplace and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+- 📑 **Coklu oturum destegi** — Birden fazla Claude terminali acip aralarinda gecis yapabilirsiniz
+- 🎯 **Komut paleti** — `/` yazarak veya butona tiklayarak skills, agents, Claude komutlari ve SuperClaude komutlarina erisim
+- 📎 **Dosya enjeksiyonu** — `@` butonuyla acik dosyanin yolunu mesaja ekler
+- 🖼️ **Gorsel gonderimi** — Mesajla birlikte gorsel secip gonderebilirsiniz
+- 🌐 **Remote control** — Uzaktan Claude oturumu baslatma, opsiyonel `caffeinate` ile uyku engelleme (macOS)
 
-- Manually:
-
-  Download the [latest release](https://github.com/Teknasyon/IntelliJ-AI-Plugin/releases/latest) and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
-
+> **⚙️ Nasil calisir:** `ClaudeSessionService` oturumlari yonetir. Terminal, IntelliJ'in native `JBTerminalWidget`'ini kullanir. Claude CLI, PATH uzerinden bulunur; bulunamazsa `~/.npm-global/bin`, `~/.local/bin`, `/usr/local/bin` gibi bilinen konumlarda aranir.
 
 ---
+
+### 💬 Otomatik Commit Mesaji Olusturma
+
+VCS commit diyalogundaki **"Generate Commit Message with Claude"** butonu, stage'lenmis degisikliklerden commit mesaji uretir.
+
+- 📝 `git diff --cached` ve `git diff` ciktilari Claude CLI'a gonderilir
+- 📏 Conventional commit formatinda mesaj uretilir
+- 🔗 Opsiyonel Jira entegrasyonu: branch isminden ticket ID cikarilip commit mesajina URL eklenir
+- 🔄 Claude bulunamazsa fallback mantigi devreye girer (dosya uzantilarini ve degisiklikleri analiz ederek tip belirler)
+
+> **⚙️ Nasil calisir:** `GenerateCommitMessageAction`, `claude -p <prompt>` komutunu 30 saniyelik timeout ile calistirir. Ciktiyi commit mesaji alanina stream eder.
+
+---
+
+### 🚀 PR Olusturma
+
+**"Create Review PR"** butonu ile tek tikla pull request olusturabilirsiniz.
+
+- 🌿 Base branch otomatik tespit edilir (git reflog veya en yakin ata branch: develop, main, master, staging, release)
+- 🏷️ Opsiyonel `review/` branch prefix'i
+- 👥 Reviewer secimi — repo contributor'larindan aranabilir liste
+- 🏷️ Label secimi — mevcut label'lardan secim veya yeni label olusturma
+- 🎫 Jira entegrasyonu: ticket Fix Version'a gore otomatik label secimi
+
+> **⚙️ Nasil calisir:** `CreateReviewPRAction` once base branch'i tespit eder, branch'i push eder, sonra `CreatePRDialog`'u acar. PR, GitHub CLI (`gh pr create`) ile olusturulur. Collaborator ve label verileri `GitHubCacheService` ile onbelleklenir.
+
+---
+
+### 🔧 PR Yorum Duzeltme
+
+**"Fix PR Comments"** butonu, cozulmemis PR review yorumlarini Claude ile duzeltir.
+
+- 🔗 PR URL'si girilir
+- 📡 GitHub GraphQL API ile cozulmemis review thread'leri cekilir
+- 📋 Yorumlar dosya yolu, satir numarasi, reviewer ismi ve kod context'i ile listelenir
+- ✅ Istenen yorumlar secilip Claude'a gonderilir
+
+> **⚙️ Nasil calisir:** `FixPRCommentsAction`, GraphQL sorgusuyla yorum verilerini ceker. `FixPRCommentsDialog` yorumlari gosterir. Secilen yorumlar formatlanip Claude terminaline paste edilir.
+
+---
+
+### 💡 Ask Claude (Kod Sorgulama)
+
+Editorde kod secip sag tik menusuyle **"Ask Claude"** secenegini kullanabilirsiniz.
+
+- 📄 Secili kod + dosya yolu ve satir numarasi bilgisiyle Claude'a gonderilir
+- 🪟 Claude tool window'u otomatik acilir
+- 🖥️ Console ciktisi icin de calisir
+
+> **⚙️ Nasil calisir:** `AskClaudeAction`, secili metni ve dosya context'ini `ClaudeSessionService.setPendingInput()` ile terminal giris alanina enjekte eder.
+
+---
+
+### 🧩 Skill ve Agent Sistemi
+
+Skills ve agents, Markdown dosyalari olarak tanimlanir ve plugin tarafindan otomatik kesfedilir.
+
+- 📘 **Skills** — `SKILL.md` uzantili dosyalar, belirli bir dizinden taranir
+- 🤖 **Agents** — Herhangi bir `.md` dosyasi, ayri bir dizinden taranir
+- ✏️ **Skill olusturma** — `CreateSkillDialog` ile isim, aciklama, workflow, ornekler ve referanslar tanimlayabilirsiniz
+- ✅ **Dogrulama** — Isim formati, aciklama kalitesi, frontmatter yapisi kontrol edilir
+
+> **⚙️ Nasil calisir:** `SkillRepositoryImpl`, konfigure edilen dizini recursive olarak tarar. 5 dakikalik onbellek kullanir. Dosyanin ilk bos olmayan satiri aciklama olarak alinir.
+
+---
+
+### 📋 Skill Best Practices Kontrolu
+
+`SKILL.md` dosyasi acildiginda editorde bildirim banner'i gosterilir.
+
+- 📖 **"Open best practices"** — Claude dokumantasyonunu tarayicida acar
+- 🔍 **"Check with Claude"** — Skill icerigini Claude'a gonderip detayli review yaptirir (frontmatter, isimlendirme, yapi, icerik kalitesi)
+
+---
+
+### 🎨 Komut Paleti
+
+Terminal giris alaninda `/` yazarak veya butona tiklayarak acilir. 4 kategoride aranabilir icerikleri listeler:
+
+| Kategori | Kaynak |
+|---|---|
+| 📘 Skills | Skills dizinindeki SKILL.md dosyalari |
+| 🤖 Agents | Agents dizinindeki .md dosyalari |
+| ⌨️ Commands | 29 yerlesik Claude komutu (`/clear`, `/model`, `/compact`...) |
+| ⚡ SC Commands | 25 SuperClaude komutu (`/sc:analyze`, `/sc:design`...) |
+
+---
+
+## ⚙️ Ayarlar
+
+**Settings > Tools > Teknasyon Plugin Settings** yolundan yapilandirilir.
+
+| Ayar | Aciklama |
+|---|---|
+| 📁 Skills Directory | Skill dosyalarinin taranacagi dizin |
+| 📁 Agents Directory | Agent dosyalarinin taranacagi dizin |
+| 💬 Commit Message Prompt | Claude'a gonderilen commit prompt sablonu (ozellestirilebilir) |
+| 🔗 Jira Ticket URL | Commit mesajina Jira ticket linki ekleme |
+| 🌿 Review Branch | PR icin `review/` branch prefix'i kullanma |
+| 🔑 Jira Credentials | Jira email ve API token (IDE credential store'da guvenli saklanir) |
+
+---
+
+## 📦 Kurulum
+
+1. IDE'de <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Manage Plugin Repositories...</kbd> acin
+2. Asagidaki URL'yi ekleyin:
+   ```
+   https://raw.githubusercontent.com/Teknasyon/intellij-ai-plugin-releases/main/updatePlugins.xml
+   ```
+3. <kbd>Marketplace</kbd> sekmesinde `"Teknasyon IntelliJ AI Plugin"` arayin ve <kbd>Install</kbd> tiklayin
+
+## 📋 Gereksinimler
+
+- 🧰 JetBrains IDE (IntelliJ IDEA, Android Studio, WebStorm, PyCharm, GoLand vb.) 2024.1+
+- 🤖 [Claude CLI](https://docs.anthropic.com/en/docs/claude-code) kurulu ve PATH'te eriselebilir olmali
+- 🐙 [GitHub CLI](https://cli.github.com/) (`gh`) — PR islemleri icin
+- ☕ Java 21+
+
+## 🛠️ Gelistirme
+
+```bash
+# Plugin'i sandbox IDE'de calistir
+./gradlew runIde
+
+# Testleri calistir
+./gradlew check
+
+# Dagitim ZIP'i olustur
+./gradlew buildPlugin
+```
+
+**Tech stack:** Kotlin 2.3.0 · Jetpack Compose Desktop 1.10.1 · IntelliJ Platform SDK · FreeMarker
+
+---
+
 Plugin based on the [IntelliJ Platform Plugin Template][template].
 
 [template]: https://github.com/JetBrains/intellij-platform-plugin-template
-[docs:plugin-description]: https://plugins.jetbrains.com/docs/intellij/plugin-user-experience.html#plugin-description-and-presentation
