@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
-    alias(libs.plugins.kotlinxSerialization) // Kotlinx Serialization Plugin
     id("org.jetbrains.compose")
     alias(libs.plugins.compose)
 }
@@ -37,7 +36,6 @@ repositories {
     mavenCentral()
     google()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
-    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
     intellijPlatform {
         defaultRepositories()
     }
@@ -53,8 +51,6 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-swing")
     }
     implementation(compose.materialIconsExtended)
-    implementation(libs.freemarker)
-    implementation(libs.kotlinx.serialization)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
