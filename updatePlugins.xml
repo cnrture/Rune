@@ -9,8 +9,8 @@
       id="com.github.teknasyon.plugin"
       url="https://raw.githubusercontent.com/Teknasyon/IntelliJ-AI-Plugin/gh-pages/plugin.zip"
       version="0.0.1">
-    <name>Teknasyon IntelliJ AI Plugin</name>
-    <description>Internal Teknasyon IntelliJ AI Plugin</description>
+    <name>Teknasyon IntelliJ AI</name>
+    <description>Internal Teknasyon IntelliJ AI</description>
     <idea-version since-build="241" until-build="253.*"/>
   </plugin>
 </plugins>

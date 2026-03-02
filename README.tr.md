@@ -1,4 +1,4 @@
-# 🤖 Teknasyon IntelliJ AI Plugin
+# 🤖 Teknasyon IntelliJ AI
 
 ![Build](https://github.com/Teknasyon/IntelliJ-AI-Plugin/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
@@ -133,7 +133,7 @@ Terminal giris alaninda `/` yazarak veya butona tiklayarak acilir. 4 kategoride 
    ```
    https://raw.githubusercontent.com/Teknasyon/intellij-ai-plugin-releases/main/updatePlugins.xml
    ```
-3. <kbd>Marketplace</kbd> sekmesinde `"Teknasyon IntelliJ AI Plugin"` arayin ve <kbd>Install</kbd> tiklayin
+3. <kbd>Marketplace</kbd> sekmesinde `"Teknasyon IntelliJ AI"` arayin ve <kbd>Install</kbd> tiklayin
 
 ## 📋 Gereksinimler
 

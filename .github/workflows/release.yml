@@ -103,8 +103,8 @@ jobs:
                 id="com.github.teknasyon.plugin"
                 url="https://raw.githubusercontent.com/DIST_REPO_PLACEHOLDER/main/plugin.zip"
                 version="VERSION_PLACEHOLDER">
-              <name>Teknasyon IntelliJ AI Plugin</name>
-              <description>Internal Teknasyon IntelliJ AI Plugin</description>
+              <name>Teknasyon IntelliJ AI</name>
+              <description>Internal Teknasyon IntelliJ AI</description>
               <idea-version since-build="SINCE_PLACEHOLDER" until-build="UNTIL_PLACEHOLDER"/>
             </plugin>
           </plugins>
