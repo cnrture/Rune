@@ -2,6 +2,7 @@ package com.github.teknasyon.plugin.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.awt.ComposePanel
+import com.github.teknasyon.plugin.common.SkikoHelper
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.JBColor
@@ -41,6 +42,7 @@ abstract class TPDialogWrapper(
     abstract fun createDesign()
 
     override fun createCenterPanel(): JComponent {
+        SkikoHelper.ensureNativeLibrary()
         return ComposePanel().apply {
             setContent {
                 TPTheme {

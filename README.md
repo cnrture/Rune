@@ -1,4 +1,4 @@
-# 🤖 Teknasyon IntelliJ AI
+# 🤖 Teknasyon AI
 
 ![Build](https://github.com/Teknasyon/IntelliJ-AI-Plugin/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
@@ -135,7 +135,7 @@ Configured via **Settings > Tools > Teknasyon Plugin Settings**.
    ```
    https://raw.githubusercontent.com/Teknasyon/intellij-ai-plugin-releases/main/updatePlugins.xml
    ```
-3. In the <kbd>Marketplace</kbd> tab, search for `"Teknasyon IntelliJ AI"` and click <kbd>Install</kbd>
+3. In the <kbd>Marketplace</kbd> tab, search for `"Teknasyon AI"` and click <kbd>Install</kbd>
 
 ## 📋 Requirements
 

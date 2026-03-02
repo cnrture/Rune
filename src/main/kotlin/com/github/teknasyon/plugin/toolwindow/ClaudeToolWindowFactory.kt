@@ -2,6 +2,7 @@ package com.github.teknasyon.plugin.toolwindow
 
 import androidx.compose.ui.awt.ComposePanel
 import com.github.teknasyon.plugin.common.Constants
+import com.github.teknasyon.plugin.common.SkikoHelper
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -23,17 +24,30 @@ class ClaudeToolWindowFactory : ToolWindowFactory {
             if (System.getProperty("skiko.renderApi") == null) {
                 System.setProperty("skiko.renderApi", "SOFTWARE")
             }
+            SkikoHelper.ensureNativeLibrary()
         }
     }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        toolWindow.contentManager.addContent(
-            ContentFactory.getInstance().createContent(
-                createComponent(project),
-                Constants.EMPTY,
-                false,
+        try {
+            toolWindow.contentManager.addContent(
+                ContentFactory.getInstance().createContent(
+                    createComponent(project),
+                    Constants.EMPTY,
+                    false,
+                )
             )
-        )
+        } catch (e: Throwable) {
+            // Catches errors from ComposePanel.addNotify() triggered during addContent
+            LOG.error("Failed to initialize tool window content", e)
+            toolWindow.contentManager.addContent(
+                ContentFactory.getInstance().createContent(
+                    createFallbackPanel(e),
+                    Constants.EMPTY,
+                    false,
+                )
+            )
+        }
     }
 
     private fun createComponent(project: Project): JComponent {
@@ -49,16 +63,22 @@ class ClaudeToolWindowFactory : ToolWindowFactory {
             }
         } catch (e: Throwable) {
             LOG.error("Failed to initialize Compose panel", e)
-            panel.add(
+            return createFallbackPanel(e)
+        }
+        return panel
+    }
+
+    private fun createFallbackPanel(error: Throwable): JComponent {
+        return JPanel(BorderLayout()).apply {
+            add(
                 JLabel(
                     "<html><center>Compose UI could not be initialized.<br>" +
                         "Try restarting the IDE or check plugin compatibility.<br><br>" +
-                        "Error: ${e.message}</center></html>",
+                        "Error: ${error.message}</center></html>",
                     SwingConstants.CENTER,
                 ),
                 BorderLayout.CENTER,
             )
         }
-        return panel
     }
 }

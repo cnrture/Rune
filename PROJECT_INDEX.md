@@ -1,4 +1,4 @@
-# Project Index: TPDevTools (Teknasyon IntelliJ AI)
+# Project Index: TPDevTools (Teknasyon AI)
 
 Generated: 2026-02-27
 
