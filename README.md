@@ -4,154 +4,156 @@
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
+🌐 **[Türkçe](README.tr.md)** | English
+
 <!-- Plugin description -->
-JetBrains IDE'leri icin AI destekli gelistirme asistani. Claude CLI entegrasyonu, otomatik commit mesaji olusturma, PR yonetimi, skill/agent sistemi ve daha fazlasi. IntelliJ IDEA, Android Studio, WebStorm, PyCharm ve diger tum JetBrains IDE'lerinde calisir.
+AI-powered development assistant for JetBrains IDEs. Claude CLI integration, automatic commit message generation, PR management, skill/agent system and more. Works with IntelliJ IDEA, Android Studio, WebStorm, PyCharm and all other JetBrains IDEs.
 <!-- Plugin description end -->
 
-## ✨ Ozellikler
+## ✨ Features
 
-### 🖥️ Claude Terminal Entegrasyonu
+### 🖥️ Claude Terminal Integration
 
-Plugin, IDE'nin sag paneline **Claude** tool window'u ekler. Bu panel icinde Claude CLI dogrudan calisir.
+The plugin adds a **Claude** tool window to the IDE's right sidebar. Claude CLI runs directly inside this panel.
 
-- 📑 **Coklu oturum destegi** — Birden fazla Claude terminali acip aralarinda gecis yapabilirsiniz
-- 🎯 **Komut paleti** — `/` yazarak veya butona tiklayarak skills, agents, Claude komutlari ve SuperClaude komutlarina erisim
-- 📎 **Dosya enjeksiyonu** — `@` butonuyla acik dosyanin yolunu mesaja ekler
-- 🖼️ **Gorsel gonderimi** — Mesajla birlikte gorsel secip gonderebilirsiniz
-- 🌐 **Remote control** — Uzaktan Claude oturumu baslatma, opsiyonel `caffeinate` ile uyku engelleme (macOS)
+- 📑 **Multi-session support** — Open multiple Claude terminals and switch between them
+- 🎯 **Command palette** — Access skills, agents, Claude commands and SuperClaude commands by typing `/` or clicking the button
+- 📎 **File injection** — Append the current file's path to your message with the `@` button
+- 🖼️ **Image attachment** — Select and send images along with your message
+- 🌐 **Remote control** — Start a remote Claude session with optional `caffeinate` sleep prevention (macOS)
 
-> **⚙️ Nasil calisir:** `ClaudeSessionService` oturumlari yonetir. Terminal, IntelliJ'in native `JBTerminalWidget`'ini kullanir. Claude CLI, PATH uzerinden bulunur; bulunamazsa `~/.npm-global/bin`, `~/.local/bin`, `/usr/local/bin` gibi bilinen konumlarda aranir.
-
----
-
-### 💬 Otomatik Commit Mesaji Olusturma
-
-VCS commit diyalogundaki **"Generate Commit Message with Claude"** butonu, stage'lenmis degisikliklerden commit mesaji uretir.
-
-- 📝 `git diff --cached` ve `git diff` ciktilari Claude CLI'a gonderilir
-- 📏 Conventional commit formatinda mesaj uretilir
-- 🔗 Opsiyonel Jira entegrasyonu: branch isminden ticket ID cikarilip commit mesajina URL eklenir
-- 🔄 Claude bulunamazsa fallback mantigi devreye girer (dosya uzantilarini ve degisiklikleri analiz ederek tip belirler)
-
-> **⚙️ Nasil calisir:** `GenerateCommitMessageAction`, `claude -p <prompt>` komutunu 30 saniyelik timeout ile calistirir. Ciktiyi commit mesaji alanina stream eder.
+> **⚙️ How it works:** `ClaudeSessionService` manages sessions. The terminal uses IntelliJ's native `JBTerminalWidget`. Claude CLI is located via PATH; if not found, common locations like `~/.npm-global/bin`, `~/.local/bin`, `/usr/local/bin` are checked as fallback.
 
 ---
 
-### 🚀 PR Olusturma
+### 💬 Automatic Commit Message Generation
 
-**"Create Review PR"** butonu ile tek tikla pull request olusturabilirsiniz.
+The **"Generate Commit Message with Claude"** button in the VCS commit dialog generates commit messages from staged changes.
 
-- 🌿 Base branch otomatik tespit edilir (git reflog veya en yakin ata branch: develop, main, master, staging, release)
-- 🏷️ Opsiyonel `review/` branch prefix'i
-- 👥 Reviewer secimi — repo contributor'larindan aranabilir liste
-- 🏷️ Label secimi — mevcut label'lardan secim veya yeni label olusturma
-- 🎫 Jira entegrasyonu: ticket Fix Version'a gore otomatik label secimi
+- 📝 `git diff --cached` and `git diff` outputs are sent to Claude CLI
+- 📏 Messages are generated in conventional commit format
+- 🔗 Optional Jira integration: ticket ID is extracted from the branch name and its URL is appended to the commit message
+- 🔄 If Claude is unavailable, a fallback logic kicks in (determines type by analyzing file extensions and changes)
 
-> **⚙️ Nasil calisir:** `CreateReviewPRAction` once base branch'i tespit eder, branch'i push eder, sonra `CreatePRDialog`'u acar. PR, GitHub CLI (`gh pr create`) ile olusturulur. Collaborator ve label verileri `GitHubCacheService` ile onbelleklenir.
-
----
-
-### 🔧 PR Yorum Duzeltme
-
-**"Fix PR Comments"** butonu, cozulmemis PR review yorumlarini Claude ile duzeltir.
-
-- 🔗 PR URL'si girilir
-- 📡 GitHub GraphQL API ile cozulmemis review thread'leri cekilir
-- 📋 Yorumlar dosya yolu, satir numarasi, reviewer ismi ve kod context'i ile listelenir
-- ✅ Istenen yorumlar secilip Claude'a gonderilir
-
-> **⚙️ Nasil calisir:** `FixPRCommentsAction`, GraphQL sorgusuyla yorum verilerini ceker. `FixPRCommentsDialog` yorumlari gosterir. Secilen yorumlar formatlanip Claude terminaline paste edilir.
+> **⚙️ How it works:** `GenerateCommitMessageAction` runs `claude -p <prompt>` with a 30-second timeout. The output is streamed into the commit message field.
 
 ---
 
-### 💡 Ask Claude (Kod Sorgulama)
+### 🚀 PR Creation
 
-Editorde kod secip sag tik menusuyle **"Ask Claude"** secenegini kullanabilirsiniz.
+Create a pull request with a single click using the **"Create Review PR"** button.
 
-- 📄 Secili kod + dosya yolu ve satir numarasi bilgisiyle Claude'a gonderilir
-- 🪟 Claude tool window'u otomatik acilir
-- 🖥️ Console ciktisi icin de calisir
+- 🌿 Base branch is auto-detected (via git reflog or closest ancestor branch: develop, main, master, staging, release)
+- 🏷️ Optional `review/` branch prefix
+- 👥 Reviewer selection — searchable list from repo contributors
+- 🏷️ Label selection — pick from existing labels or create new ones
+- 🎫 Jira integration: auto-selects labels based on ticket Fix Version
 
-> **⚙️ Nasil calisir:** `AskClaudeAction`, secili metni ve dosya context'ini `ClaudeSessionService.setPendingInput()` ile terminal giris alanina enjekte eder.
-
----
-
-### 🧩 Skill ve Agent Sistemi
-
-Skills ve agents, Markdown dosyalari olarak tanimlanir ve plugin tarafindan otomatik kesfedilir.
-
-- 📘 **Skills** — `SKILL.md` uzantili dosyalar, belirli bir dizinden taranir
-- 🤖 **Agents** — Herhangi bir `.md` dosyasi, ayri bir dizinden taranir
-- ✏️ **Skill olusturma** — `CreateSkillDialog` ile isim, aciklama, workflow, ornekler ve referanslar tanimlayabilirsiniz
-- ✅ **Dogrulama** — Isim formati, aciklama kalitesi, frontmatter yapisi kontrol edilir
-
-> **⚙️ Nasil calisir:** `SkillRepositoryImpl`, konfigure edilen dizini recursive olarak tarar. 5 dakikalik onbellek kullanir. Dosyanin ilk bos olmayan satiri aciklama olarak alinir.
+> **⚙️ How it works:** `CreateReviewPRAction` detects the base branch, pushes the branch, then opens `CreatePRDialog`. The PR is created via GitHub CLI (`gh pr create`). Collaborator and label data is cached by `GitHubCacheService`.
 
 ---
 
-### 📋 Skill Best Practices Kontrolu
+### 🔧 Fix PR Comments
 
-`SKILL.md` dosyasi acildiginda editorde bildirim banner'i gosterilir.
+The **"Fix PR Comments"** button resolves unresolved PR review comments with Claude.
 
-- 📖 **"Open best practices"** — Claude dokumantasyonunu tarayicida acar
-- 🔍 **"Check with Claude"** — Skill icerigini Claude'a gonderip detayli review yaptirir (frontmatter, isimlendirme, yapi, icerik kalitesi)
+- 🔗 Enter the PR URL
+- 📡 Unresolved review threads are fetched via GitHub GraphQL API
+- 📋 Comments are listed with file path, line number, reviewer name and code context
+- ✅ Select the comments you want to fix and send them to Claude
+
+> **⚙️ How it works:** `FixPRCommentsAction` fetches comment data with a GraphQL query. `FixPRCommentsDialog` displays the comments. Selected comments are formatted and pasted into the Claude terminal.
 
 ---
 
-### 🎨 Komut Paleti
+### 💡 Ask Claude (Code Query)
 
-Terminal giris alaninda `/` yazarak veya butona tiklayarak acilir. 4 kategoride aranabilir icerikleri listeler:
+Select code in the editor and use **"Ask Claude"** from the right-click menu.
 
-| Kategori | Kaynak |
+- 📄 Selected code is sent to Claude with file path and line number context
+- 🪟 Claude tool window opens automatically
+- 🖥️ Also works for console output
+
+> **⚙️ How it works:** `AskClaudeAction` injects the selected text and file context into the terminal input field via `ClaudeSessionService.setPendingInput()`.
+
+---
+
+### 🧩 Skill & Agent System
+
+Skills and agents are defined as Markdown files and are automatically discovered by the plugin.
+
+- 📘 **Skills** — Files with `SKILL.md` suffix, scanned from a configured directory
+- 🤖 **Agents** — Any `.md` file, scanned from a separate configured directory
+- ✏️ **Skill creation** — Define name, description, workflow, examples and references via `CreateSkillDialog`
+- ✅ **Validation** — Name format, description quality and frontmatter structure are checked
+
+> **⚙️ How it works:** `SkillRepositoryImpl` recursively scans the configured directory. Uses a 5-minute in-memory cache. The first non-empty line of the file body becomes the description.
+
+---
+
+### 📋 Skill Best Practices Check
+
+A notification banner appears in the editor when a `SKILL.md` file is opened.
+
+- 📖 **"Open best practices"** — Opens the Claude documentation in the browser
+- 🔍 **"Check with Claude"** — Sends the skill content to Claude for a detailed review (frontmatter, naming, structure, content quality)
+
+---
+
+### 🎨 Command Palette
+
+Opens by typing `/` in the terminal input field or clicking the button. Lists searchable content in 4 categories:
+
+| Category | Source |
 |---|---|
-| 📘 Skills | Skills dizinindeki SKILL.md dosyalari |
-| 🤖 Agents | Agents dizinindeki .md dosyalari |
-| ⌨️ Commands | 29 yerlesik Claude komutu (`/clear`, `/model`, `/compact`...) |
-| ⚡ SC Commands | 25 SuperClaude komutu (`/sc:analyze`, `/sc:design`...) |
+| 📘 Skills | SKILL.md files in the skills directory |
+| 🤖 Agents | .md files in the agents directory |
+| ⌨️ Commands | 29 built-in Claude commands (`/clear`, `/model`, `/compact`...) |
+| ⚡ SC Commands | 25 SuperClaude commands (`/sc:analyze`, `/sc:design`...) |
 
 ---
 
-## ⚙️ Ayarlar
+## ⚙️ Settings
 
-**Settings > Tools > Teknasyon Plugin Settings** yolundan yapilandirilir.
+Configured via **Settings > Tools > Teknasyon Plugin Settings**.
 
-| Ayar | Aciklama |
+| Setting | Description |
 |---|---|
-| 📁 Skills Directory | Skill dosyalarinin taranacagi dizin |
-| 📁 Agents Directory | Agent dosyalarinin taranacagi dizin |
-| 💬 Commit Message Prompt | Claude'a gonderilen commit prompt sablonu (ozellestirilebilir) |
-| 🔗 Jira Ticket URL | Commit mesajina Jira ticket linki ekleme |
-| 🌿 Review Branch | PR icin `review/` branch prefix'i kullanma |
-| 🔑 Jira Credentials | Jira email ve API token (IDE credential store'da guvenli saklanir) |
+| 📁 Skills Directory | Directory to scan for skill files |
+| 📁 Agents Directory | Directory to scan for agent files |
+| 💬 Commit Message Prompt | Customizable prompt template sent to Claude |
+| 🔗 Jira Ticket URL | Append Jira ticket link to commit messages |
+| 🌿 Review Branch | Use `review/` branch prefix for PRs |
+| 🔑 Jira Credentials | Jira email and API token (securely stored in IDE credential store) |
 
 ---
 
-## 📦 Kurulum
+## 📦 Installation
 
-1. IDE'de <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Manage Plugin Repositories...</kbd> acin
-2. Asagidaki URL'yi ekleyin:
+1. In your IDE, go to <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Manage Plugin Repositories...</kbd>
+2. Add the following URL:
    ```
    https://raw.githubusercontent.com/Teknasyon/intellij-ai-plugin-releases/main/updatePlugins.xml
    ```
-3. <kbd>Marketplace</kbd> sekmesinde `"Teknasyon IntelliJ AI Plugin"` arayin ve <kbd>Install</kbd> tiklayin
+3. In the <kbd>Marketplace</kbd> tab, search for `"Teknasyon IntelliJ AI Plugin"` and click <kbd>Install</kbd>
 
-## 📋 Gereksinimler
+## 📋 Requirements
 
-- 🧰 JetBrains IDE (IntelliJ IDEA, Android Studio, WebStorm, PyCharm, GoLand vb.) 2024.1+
-- 🤖 [Claude CLI](https://docs.anthropic.com/en/docs/claude-code) kurulu ve PATH'te eriselebilir olmali
-- 🐙 [GitHub CLI](https://cli.github.com/) (`gh`) — PR islemleri icin
+- 🧰 JetBrains IDE (IntelliJ IDEA, Android Studio, WebStorm, PyCharm, GoLand, etc.) 2024.1+
+- 🤖 [Claude CLI](https://docs.anthropic.com/en/docs/claude-code) installed and accessible in PATH
+- 🐙 [GitHub CLI](https://cli.github.com/) (`gh`) — for PR operations
 - ☕ Java 21+
 
-## 🛠️ Gelistirme
+## 🛠️ Development
 
 ```bash
-# Plugin'i sandbox IDE'de calistir
+# Run plugin in a sandboxed IDE instance
 ./gradlew runIde
 
-# Testleri calistir
+# Run tests
 ./gradlew check
 
-# Dagitim ZIP'i olustur
+# Build distribution ZIP
 ./gradlew buildPlugin
 ```
 
