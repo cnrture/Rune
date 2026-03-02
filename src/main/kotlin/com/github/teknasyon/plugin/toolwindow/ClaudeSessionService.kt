@@ -1,4 +1,4 @@
-package com.github.teknasyon.plugin.toolwindow.claude
+package com.github.teknasyon.plugin.toolwindow
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -14,6 +14,7 @@ import org.jetbrains.plugins.terminal.LocalTerminalDirectRunner
 import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyEvent
+import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -314,7 +315,7 @@ private fun createClaudeTerminalPanel(
 
 private fun doCheckSuperClaudeInstalled(): Boolean {
     return try {
-        val commandsDir = java.io.File(System.getProperty("user.home"), ".claude/commands")
+        val commandsDir = File(System.getProperty("user.home"), ".claude/commands")
         commandsDir.exists() && commandsDir.isDirectory
     } catch (_: Exception) {
         false
@@ -343,5 +344,5 @@ private fun doCheckClaudeInstalled(): Boolean {
         "/usr/bin/claude",
         "$home/.npm-global/bin/claude",
         "$home/.local/bin/claude",
-    ).any { java.io.File(it).exists() }
+    ).any { File(it).exists() }
 }

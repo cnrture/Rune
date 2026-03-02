@@ -1,6 +1,6 @@
 package com.github.teknasyon.plugin.actions
 
-import com.github.teknasyon.plugin.toolwindow.claude.ClaudeSessionService
+import com.github.teknasyon.plugin.toolwindow.ClaudeSessionService
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileDocumentManager

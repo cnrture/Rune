@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.components.*
 import com.github.teknasyon.plugin.theme.TPTheme
-import com.github.teknasyon.plugin.toolwindow.claude.ClaudeSessionService
+import com.github.teknasyon.plugin.toolwindow.ClaudeSessionService
 import com.google.gson.JsonParser
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager

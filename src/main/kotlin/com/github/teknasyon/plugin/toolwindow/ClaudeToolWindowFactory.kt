@@ -1,4 +1,4 @@
-package com.github.teknasyon.plugin.toolwindow.claude
+package com.github.teknasyon.plugin.toolwindow
 
 import androidx.compose.ui.awt.ComposePanel
 import com.github.teknasyon.plugin.common.Constants

@@ -1,4 +1,4 @@
-package com.github.teknasyon.plugin.data.repository
+package com.github.teknasyon.plugin.data
 
 import com.github.teknasyon.plugin.domain.model.SkillFolder
 import com.github.teknasyon.plugin.service.FileScanner

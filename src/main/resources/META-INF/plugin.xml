@@ -11,7 +11,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="TeknasyonIntelliJPlugin" displayType="BALLOON" isLogByDefault="false"/>
         <toolWindow
-                factoryClass="com.github.teknasyon.plugin.toolwindow.claude.ClaudeToolWindowFactory"
+                factoryClass="com.github.teknasyon.plugin.toolwindow.ClaudeToolWindowFactory"
                 id="Claude"
                 anchor="right"
                 icon="/icons/claudeIcon.svg"/>

@@ -1,6 +1,6 @@
 package com.github.teknasyon.plugin.actions
 
-import com.github.teknasyon.plugin.toolwindow.claude.ClaudeSessionService
+import com.github.teknasyon.plugin.toolwindow.ClaudeSessionService
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent

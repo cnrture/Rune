@@ -1,4 +1,4 @@
-package com.github.teknasyon.plugin.toolwindow.claude
+package com.github.teknasyon.plugin.toolwindow
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,7 +34,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import com.github.teknasyon.plugin.actions.dialog.CreateSkillDialog
 import com.github.teknasyon.plugin.components.*
-import com.github.teknasyon.plugin.data.repository.SkillRepositoryImpl
+import com.github.teknasyon.plugin.data.SkillRepositoryImpl
 import com.github.teknasyon.plugin.domain.model.Skill
 import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
 import com.github.teknasyon.plugin.service.FileScanner
