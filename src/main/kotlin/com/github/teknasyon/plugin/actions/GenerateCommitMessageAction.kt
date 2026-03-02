@@ -1,5 +1,6 @@
 package com.github.teknasyon.plugin.actions
 
+import com.github.teknasyon.plugin.service.PluginSettingsService
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -41,7 +42,11 @@ class GenerateCommitMessageAction : AnAction() {
                     return
                 }
 
-                val jiraUrl = getJiraTicketUrl(projectDir)
+                val jiraUrl = if (PluginSettingsService.getInstance(project).isIncludeJiraUrlInCommit()) {
+                    getJiraTicketUrl(projectDir)
+                } else {
+                    null
+                }
 
                 indicator.text = "Generating commit message with Claude…"
                 val usedClaude = streamWithClaude(projectDir, diff, jiraUrl, project, commitDocument)
@@ -68,8 +73,8 @@ class GenerateCommitMessageAction : AnAction() {
     ): Boolean {
         val claudePath = findClaudeCli() ?: return false
         val truncatedDiff = if (diff.length > 8000) diff.take(8000) + "\n…(truncated)" else diff
-        val prompt = "Based on the following git diff, write a single conventional commit message " +
-            "(format: type: description). Output only the commit message, nothing else.\n\n$truncatedDiff"
+        val promptTemplate = PluginSettingsService.getInstance(project).getCommitMessagePrompt()
+        val prompt = promptTemplate.replace("{diff}", truncatedDiff)
 
         return try {
             val process = ProcessBuilder(claudePath, "-p", prompt)

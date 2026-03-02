@@ -16,6 +16,8 @@ class PluginSettingsService :
     data class State(
         var rootPath: String = "",
         var agentsRootPath: String = "",
+        var commitMessagePrompt: String = DEFAULT_COMMIT_PROMPT,
+        var includeJiraUrlInCommit: Boolean = false,
     )
 
     private var state = State()
@@ -38,7 +40,24 @@ class PluginSettingsService :
 
     fun getAgentsRootPath(): String = state.agentsRootPath
 
+    fun getCommitMessagePrompt(): String = state.commitMessagePrompt
+
+    fun setCommitMessagePrompt(prompt: String) {
+        state.commitMessagePrompt = prompt
+    }
+
+    fun isIncludeJiraUrlInCommit(): Boolean = state.includeJiraUrlInCommit
+
+    fun setIncludeJiraUrlInCommit(include: Boolean) {
+        state.includeJiraUrlInCommit = include
+    }
+
     companion object {
+
+        const val DEFAULT_COMMIT_PROMPT =
+            "Based on the following git diff, write a single conventional commit message " +
+                "(format: type: description). Output only the commit message, nothing else.\n\n{diff}"
+
         fun getInstance(project: Project): PluginSettingsService {
             return project.getService(PluginSettingsService::class.java)
         }
