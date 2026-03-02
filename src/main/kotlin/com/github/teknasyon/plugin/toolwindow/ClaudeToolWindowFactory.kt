@@ -3,21 +3,30 @@ package com.github.teknasyon.plugin.toolwindow
 import androidx.compose.ui.awt.ComposePanel
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.theme.TPTheme
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
 import java.awt.BorderLayout
 import javax.swing.JComponent
+import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 class ClaudeToolWindowFactory : ToolWindowFactory {
 
-    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        if (System.getProperty("skiko.renderApi") == null) {
-            System.setProperty("skiko.renderApi", "SOFTWARE")
-        }
+    companion object {
+        private val LOG = Logger.getInstance(ClaudeToolWindowFactory::class.java)
 
+        init {
+            if (System.getProperty("skiko.renderApi") == null) {
+                System.setProperty("skiko.renderApi", "SOFTWARE")
+            }
+        }
+    }
+
+    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         toolWindow.contentManager.addContent(
             ContentFactory.getInstance().createContent(
                 createComponent(project),
@@ -29,13 +38,26 @@ class ClaudeToolWindowFactory : ToolWindowFactory {
 
     private fun createComponent(project: Project): JComponent {
         val panel = JPanel(BorderLayout())
-        ComposePanel().apply {
-            setContent {
-                TPTheme {
-                    ClaudeTerminalContent(project = project)
+        try {
+            ComposePanel().apply {
+                setContent {
+                    TPTheme {
+                        ClaudeTerminalContent(project = project)
+                    }
                 }
+                panel.add(this)
             }
-            panel.add(this)
+        } catch (e: Throwable) {
+            LOG.error("Failed to initialize Compose panel", e)
+            panel.add(
+                JLabel(
+                    "<html><center>Compose UI could not be initialized.<br>" +
+                        "Try restarting the IDE or check plugin compatibility.<br><br>" +
+                        "Error: ${e.message}</center></html>",
+                    SwingConstants.CENTER,
+                ),
+                BorderLayout.CENTER,
+            )
         }
         return panel
     }
