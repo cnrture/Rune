@@ -1,6 +1,6 @@
-# Getcontact-Android-Studio-Plugin-Project
+# IntelliJ AI Plugin
 
-![Build](https://github.com/Teknasyon/Getcontact-Android-Studio-Plugin-Project/workflows/Build/badge.svg)
+![Build](https://github.com/Teknasyon/IntelliJ-AI-Plugin/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
@@ -28,7 +28,7 @@ To keep everything working, do not remove `<!-- ... -->` sections.
 
 - Using the IDE built-in plugin system:
   
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Getcontact-Android-Studio-Plugin-Project"</kbd> >
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Teknasyon IntelliJ AI Plugin"</kbd> >
   <kbd>Install</kbd>
   
 - Using JetBrains Marketplace:
@@ -40,7 +40,7 @@ To keep everything working, do not remove `<!-- ... -->` sections.
 
 - Manually:
 
-  Download the [latest release](https://github.com/Teknasyon/Getcontact-Android-Studio-Plugin-Project/releases/latest) and install it manually using
+  Download the [latest release](https://github.com/Teknasyon/IntelliJ-AI-Plugin/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 

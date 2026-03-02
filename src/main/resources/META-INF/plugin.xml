@@ -9,7 +9,7 @@
     <depends>org.jetbrains.plugins.terminal</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="TeknasyonAndroidStudioPlugin" displayType="BALLOON" isLogByDefault="false"/>
+        <notificationGroup id="TeknasyonIntelliJPlugin" displayType="BALLOON" isLogByDefault="false"/>
         <toolWindow
                 factoryClass="com.github.teknasyon.plugin.toolwindow.claude.ClaudeToolWindowFactory"
                 id="Claude"

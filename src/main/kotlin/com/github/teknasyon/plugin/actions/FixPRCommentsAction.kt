@@ -52,7 +52,7 @@ class FixPRCommentsAction : AnAction() {
     private fun notify(project: Project) {
         ApplicationManager.getApplication().invokeLater {
             NotificationGroupManager.getInstance()
-                .getNotificationGroup("TeknasyonAndroidStudioPlugin")
+                .getNotificationGroup("TeknasyonIntelliJPlugin")
                 .createNotification(
                     "GitHub CLI (gh) not found. Install from https://cli.github.com and run 'gh auth login'.",
                     NotificationType.ERROR,

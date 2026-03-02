@@ -1,6 +1,6 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# Getcontact-Android-Studio-Plugin-Project Changelog
+# IntelliJ-AI-Plugin Changelog
 
 ## [Unreleased]
 
@@ -8,5 +8,5 @@
 
 Initial internal release
 
-[Unreleased]: https://github.com/Teknasyon/Getcontact-Android-Studio-Plugin-Project/compare/v0.0.1...HEAD
-[0.0.1]: https://github.com/Teknasyon/Getcontact-Android-Studio-Plugin-Project/commits/v0.0.1
+[Unreleased]: https://github.com/Teknasyon/IntelliJ-AI-Plugin/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/Teknasyon/IntelliJ-AI-Plugin/commits/v0.0.1

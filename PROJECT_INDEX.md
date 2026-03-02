@@ -1,4 +1,4 @@
-# Project Index: TPDevTools (Teknasyon Android Studio Plugin)
+# Project Index: TPDevTools (Teknasyon IntelliJ AI Plugin)
 
 Generated: 2026-02-27
 
@@ -7,7 +7,7 @@ Generated: 2026-02-27
 ## Project Structure
 
 ```
-Teknasyon-AndroidStudio-Plugin/
+Teknasyon-IntelliJ-Plugin/
 ├── src/main/kotlin/com/github/teknasyon/plugin/
 │   ├── TPToolWindowFactory.kt             ← Ana tool window (Jungle/Module/Settings)
 │   ├── actions/

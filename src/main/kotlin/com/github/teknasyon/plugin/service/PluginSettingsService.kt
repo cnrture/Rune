@@ -8,8 +8,8 @@ import com.intellij.openapi.project.Project
 
 @Service(Service.Level.PROJECT)
 @State(
-    name = "TeknasyonAndroidStudioPluginSetting",
-    storages = [Storage("teknasyonandroidstudioplugin.xml")]
+    name = "TeknasyonIntelliJPluginSettings",
+    storages = [Storage("teknasyonintellijplugin.xml")]
 )
 class PluginSettingsService :
     PersistentStateComponent<PluginSettingsService.State> {
