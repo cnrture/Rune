@@ -18,6 +18,7 @@ class PluginSettingsService :
         var agentsRootPath: String = "",
         var commitMessagePrompt: String = DEFAULT_COMMIT_PROMPT,
         var includeJiraUrlInCommit: Boolean = false,
+        var useReviewBranch: Boolean = false,
     )
 
     private var state = State()
@@ -50,6 +51,12 @@ class PluginSettingsService :
 
     fun setIncludeJiraUrlInCommit(include: Boolean) {
         state.includeJiraUrlInCommit = include
+    }
+
+    fun isUseReviewBranch(): Boolean = state.useReviewBranch
+
+    fun setUseReviewBranch(use: Boolean) {
+        state.useReviewBranch = use
     }
 
     companion object {
