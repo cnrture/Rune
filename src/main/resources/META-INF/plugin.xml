@@ -14,7 +14,7 @@
                 factoryClass="com.github.teknasyon.plugin.toolwindow.ClaudeToolWindowFactory"
                 id="Claude"
                 anchor="right"
-                icon="/icons/claudeIcon.svg"/>
+                icon="/icons/pluginIcon.svg"/>
 
         <editorNotificationProvider
                 implementation="com.github.teknasyon.plugin.actions.SkillBestPracticesNotificationProvider"/>
@@ -59,7 +59,7 @@
                 class="com.github.teknasyon.plugin.actions.AskClaudeAction"
                 text="Ask Claude"
                 description="Send selected code to Claude terminal"
-                icon="/icons/claudeIcon.svg">
+                icon="/icons/pluginIcon.svg">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ConsoleEditorPopupMenu" anchor="last"/>
         </action>

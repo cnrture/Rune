@@ -79,7 +79,7 @@ Teknasyon-IntelliJ-Plugin/
 │           └── TemplateWriter.kt
 ├── src/main/resources/
 │   ├── META-INF/plugin.xml
-│   └── icons/ (pluginIcon.svg, claudeIcon.svg)
+│   └── icons/ (pluginIcon.svg)
 ├── .github/workflows/ (build.yml, release.yml, run-ui-tests.yml)
 ├── build.gradle.kts
 ├── gradle.properties
