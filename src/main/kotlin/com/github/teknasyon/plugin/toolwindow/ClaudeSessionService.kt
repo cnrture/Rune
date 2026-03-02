@@ -1,5 +1,7 @@
 package com.github.teknasyon.plugin.toolwindow
 
+import com.github.teknasyon.plugin.common.CliUtils
+import com.github.teknasyon.plugin.common.Constants
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -150,17 +152,17 @@ class ClaudeSessionService(private val project: Project) : Disposable {
         sendToTerminal("/remote-control", true)
         val widget = activeWidget
         ApplicationManager.getApplication().executeOnPooledThread {
-            Thread.sleep(1000) // Wait for menu to render
+            Thread.sleep(Constants.DELAY_MENU_RENDER_MS)
             try {
                 // Menu cursor starts on "Continue" — press Up twice to reach "Disconnect this session"
                 SwingUtilities.invokeAndWait {
                     widget?.terminalStarter?.sendBytes("\u001B[A".toByteArray(), true)
                 }
-                Thread.sleep(200)
+                Thread.sleep(Constants.DELAY_KEY_INPUT_MS)
                 SwingUtilities.invokeAndWait {
                     widget?.terminalStarter?.sendBytes("\u001B[A".toByteArray(), true)
                 }
-                Thread.sleep(200)
+                Thread.sleep(Constants.DELAY_KEY_INPUT_MS)
                 SwingUtilities.invokeAndWait {
                     widget?.terminalStarter?.sendBytes("\r".toByteArray(), true)
                 }
@@ -179,7 +181,7 @@ class ClaudeSessionService(private val project: Project) : Disposable {
 
     private fun stopCaffeinate() {
         try {
-            caffeinateProcess?.destroyForcibly()?.waitFor(5, TimeUnit.SECONDS)
+            caffeinateProcess?.destroyForcibly()?.waitFor(Constants.TIMEOUT_PROCESS_CLEANUP_SECONDS, TimeUnit.SECONDS)
         } catch (_: Exception) {
         }
         caffeinateProcess = null
@@ -293,7 +295,7 @@ private fun createClaudeTerminalPanel(
         }
 
         ApplicationManager.getApplication().executeOnPooledThread {
-            Thread.sleep(1500)
+            Thread.sleep(Constants.DELAY_CLI_STARTUP_MS)
             ApplicationManager.getApplication().invokeLater {
                 try {
                     widget.terminalStarter?.sendString("claude\n", true)
@@ -322,27 +324,4 @@ private fun doCheckSuperClaudeInstalled(): Boolean {
     }
 }
 
-private fun doCheckClaudeInstalled(): Boolean {
-    // Try login shell first (picks up user's PATH from profile)
-    // Then fallback to common install locations
-    // GUI-launched IDE doesn't inherit terminal PATH
-    val foundViaShell = try {
-        val process = ProcessBuilder("bash", "-l", "-c", "which claude")
-            .redirectErrorStream(true)
-            .start()
-        process.outputStream.close()
-        process.waitFor() == 0
-    } catch (_: Exception) {
-        false
-    }
-    if (foundViaShell) return true
-
-    // Fallback: check common install locations directly
-    val home = System.getProperty("user.home")
-    return listOf(
-        "/usr/local/bin/claude",
-        "/usr/bin/claude",
-        "$home/.npm-global/bin/claude",
-        "$home/.local/bin/claude",
-    ).any { File(it).exists() }
-}
+private fun doCheckClaudeInstalled(): Boolean = CliUtils.isClaudeInstalled()

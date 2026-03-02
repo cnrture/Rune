@@ -1,5 +1,6 @@
 package com.github.teknasyon.plugin.actions
 
+import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.toolwindow.ClaudeSessionService
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
@@ -28,8 +29,7 @@ class SkillBestPracticesNotificationProvider : EditorNotificationProvider, DumbA
             val panel = EditorNotificationPanel(fileEditor, EditorNotificationPanel.Status.Info)
             panel.text = "Check this skill against Claude platform best practices"
             panel.createActionLabel("Open best practices") {
-                val url = "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices.md"
-                BrowserUtil.browse(url)
+                BrowserUtil.browse(Constants.CLAUDE_SKILL_BEST_PRACTICES_URL)
             }
             panel.createActionLabel("Check with Claude") {
                 val document = fileEditor.file?.let {
@@ -51,7 +51,7 @@ class SkillBestPracticesNotificationProvider : EditorNotificationProvider, DumbA
                 } else {
                     // New session needs time for claude CLI to start (~2s)
                     ApplicationManager.getApplication().executeOnPooledThread {
-                        Thread.sleep(3000)
+                        Thread.sleep(Constants.DELAY_NEW_SESSION_CLI_MS)
                         ApplicationManager.getApplication().invokeLater {
                             service.sendToTerminal(prompt, autoRun = true)
                         }
@@ -63,7 +63,7 @@ class SkillBestPracticesNotificationProvider : EditorNotificationProvider, DumbA
     }
 
     private fun buildPrompt(skillContent: String): String {
-        return """Review this SKILL.md file against Claude platform best practices (https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices.md):
+        return """Review this SKILL.md file against Claude platform best practices (${Constants.CLAUDE_SKILL_BEST_PRACTICES_URL}):
 
 <skill_content>
 $skillContent

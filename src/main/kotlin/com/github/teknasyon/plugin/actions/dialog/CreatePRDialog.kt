@@ -196,7 +196,7 @@ class CreatePRDialog(
             .redirectErrorStream(true)
             .start()
         process.outputStream.close()
-        val completed = process.waitFor(30, TimeUnit.SECONDS)
+        val completed = process.waitFor(Constants.TIMEOUT_PROCESS_DEFAULT_SECONDS, TimeUnit.SECONDS)
         val output = process.inputStream.bufferedReader().readText().trim()
         if (!completed || process.exitValue() != 0) {
             throw RuntimeException(output.ifBlank { "Command timed out" })

@@ -1,5 +1,7 @@
 package com.github.teknasyon.plugin.actions
 
+import com.github.teknasyon.plugin.common.CliUtils
+import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.service.PluginSettingsService
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -15,7 +17,6 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.VcsDataKeys
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 class GenerateCommitMessageAction : AnAction() {
 
@@ -98,7 +99,7 @@ class GenerateCommitMessageAction : AnAction() {
                 }
             }.also { it.isDaemon = true; it.start() }
 
-            readerThread.join(30_000) // 30 s hard timeout
+            readerThread.join(Constants.TIMEOUT_CLAUDE_STREAM_MS)
             if (readerThread.isAlive) {
                 process.destroyForcibly()
                 readerThread.interrupt()
@@ -134,48 +135,14 @@ class GenerateCommitMessageAction : AnAction() {
         return (staged + "\n" + unstaged).trim()
     }
 
-    private fun runGit(dir: File, vararg args: String): String {
-        return try {
-            // Use login shell so git is found even with minimal PATH
-            val cmd = listOf("git") + args.toList()
-            val process = ProcessBuilder(cmd)
-                .directory(dir)
-                .redirectErrorStream(true)
-                .start()
-            process.outputStream.close()
-            process.waitFor(10, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim()
-        } catch (_: Exception) {
-            ""
-        }
-    }
+    private fun runGit(dir: File, vararg args: String): String = CliUtils.runGit(dir, *args)
 
-    private fun findClaudeCli(): String? {
-        // Use a login shell so it picks up the user's PATH (nvm, homebrew, etc.)
-        return try {
-            val process = ProcessBuilder("bash", "-l", "-c", "which claude")
-                .redirectErrorStream(true)
-                .start()
-            process.outputStream.close()
-            process.waitFor(5, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim().ifBlank { null }
-        } catch (_: Exception) {
-            // Fallback: check common install locations directly
-            val home = System.getProperty("user.home")
-            listOf(
-                "/usr/local/bin/claude",
-                "/usr/bin/claude",
-                "$home/.npm-global/bin/claude",
-                "$home/.local/bin/claude",
-                "$home/.nvm/versions/node/$(ls $home/.nvm/versions/node 2>/dev/null | tail -1)/bin/claude",
-            ).firstOrNull { File(it).exists() }
-        }
-    }
+    private fun findClaudeCli(): String? = CliUtils.findClaudeCli()
 
     private fun getJiraTicketUrl(projectDir: String): String? {
-        val branch = runGit(File(projectDir), "rev-parse", "--abbrev-ref", "HEAD")
-        val ticketId = Regex("[A-Z]+-\\d+").find(branch)?.value ?: return null
-        return "https://pozitim.atlassian.net/browse/$ticketId"
+        val branch = CliUtils.runGit(File(projectDir), "rev-parse", "--abbrev-ref", "HEAD")
+        val ticketId = Constants.JIRA_TICKET_REGEX.find(branch)?.value ?: return null
+        return Constants.jiraBrowseUrl(ticketId)
     }
 
     private fun generateFallbackMessage(diff: String, jiraUrl: String? = null): String {

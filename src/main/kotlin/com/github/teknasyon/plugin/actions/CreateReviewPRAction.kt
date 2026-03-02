@@ -1,6 +1,8 @@
 package com.github.teknasyon.plugin.actions
 
 import com.github.teknasyon.plugin.actions.dialog.CreatePRDialog
+import com.github.teknasyon.plugin.common.CliUtils
+import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.service.PluginSettingsService
 import com.intellij.ide.BrowserUtil
 import com.intellij.notification.NotificationGroupManager
@@ -14,7 +16,6 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 class CreateReviewPRAction : AnAction() {
 
@@ -70,7 +71,7 @@ class CreateReviewPRAction : AnAction() {
                 if (ghPath == null) {
                     notify(
                         project,
-                        "GitHub CLI (gh) not found. Install from https://cli.github.com and run 'gh auth login'.",
+                        Constants.GH_CLI_NOT_FOUND_MESSAGE,
                         NotificationType.ERROR
                     )
                     return
@@ -88,7 +89,7 @@ class CreateReviewPRAction : AnAction() {
                 }
 
                 // 8. Extract Jira ticket ID from branch name
-                val ticketId = Regex("[A-Z]+-\\d+").find(currentBranch)?.value
+                val ticketId = Constants.JIRA_TICKET_REGEX.find(currentBranch)?.value
 
                 // 9. Open dialog on EDT for reviewer/label selection
                 ApplicationManager.getApplication().invokeLater {
@@ -226,43 +227,17 @@ class CreateReviewPRAction : AnAction() {
         } ?: "develop"
     }
 
-    private fun findGhCli(): String? {
-        return try {
-            val process = ProcessBuilder("bash", "-l", "-c", "which gh")
-                .redirectErrorStream(true)
-                .start()
-            process.outputStream.close()
-            process.waitFor(5, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim().ifBlank { null }
-        } catch (_: Exception) {
-            listOf("/usr/local/bin/gh", "/usr/bin/gh", "/opt/homebrew/bin/gh")
-                .firstOrNull { File(it).exists() }
-        }
-    }
+    private fun findGhCli(): String? = CliUtils.findGhCli()
 
     private fun getJiraTicketUrl(dir: File): String? {
-        val branch = runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
-        val ticketId = Regex("[A-Z]+-\\d+").find(branch)?.value ?: return null
-        return "https://pozitim.atlassian.net/browse/$ticketId"
+        val branch = CliUtils.runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
+        val ticketId = Constants.JIRA_TICKET_REGEX.find(branch)?.value ?: return null
+        return Constants.jiraBrowseUrl(ticketId)
     }
 
-    private fun runGit(dir: File, vararg args: String): String {
-        return runProcess(dir, "git", *args)
-    }
+    private fun runGit(dir: File, vararg args: String): String = CliUtils.runGit(dir, *args)
 
-    private fun runProcess(dir: File, vararg cmd: String): String {
-        return try {
-            val process = ProcessBuilder(*cmd)
-                .directory(dir)
-                .redirectErrorStream(true)
-                .start()
-            process.outputStream.close()
-            process.waitFor(30, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim()
-        } catch (_: Exception) {
-            ""
-        }
-    }
+    private fun runProcess(dir: File, vararg cmd: String): String = CliUtils.runProcess(dir, *cmd)
 
     private fun notify(project: Project, message: String, type: NotificationType) {
         ApplicationManager.getApplication().invokeLater {

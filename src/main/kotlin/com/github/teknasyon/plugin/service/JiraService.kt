@@ -1,5 +1,6 @@
 package com.github.teknasyon.plugin.service
 
+import com.github.teknasyon.plugin.common.Constants
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.credentialStore.generateServiceName
@@ -14,7 +15,7 @@ import java.util.Base64
 
 object JiraService {
 
-    private const val JIRA_BASE_URL = "https://pozitim.atlassian.net"
+    private val JIRA_BASE_URL = Constants.JIRA_BASE_URL
 
     private val credentialAttributes = CredentialAttributes(
         generateServiceName("TPDevTools", "JiraCredentials")
@@ -46,8 +47,8 @@ object JiraService {
             "Authorization",
             "Basic " + Base64.getEncoder().encodeToString("$email:$token".toByteArray())
         )
-        connection.connectTimeout = 10_000
-        connection.readTimeout = 10_000
+        connection.connectTimeout = Constants.TIMEOUT_HTTP_MS
+        connection.readTimeout = Constants.TIMEOUT_HTTP_MS
 
         return try {
             if (connection.responseCode != 200) return emptyList()

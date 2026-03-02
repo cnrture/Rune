@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -297,14 +296,14 @@ class CreateSkillDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                color = WarningYellow.copy(alpha = 0.15f),
+                                color = TPTheme.colors.warning.copy(alpha = 0.15f),
                                 shape = RoundedCornerShape(8.dp),
                             )
                             .padding(12.dp),
                     ) {
                         TPText(
                             text = "Skills root path not configured. Configure in Settings > Tools > Teknasyon Plugin Settings",
-                            color = WarningYellow,
+                            color = TPTheme.colors.warning,
                             style = TextStyle(fontSize = 12.sp),
                         )
                     }
@@ -530,7 +529,7 @@ class CreateSkillDialog(
             warnings.forEach { msg ->
                 TPText(
                     text = "⚠ $msg",
-                    color = WarningYellow,
+                    color = TPTheme.colors.warning,
                     style = TextStyle(fontSize = 11.sp),
                 )
             }
@@ -545,8 +544,4 @@ class CreateSkillDialog(
     }
 
     // endregion
-
-    companion object {
-        private val WarningYellow = Color(0xFFFFD54F)
-    }
 }

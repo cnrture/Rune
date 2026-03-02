@@ -15,6 +15,8 @@ fun lightColors(
     purple: Color = Color(0xFFB388FF),
     hintGray: Color = Color(0xFF938F99),
     red: Color = Color(0xFFFF8A80),
+    green: Color = Color(0xFF69F0AE),
+    warning: Color = Color(0xFFFFD54F),
     primaryContainer: Color = Color(0xFF1A2857),
     outline: Color = Color(0xFF49454F),
 ): TPColor = TPColor(
@@ -26,6 +28,8 @@ fun lightColors(
     purple = purple,
     hintGray = hintGray,
     red = red,
+    green = green,
+    warning = warning,
     primaryContainer = primaryContainer,
     outline = outline,
 )
@@ -39,6 +43,8 @@ class TPColor(
     purple: Color,
     hintGray: Color,
     red: Color,
+    green: Color,
+    warning: Color,
     primaryContainer: Color,
     outline: Color,
 ) {
@@ -65,6 +71,12 @@ class TPColor(
 
     private var _red: Color by mutableStateOf(red)
     val red: Color = _red
+
+    private var _green: Color by mutableStateOf(green)
+    val green: Color = _green
+
+    private var _warning: Color by mutableStateOf(warning)
+    val warning: Color = _warning
 
     private var _primaryContainer: Color by mutableStateOf(primaryContainer)
     val primaryContainer: Color = _primaryContainer

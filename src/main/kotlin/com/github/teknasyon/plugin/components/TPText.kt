@@ -6,7 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
 
 @Composable
 fun TPText(
@@ -16,6 +18,9 @@ fun TPText(
     color: Color = style.color,
     overflow: TextOverflow = TextOverflow.Clip,
     maxLines: Int = Int.MAX_VALUE,
+    fontSize: TextUnit = TextUnit.Unspecified,
+    fontWeight: FontWeight? = null,
+    letterSpacing: TextUnit = TextUnit.Unspecified,
 ) {
     Text(
         modifier = modifier,
@@ -24,5 +29,8 @@ fun TPText(
         overflow = overflow,
         maxLines = maxLines,
         style = style,
+        fontSize = fontSize,
+        fontWeight = fontWeight,
+        letterSpacing = letterSpacing,
     )
 }

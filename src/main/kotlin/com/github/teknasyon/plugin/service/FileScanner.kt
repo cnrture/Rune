@@ -16,6 +16,7 @@ class FileScanner(private val project: Project) {
         val result: List<SkillFolder>,
     )
 
+    @Volatile
     private var cache: CacheEntry? = null
     private val cacheExpirationMs = 5 * 60 * 1000L // 5 minutes
 

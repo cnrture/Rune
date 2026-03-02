@@ -211,7 +211,7 @@ class FixPRCommentsDialog(
             .redirectErrorStream(true)
             .start()
         process.outputStream.close()
-        val completed = process.waitFor(30, TimeUnit.SECONDS)
+        val completed = process.waitFor(Constants.TIMEOUT_PROCESS_DEFAULT_SECONDS, TimeUnit.SECONDS)
         val output = process.inputStream.bufferedReader().readText().trim()
         if (!completed || process.exitValue() != 0) {
             throw RuntimeException(output.ifBlank { "Command timed out" })
@@ -465,7 +465,7 @@ class FixPRCommentsDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        color = Color(0xFF69F0AE).copy(alpha = 0.15f),
+                        color = TPTheme.colors.green.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(12.dp),
                     )
                     .padding(24.dp),
@@ -473,7 +473,7 @@ class FixPRCommentsDialog(
             ) {
                 TPText(
                     text = "Sent to Claude!",
-                    color = Color(0xFF69F0AE),
+                    color = TPTheme.colors.green,
                     style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
                 )
                 Spacer(modifier = Modifier.size(12.dp))
