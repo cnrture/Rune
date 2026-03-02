@@ -14,6 +14,7 @@ import org.jetbrains.plugins.terminal.LocalTerminalDirectRunner
 import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyEvent
+import java.util.concurrent.TimeUnit
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -30,6 +31,7 @@ data class ClaudeSessionState(
     val activeSessionId: Int = 0,
     val claudeInstalled: Boolean? = null,
     val superClaudeInstalled: Boolean? = null,
+    val remoteControlActive: Boolean = false,
 )
 
 @Service(Service.Level.PROJECT)
@@ -51,6 +53,7 @@ class ClaudeSessionService(private val project: Project) : Disposable {
 
     val sessionManager = SessionManager()
     private var nextId = 1
+    private var caffeinateProcess: Process? = null
 
     val activeWidget: JBTerminalWidget?
         get() {
@@ -88,6 +91,7 @@ class ClaudeSessionService(private val project: Project) : Disposable {
     }
 
     fun closeSession(id: Int) {
+        stopCaffeinate()
         sessionManager.removeSession(id)
         val current = _state.value
         val remaining = current.sessions.filter { it.id != id }
@@ -131,7 +135,58 @@ class ClaudeSessionService(private val project: Project) : Disposable {
         }
     }
 
+    fun startRemoteControl(preventSleep: Boolean) {
+        sendToTerminal("/remote-control", true)
+        if (preventSleep) {
+            startCaffeinate()
+        }
+        _state.value = _state.value.copy(remoteControlActive = true)
+    }
+
+    @Suppress("DEPRECATION")
+    fun stopRemoteControl() {
+        // Send /remote-control to open disconnect menu, then navigate to "Disconnect"
+        sendToTerminal("/remote-control", true)
+        val widget = activeWidget
+        ApplicationManager.getApplication().executeOnPooledThread {
+            Thread.sleep(1000) // Wait for menu to render
+            try {
+                // Menu cursor starts on "Continue" — press Up twice to reach "Disconnect this session"
+                SwingUtilities.invokeAndWait {
+                    widget?.terminalStarter?.sendBytes("\u001B[A".toByteArray(), true)
+                }
+                Thread.sleep(200)
+                SwingUtilities.invokeAndWait {
+                    widget?.terminalStarter?.sendBytes("\u001B[A".toByteArray(), true)
+                }
+                Thread.sleep(200)
+                SwingUtilities.invokeAndWait {
+                    widget?.terminalStarter?.sendBytes("\r".toByteArray(), true)
+                }
+            } catch (_: Exception) {
+            }
+        }
+        stopCaffeinate()
+    }
+
+    private fun startCaffeinate() {
+        try {
+            caffeinateProcess = ProcessBuilder("caffeinate", "-dis").start()
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun stopCaffeinate() {
+        try {
+            caffeinateProcess?.destroyForcibly()?.waitFor(5, TimeUnit.SECONDS)
+        } catch (_: Exception) {
+        }
+        caffeinateProcess = null
+        _state.value = _state.value.copy(remoteControlActive = false)
+    }
+
     override fun dispose() {
+        stopCaffeinate()
         sessionManager.dispose()
     }
 
