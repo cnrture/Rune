@@ -17,7 +17,6 @@ object Constants {
     // Timeouts (seconds)
     const val TIMEOUT_CLI_LOOKUP_SECONDS = 5L
     const val TIMEOUT_PROCESS_DEFAULT_SECONDS = 30L
-    const val TIMEOUT_GIT_SECONDS = 10L
     const val TIMEOUT_HTTP_MS = 10_000
     const val TIMEOUT_CLAUDE_STREAM_MS = 30_000L
     const val TIMEOUT_PROCESS_CLEANUP_SECONDS = 5L
