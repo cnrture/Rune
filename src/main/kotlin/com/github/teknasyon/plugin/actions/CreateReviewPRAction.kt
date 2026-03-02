@@ -1,6 +1,7 @@
 package com.github.teknasyon.plugin.actions
 
 import com.github.teknasyon.plugin.actions.dialog.CreatePRDialog
+import com.github.teknasyon.plugin.service.PluginSettingsService
 import com.intellij.ide.BrowserUtil
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -29,10 +30,10 @@ class CreateReviewPRAction : AnAction() {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Preparing review PR…", false) {
             override fun run(indicator: ProgressIndicator) {
                 val dir = File(project.basePath ?: return)
+                val useReviewBranch = PluginSettingsService.getInstance(project).isUseReviewBranch()
 
                 // 1. Current branch
                 val currentBranch = runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
-                val reviewBranch = "review/$currentBranch"
 
                 // 2. Detect base branch automatically
                 indicator.text = "Detecting base branch…"
@@ -43,15 +44,21 @@ class CreateReviewPRAction : AnAction() {
                 indicator.text = "Fetching remote…"
                 runGit(dir, "fetch", "origin")
 
-                // 4. Create review branch on remote from base (skip if already exists)
-                val reviewExists = runGit(dir, "ls-remote", "--heads", "origin", reviewBranch).isNotBlank()
-                if (!reviewExists) {
-                    indicator.text = "Creating $reviewBranch from $baseBranch…"
-                    val result = runGit(dir, "push", "origin", "origin/$baseBranch:refs/heads/$reviewBranch")
-                    if (result.contains("error") || result.contains("fatal")) {
-                        notify(project, "Failed to create $reviewBranch: $result", NotificationType.ERROR)
-                        return
+                // 4. Determine target branch
+                val targetBranch = if (useReviewBranch) {
+                    val reviewBranch = "review/$currentBranch"
+                    val reviewExists = runGit(dir, "ls-remote", "--heads", "origin", reviewBranch).isNotBlank()
+                    if (!reviewExists) {
+                        indicator.text = "Creating $reviewBranch from $baseBranch…"
+                        val result = runGit(dir, "push", "origin", "origin/$baseBranch:refs/heads/$reviewBranch")
+                        if (result.contains("error") || result.contains("fatal")) {
+                            notify(project, "Failed to create $reviewBranch: $result", NotificationType.ERROR)
+                            return
+                        }
                     }
+                    reviewBranch
+                } else {
+                    baseBranch
                 }
 
                 // 5. Push current branch
@@ -97,7 +104,7 @@ class CreateReviewPRAction : AnAction() {
                                 dir = dir,
                                 ghPath = ghPath,
                                 currentBranch = currentBranch,
-                                reviewBranch = reviewBranch,
+                                targetBranch = targetBranch,
                                 reviewers = reviewers,
                                 labels = labels,
                             )
@@ -114,13 +121,13 @@ class CreateReviewPRAction : AnAction() {
         dir: File,
         ghPath: String,
         currentBranch: String,
-        reviewBranch: String,
+        targetBranch: String,
         reviewers: List<String>,
         labels: List<String>,
     ) {
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Creating review PR…", false) {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Creating PR…", false) {
             override fun run(indicator: ProgressIndicator) {
-                indicator.text = "Creating PR $currentBranch → $reviewBranch…"
+                indicator.text = "Creating PR $currentBranch → $targetBranch…"
 
                 val jiraUrl = getJiraTicketUrl(dir)
 
@@ -128,7 +135,7 @@ class CreateReviewPRAction : AnAction() {
                     ghPath,
                     "pr", "create",
                     "--assignee", "@me",
-                    "--base", reviewBranch,
+                    "--base", targetBranch,
                     "--head", currentBranch,
                     "--title", currentBranch,
                     "--body", jiraUrl ?: "",
@@ -260,7 +267,7 @@ class CreateReviewPRAction : AnAction() {
     private fun notify(project: Project, message: String, type: NotificationType) {
         ApplicationManager.getApplication().invokeLater {
             NotificationGroupManager.getInstance()
-                .getNotificationGroup("SkillDock")
+                .getNotificationGroup("TeknasyonAndroidStudioPlugin")
                 .createNotification(message, type)
                 .notify(project)
         }

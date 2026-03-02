@@ -1,217 +1,223 @@
 # Project Index: TPDevTools (Teknasyon Android Studio Plugin)
 
-Generated: 2026-02-21
+Generated: 2026-02-27
 
 ---
 
-## 📁 Proje Yapısı
+## Project Structure
 
 ```
 Teknasyon-AndroidStudio-Plugin/
 ├── src/main/kotlin/com/github/teknasyon/plugin/
-│   ├── TPToolWindowFactory.kt          ← Ana giriş noktası
-│   ├── actions/                        ← IDE VCS aksiyonları
-│   ├── common/                         ← Yardımcı araçlar
-│   │   ├── file/                       ← Dosya işlemleri
+│   ├── TPToolWindowFactory.kt             ← Ana tool window (Jungle/Module/Settings)
+│   ├── actions/
+│   │   ├── AskClaudeAction.kt             ← Editörden seçili kodu Claude'a gönderir
+│   │   ├── GenerateCommitMessageAction.kt ← Claude ile commit mesajı oluşturur
+│   │   ├── CreateReviewPRAction.kt        ← Review branch + PR oluşturur
+│   │   └── dialog/
+│   │       └── CreatePRDialog.kt          ← PR oluşturma dialogu
+│   ├── common/
+│   │   ├── file/
+│   │   │   ├── File.kt, FileTree.kt, FileWriter.kt
+│   │   │   ├── ImportAnalyzer.kt
+│   │   │   └── LibraryDependencyFinder.kt
 │   │   ├── Constants.kt
 │   │   ├── Extensions.kt
+│   │   ├── NoRippleTheme.kt
 │   │   └── Utils.kt
-│   ├── components/                     ← Ortak UI bileşenleri (TPxxx)
-│   ├── data/                           ← Veri modelleri & repository
+│   ├── components/                         ← Ortak Compose bileşenleri (TP prefix)
+│   │   ├── TPActionCard.kt, TPButton.kt, TPCheckbox.kt
+│   │   ├── TPDialogWrapper.kt, TPDropdownItem.kt
+│   │   ├── TPFileTree.kt, TPRadioButton.kt
+│   │   ├── TPTabRow.kt, TPText.kt, TPTextField.kt
+│   ├── data/
+│   │   ├── FileTemplate.kt, LibraryInfo.kt
+│   │   ├── ModuleTemplate.kt, PluginInfo.kt, PluginListItem.kt
+│   │   ├── SettingsState.kt
 │   │   └── repository/
+│   │       ├── SkillRepository.kt          ← Interface
+│   │       └── SkillRepositoryImpl.kt      ← Skill tarama implementasyonu
 │   ├── domain/
-│   │   ├── model/                      ← Domain modelleri
-│   │   └── usecase/                    ← Use case'ler
-│   ├── service/                        ← IDE servis katmanı
-│   ├── theme/                          ← Tema sistemi (TPTheme, TPColor)
+│   │   ├── model/
+│   │   │   ├── Skill.kt                    ← Markdown dosyası → komut modeli
+│   │   │   ├── SkillFolder.kt              ← Ağaç yapısında klasör modeli
+│   │   │   ├── ReviewTask.kt, ReviewChange.kt
+│   │   └── usecase/
+│   │       └── ScanSkillsUseCase.kt        ← Root path'te .md dosyalarını tarar
+│   ├── service/
+│   │   ├── FileScanner.kt                  ← Dosya sistemi tarayıcı (5dk cache)
+│   │   ├── SettingsService.kt              ← Global ayarlar (gtcDevToolsSettings.xml)
+│   │   ├── PluginSettingsService.kt        ← Proje ayarları (rootPath, agentsRootPath)
+│   │   ├── PluginConfigurable.kt           ← IDE Settings > Tools sayfası
+│   │   ├── GitHubCacheService.kt           ← GitHub veri cache'i
+│   │   └── JiraService.kt                  ← Jira entegrasyonu
+│   ├── theme/
+│   │   ├── TPTheme.kt                      ← MaterialTheme wrapper
+│   │   └── TPColor.kt                      ← Renk paleti
 │   └── toolwindow/
-│       ├── ai/                         ← SkillDock (Ana AI paneli)
+│       ├── claude/                          ← Claude Terminal entegrasyonu
+│       │   ├── ClaudeToolWindowFactory.kt   ← "Claude" tool window fabrikası
+│       │   ├── ClaudeSessionService.kt      ← Çoklu terminal oturum yönetimi
+│       │   └── ClaudeTerminalContent.kt     ← Ana Claude UI (terminal + input + dialogs)
 │       ├── manager/
-│       │   ├── ai/                     ← AI içerik ekranı
-│       │   ├── featuregenerator/       ← Feature Generator
-│       │   ├── jungle/                 ← Jungle içerik ekranı
-│       │   ├── modulegenerator/        ← Module Generator
-│       │   └── settings/               ← Ayarlar ekranı
-│       └── template/                   ← Kod şablonları
-├── src/main/resources/META-INF/plugin.xml
+│       │   ├── jungle/
+│       │   │   └── JungleContent.kt
+│       │   ├── modulegenerator/             ← Modül oluşturucu
+│       │   │   ├── ModuleGeneratorContent.kt
+│       │   │   ├── MoveExistingFilesToModuleContent.kt
+│       │   │   ├── CreateNewModuleConfigurationPanel.kt
+│       │   │   ├── action/ModuleGeneratorAction.kt
+│       │   │   ├── dialog/ModuleGeneratorDialog.kt
+│       │   │   └── components/ (6 dosya)
+│       │   └── settings/
+│       │       ├── SettingsContent.kt
+│       │       ├── component/FileTemplateEditor.kt
+│       │       └── dialog/ (3 dialog)
+│       └── template/                        ← FreeMarker şablonları
+│           ├── GradleTemplate.kt, ManifestTemplate.kt
+│           ├── GitIgnoreTemplate.kt, ModuleReadMeTemplate.kt
+│           └── TemplateWriter.kt
+├── src/main/resources/
+│   ├── META-INF/plugin.xml
+│   └── icons/ (pluginIcon.svg, claudeIcon.svg)
+├── .github/workflows/ (build.yml, release.yml, run-ui-tests.yml)
 ├── build.gradle.kts
 ├── gradle.properties
 ├── gradle/libs.versions.toml
 └── CHANGELOG.md
 ```
 
+**Toplam**: 71 Kotlin dosyası
+
 ---
 
-## 🚀 Giriş Noktaları
+## Entry Points
 
 | Dosya | Amaç |
 |-------|-------|
-| `TPToolWindowFactory.kt` | Tool window fabrikası, 5 bölümlü ana UI'ı oluşturur |
-| `plugin.xml` | Plugin tanımı, aksiyonlar, extension point'ler |
-| `SkillDockPanel.kt` | SkillDock'un ana Composable UI'ı |
-| `SkillDockViewModel.kt` | MVI mimarisi ViewModel'i |
+| `TPToolWindowFactory.kt` | "Teknasyon Plugin" tool window — Jungle, Module, Settings bölümleri |
+| `ClaudeToolWindowFactory.kt` | "Claude" tool window — Gömülü Claude CLI terminali |
+| `plugin.xml` | Plugin manifest: 2 tool window, 4 action, 1 configurable |
 
 ---
 
-## 📦 Çekirdek Modüller
+## Core Modules
 
-### 1. Tool Window (`TPToolWindowFactory`)
-- **Yol**: `src/main/kotlin/.../TPToolWindowFactory.kt`
-- **Amaç**: IDE'nin sağ tarafına `TPDevTools` panel'ini bağlar
-- **Bölümler**: AI Tools, Jungle, Module, Feature, Settings
-- **Navigasyon**: `selectedSection` state'i ile bölümler arası geçiş
+### 1. Claude Terminal (`toolwindow/claude/`)
+- **Amaç**: Claude CLI'ı IDE içinde gömülü terminal olarak sunar
+- **ClaudeSessionService**: Çoklu terminal oturumu yönetimi (SessionManager + CardLayout)
+- **ClaudeTerminalContent**: Ana UI — SessionTabBar, SwingPanel terminal, ActionButtons, TerminalInputBar
+- **Özellikler**:
+  - Çoklu oturum (sekme bazlı)
+  - Skills/Agents/Commands picker dialog'ları
+  - Görsel ekleme, dosya enjeksiyonu (@), Enter ile gönderme
+  - Claude CLI kurulum kontrolü + rehber ekranı
+  - 27 adet Claude komutu hızlı erişim grid'i
 
-### 2. SkillDock – AI Araç Paneli
-- **Yol**: `toolwindow/ai/`
-- **Amaç**: Skill dosyalarını (.md) tarayıp Claude komutlarına dönüştürür
-- **Sekmeler**: Skills, Agents, Commands
-- **Ana dosyalar**:
-  - `SkillDockPanel.kt` — UI composable
-  - `SkillDockViewModel.kt` — İş mantığı & state yönetimi
-  - `SkillDockState.kt` — `SkillDockState`, `TabState`, `SkillDockTab` enum
-  - `SkillDockEvent.kt` — Tüm UI olayları
-  - `SearchBar.kt` — Arama bileşeni
-  - `SkillItemView.kt` — Skill liste elemanı
-  - `CommandsTabView.kt` — Claude komutları sekmesi
-  - `ReviewTrackerDialog.kt` / `ReviewResultPanel.kt` — PR review takibi
+### 2. IDE Actions (`actions/`)
+- **GenerateCommitMessageAction**: Staged diff → Claude `-p` → commit mesajı (VCS menüsü)
+- **CreateReviewPRAction**: Auto base branch algılama → review branch → `gh pr create`
+- **AskClaudeAction**: Editör sağ-tık → seçili kodu Claude tool window'a gönderir
+- Jira entegrasyonu: Branch adından `[A-Z]+-\d+` ticket ID çıkarır
 
-### 3. Domain Katmanı
-- **Yol**: `domain/model/` ve `domain/usecase/`
-- **Modeller**:
-  - `Skill` — Skill dosyası (isim, commandName, filePath, isFavorite)
-  - `SkillFolder` — Klasör içindeki skill'lerin grubu
-  - `ReviewTask` / `ReviewChange` — PR review görevleri ve değişiklikler
-- **Use Case'ler**:
-  - `ScanSkillsUseCase` — Belirlenen root path'te .md dosyalarını tarar
-  - `ExecuteSkillUseCase` — Seçilen skill'i terminalde çalıştırır
-  - `ToggleFavoriteUseCase` — Skill'i favorilere ekler/çıkarır
-  - `ProcessReviewCommentsUseCase` — PR yorumlarını işleyip görev listesi oluşturur
+### 3. Domain Layer (`domain/`)
+- **Skill**: `name`, `commandName` (/dosya-adı), `description`, `filePath`, `isFavorite`
+- **SkillFolder**: Ağaç yapısı — `skills + subFolders`, `getAllSkills()` recursive traversal
+- **ScanSkillsUseCase**: Root path boş kontrolü → `SkillRepository.scanSkills()`
 
-### 4. Servisler
-- **Yol**: `service/`
-- `SettingsService` — Global plugin ayarları (templates, export/import)
-- `SkillDockSettingsService` — Proje bazlı ayarlar (rootPath, agentsPath, favorites) → `skilldock.xml`
-- `SkillDockConfigurable` — IDE Preferences > Tools > SkillDock ayar sayfası
-- `FileScanner` — Proje dosya sistemi tarayıcı
-- `TerminalExecutor` / `TerminalExecutorImpl` — Terminalde komut çalıştırma
+### 4. Data Layer (`data/`)
+- **SkillRepositoryImpl**: `FileScanner` delegasyonu, Result wrapping
+- **SettingsState**: `moduleTemplates`, `defaultModuleTemplateId`, `isActionsExpanded`
+- **ModuleTemplate / FileTemplate**: Kotlinx Serialization ile persist edilen şablonlar
 
-### 5. VCS Aksiyonları
-- **Yol**: `actions/`
-- `GenerateCommitMessageAction` — Staged değişikliklerden Claude ile commit mesajı oluşturur (VCS menüsü)
-- `CreateReviewPRAction` — Review branch oluşturup PR açar
+### 5. Services (`service/`)
+- **FileScanner**: VirtualFile sistemi ile `.md` tarama, 5dk in-memory cache
+  - `strictFilter=true` → sadece `SKILL.md` (Skills sekmesi)
+  - `strictFilter=false` → tüm `.md` dosyaları (Agents sekmesi)
+- **SettingsService** (APP-scoped): `gtcDevToolsSettings.xml` + `~/.gtcdevtools/settings.json` auto-backup
+- **PluginSettingsService** (PROJECT-scoped): `teknasyonandroidstudioplugin.xml` → `rootPath`, `agentsRootPath`
 
-### 6. Module Generator
-- **Yol**: `toolwindow/manager/modulegenerator/`
-- Adımlar: Root seçimi → Modul tipi/ismi → Template seçimi → Plugin seçimi → Kütüphane seçimi → Dosya ağacı
-- **Dialog**: `ModuleGeneratorDialog.kt`
-- **Şablonlar**: `GradleTemplate`, `ManifestTemplate`, `GitIgnoreTemplate`, `ModuleReadMeTemplate`
+### 6. Module Generator (`toolwindow/manager/modulegenerator/`)
+- Wizard akışı: Root → Tip/İsim → Template → Plugin → Kütüphane → Dosya ağacı
+- FreeMarker template'leri: Gradle, Manifest, GitIgnore, ReadMe
+- Varsayılan şablon: "Candroid's Module" (Screen + ViewModel + Contract + PreviewProvider)
 
-### 7. Feature Generator
-- **Yol**: `toolwindow/manager/featuregenerator/`
-- Adımlar: Root seçimi → Konfigürasyon → Dosya ağacı
-- **Dialog**: `FeatureGeneratorDialog.kt`
+### 7. UI Component Library (`components/`)
+- TP prefix: `TPButton`, `TPCheckbox`, `TPTextField`, `TPText`, `TPRadioButton`
+- `TPTabRow`, `TPActionCard` (EXTRA_SMALL/SMALL/MEDIUM/LARGE), `TPFileTree`
+- `TPDialogWrapper`, `TPDropdownItem`
 
-### 8. UI Bileşen Kütüphanesi (TP Prefix)
-- **Yol**: `components/`
-- `TPButton`, `TPCheckbox`, `TPTextField`, `TPText`
-- `TPRadioButton`, `TPTabRow`, `TPActionCard`
-- `TPFileTree`, `TPDropdownItem`, `TPDialogWrapper`
-
-### 9. Tema Sistemi
-- **Yol**: `theme/`
-- `TPTheme.kt` — `MaterialTheme` wrapper + özel renkler
-- `TPColor.kt` — Renk paleti (black, gray, blue, purple, white, lightGray)
+### 8. Theme (`theme/`)
+- `TPTheme`: MaterialTheme wrapper, `TPTheme.colors.*` erişimi
+- `TPColor`: black, gray, blue, purple, white, lightGray, hintGray, red, primaryContainer
 
 ---
 
-## 🔧 Yapılandırma
+## Configuration
 
 | Dosya | Amaç |
 |-------|-------|
-| `gradle.properties` | Plugin ID, versiyon, platform tipi (AI), build aralığı |
-| `build.gradle.kts` | Bağımlılıklar, IntelliJ Platform yapılandırması |
-| `gradle/libs.versions.toml` | Versiyon kataloğu |
-| `plugin.xml` | Plugin manifest: tool window, actions, configurables |
+| `gradle.properties` | `pluginGroup=com.github.teknasyon.plugin`, `platformType=AI`, `platformVersion=2025.2.2.3` |
+| `build.gradle.kts` | Compose Desktop, IntelliJ Platform, Serialization, FreeMarker |
+| `gradle/libs.versions.toml` | Kotlin 2.3.0, IntelliJ Platform 2.11.0, Compose 1.10.1 |
+| `plugin.xml` | 2 toolWindow, 4 action, 1 configurable, terminal bağımlılığı |
 
-**Platform**: `AI` (Android Studio AI) — `platformVersion=2025.2.2.3`
-**Build Aralığı**: `241` – `253.*`
-**Plugin Versiyonu**: `0.0.1`
+**Build aralığı**: `241` – `253.*` | **JVM**: Java 21
 
 ---
 
-## 📚 Dokümantasyon
-
-| Dosya | Konu |
-|-------|-------|
-| `README.md` | Kurulum talimatları (şablon README, güncellenmemiş) |
-| `CHANGELOG.md` | Sürüm notları |
-
----
-
-## 🧪 Test
-
-| Yol | Tip |
-|-----|-----|
-| `.run/Run Tests.run.xml` | Gradle test çalıştırma konfigürasyonu |
-| `.run/Run Plugin.run.xml` | Plugin'i sandbox IDE'de çalıştırma |
-| `.run/Run Verifications.run.xml` | Plugin doğrulama |
-
-Test framework: JUnit 4 (`junit:junit:4.13.2`), opentest4j
-
----
-
-## 🔗 Temel Bağımlılıklar
+## Key Dependencies
 
 | Bağımlılık | Versiyon | Amaç |
 |-----------|---------|-------|
-| `org.jetbrains.intellij.platform` | 2.11.0 | IntelliJ Platform Gradle Plugin |
-| `org.jetbrains.kotlin.jvm` | 2.3.0 | Kotlin desteği |
-| `org.jetbrains.compose` | 1.10.1 | Compose Desktop UI |
-| `org.freemarker:freemarker` | 2.3.34 | Şablon motoru |
-| `kotlinx-serialization-json` | 1.9.0 | JSON serileştirme |
-| `compose.materialIconsExtended` | — | Material ikonları |
+| IntelliJ Platform Gradle Plugin | 2.11.0 | Plugin build sistemi |
+| Kotlin JVM | 2.3.0 | Dil desteği |
+| Jetpack Compose Desktop | 1.10.1 | UI framework (Skiko SOFTWARE render) |
+| FreeMarker | 2.3.34 | Modül şablon motoru |
+| kotlinx-serialization-json | 1.9.0 | Ayarlar JSON serileştirme |
+| Compose Material Icons Extended | — | İkon kütüphanesi |
 
 ---
 
-## 🏗️ Mimari Özeti
+## CI/CD
+
+| Workflow | Amaç |
+|----------|-------|
+| `build.yml` | Build + test |
+| `release.yml` | JetBrains Marketplace yayınlama |
+| `run-ui-tests.yml` | Robot server ile UI testleri (port 8082) |
+
+---
+
+## Architecture Summary
 
 ```
-TPToolWindowFactory (Giriş)
-    └─► MainContent (Composable)
-         ├─► Sidebar (AI / Jungle / Module / Feature / Settings)
-         └─► İçerik Alanı
-              ├─► AiContent → SkillDockPanel
-              │     ├─► SkillDockViewModel (MVI)
-              │     │     ├─► ScanSkillsUseCase
-              │     │     ├─► ExecuteSkillUseCase  ──► TerminalExecutor
-              │     │     ├─► ToggleFavoriteUseCase ──► SkillDockSettingsService
-              │     │     └─► ProcessReviewCommentsUseCase
-              │     └─► UI: SearchBar, SkillGroupsList, CommandsTabView,
-              │           ReviewTrackerDialog, ReviewResultPanel
-              ├─► ModuleGeneratorContent
-              ├─► FeatureGeneratorContent
-              ├─► JungleContent
-              └─► SettingsContent
+plugin.xml
+  ├── TPToolWindowFactory (right panel) ── Jungle / Module / Settings
+  └── ClaudeToolWindowFactory (right panel) ── Claude Terminal
+        └── ClaudeSessionService (multi-session)
+              └── JBTerminalWidget + CardLayout
+
+Actions (VCS menu / Editor popup):
+  ├── GenerateCommitMessageAction ── claude -p "diff" → commit msg
+  ├── CreateReviewPRAction ── git + gh CLI → review PR
+  └── AskClaudeAction ── selected code → Claude terminal
+
+Data Flow:
+  UI → Event → ViewModel → UseCase → Repository → FileScanner/Settings → State → UI
 ```
 
-**Veri akışı**: Event → ViewModel → UseCase → Repository/Service → State → UI
-**UI Teknolojisi**: Jetpack Compose Desktop (Skiko tabanlı, SOFTWARE render)
-**Durum yönetimi**: `MutableStateFlow` / `collectAsState()`
+**UI**: Jetpack Compose Desktop gömülü (ComposePanel → JPanel)
+**Terminal**: JBTerminalWidget (LocalTerminalDirectRunner) ile `claude` CLI
+**Render**: `skiko.renderApi=SOFTWARE`
 
 ---
 
-## 📝 Hızlı Başlangıç
+## Quick Start
 
-1. **Geliştirme için çalıştır**: IntelliJ'de `Run Plugin` konfigürasyonunu çalıştır
-2. **Test**: `Run Tests` konfigürasyonunu çalıştır
-3. **Build**: `./gradlew buildPlugin`
-4. **Yayınlama**: `./gradlew publishPlugin` (PUBLISH_TOKEN env değişkeni gerekli)
-
----
-
-## 📌 Önemli Notlar
-
-- `SkillDock`, `.md` uzantılı dosyaları `Skill` olarak tarar; `commandName` dosya adından türetilir (`/filename`)
-- Composable'lar `ComposePanel` ile Swing'e gömülmüştür (`skiko.renderApi=SOFTWARE`)
-- `SkillDockSettingsService` proje bazlı (`Service.Level.PROJECT`), `SettingsService` global
-- PR review takibi Claude AI ile entegre çalışır (terminal üzerinden)
+```bash
+./gradlew runIde          # Sandbox IDE'de çalıştır
+./gradlew check           # Testleri çalıştır
+./gradlew buildPlugin     # Dağıtım ZIP oluştur
+./gradlew publishPlugin   # Marketplace'e yayınla
+```

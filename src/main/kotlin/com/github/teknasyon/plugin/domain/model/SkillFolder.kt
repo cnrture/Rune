@@ -15,6 +15,4 @@ data class SkillFolder(
         }
         return allSkills
     }
-
-    fun hasSkills(): Boolean = skills.isNotEmpty() || subFolders.any { it.hasSkills() }
 }
