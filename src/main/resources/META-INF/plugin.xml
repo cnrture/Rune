@@ -11,7 +11,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="RunePlugin" displayType="BALLOON" isLogByDefault="false"/>
         <toolWindow
-                factoryClass="com.github.cnrture.rune.toolwindow.claude.ClaudeToolWindowFactory"
+                factoryClass="com.github.cnrture.rune.toolwindow.ClaudeToolWindowFactory"
                 id="Claude"
                 anchor="right"
                 icon="/icons/pluginIcon.svg"/>

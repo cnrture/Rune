@@ -1,5 +1,6 @@
-package com.github.cnrture.rune.toolwindow.claude
+package com.github.cnrture.rune.toolwindow
 
+import com.github.cnrture.rune.service.CliDiscoveryService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -29,7 +30,6 @@ data class ClaudeSessionState(
     val sessions: List<ClaudeSession> = emptyList(),
     val activeSessionId: Int = 0,
     val claudeInstalled: Boolean? = null,
-    val superClaudeInstalled: Boolean? = null,
 )
 
 @Service(Service.Level.PROJECT)
@@ -62,18 +62,16 @@ class ClaudeSessionService(private val project: Project) : Disposable {
         if (_state.value.claudeInstalled != null) return
         ApplicationManager.getApplication().executeOnPooledThread {
             val installed = doCheckClaudeInstalled()
-            val scInstalled = doCheckSuperClaudeInstalled()
             ApplicationManager.getApplication().invokeLater {
                 _state.value = _state.value.copy(
                     claudeInstalled = installed,
-                    superClaudeInstalled = scInstalled,
                 )
             }
         }
     }
 
     fun retryClaudeCheck() {
-        _state.value = _state.value.copy(claudeInstalled = null, superClaudeInstalled = null)
+        _state.value = _state.value.copy(claudeInstalled = null)
         checkClaudeInstalled()
     }
 
@@ -257,15 +255,6 @@ private fun createClaudeTerminalPanel(
     return panel
 }
 
-private fun doCheckSuperClaudeInstalled(): Boolean {
-    return try {
-        val commandsDir = java.io.File(System.getProperty("user.home"), ".claude/commands")
-        commandsDir.exists() && commandsDir.isDirectory
-    } catch (_: Exception) {
-        false
-    }
-}
-
 private fun doCheckClaudeInstalled(): Boolean {
-    return com.github.cnrture.rune.service.CliDiscoveryService.isClaudeInstalled()
+    return CliDiscoveryService.isClaudeInstalled()
 }

@@ -31,7 +31,7 @@ import com.github.cnrture.rune.common.Constants
 import com.github.cnrture.rune.common.ProcessRunner
 import com.github.cnrture.rune.components.*
 import com.github.cnrture.rune.theme.RTheme
-import com.github.cnrture.rune.toolwindow.claude.ClaudeSessionService
+import com.github.cnrture.rune.toolwindow.ClaudeSessionService
 import com.google.gson.JsonParser
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager

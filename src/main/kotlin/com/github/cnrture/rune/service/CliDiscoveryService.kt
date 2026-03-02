@@ -23,8 +23,28 @@ object CliDiscoveryService {
 
     /**
      * Checks if Claude CLI is installed (returns boolean, no path).
+     * Uses exit code check for efficiency instead of reading stdout.
      */
-    fun isClaudeInstalled(): Boolean = findClaudeCli() != null
+    fun isClaudeInstalled(): Boolean {
+        val foundViaShell = try {
+            val process = ProcessBuilder("bash", "-l", "-c", "which claude")
+                .redirectErrorStream(true)
+                .start()
+            process.outputStream.close()
+            process.waitFor() == 0
+        } catch (_: Exception) {
+            false
+        }
+        if (foundViaShell) return true
+
+        val home = System.getProperty("user.home")
+        return listOf(
+            "/usr/local/bin/claude",
+            "/usr/bin/claude",
+            "$home/.npm-global/bin/claude",
+            "$home/.local/bin/claude",
+        ).any { File(it).exists() }
+    }
 
     /**
      * Finds the GitHub CLI (gh) path using login shell for full PATH resolution.

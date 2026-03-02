@@ -1,4 +1,4 @@
-package com.github.cnrture.rune.toolwindow.claude
+package com.github.cnrture.rune.toolwindow
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -190,7 +190,6 @@ fun ClaudeTerminalContent(project: Project) {
                 project = project,
                 scanSkillsUseCase = scanSkillsUseCase,
                 settingsService = settingsService,
-                superClaudeInstalled = state.superClaudeInstalled == true,
                 onDismiss = { showCommandPalette = false },
                 onItemSelected = { item ->
                     showCommandPalette = false
@@ -610,9 +609,9 @@ private fun TerminalInputBar(
 
 // --- Unified Command Palette ---
 
-private enum class PaletteCategory { SKILL, AGENT, COMMAND, SC_COMMAND }
+private enum class PaletteCategory { SKILL, AGENT, COMMAND }
 
-private enum class PaletteFilter { ALL, SKILLS, AGENTS, COMMANDS, SC_COMMANDS }
+private enum class PaletteFilter { ALL, SKILLS, AGENTS, COMMANDS }
 
 private data class PaletteItem(
     val category: PaletteCategory,
@@ -658,42 +657,11 @@ private val claudeCommands = listOf(
     ClaudeCommand("/usage", "Usage limits", Icons.Rounded.DataUsage),
 )
 
-private val scCommands = listOf(
-    ClaudeCommand("/sc:analyze", "Code analysis", Icons.Rounded.Analytics),
-    ClaudeCommand("/sc:brainstorm", "Requirements discovery", Icons.Rounded.Lightbulb),
-    ClaudeCommand("/sc:build", "Build & compile", Icons.Rounded.Build),
-    ClaudeCommand("/sc:business-panel", "Business panel analysis", Icons.Rounded.Business),
-    ClaudeCommand("/sc:cleanup", "Code cleanup", Icons.Rounded.CleaningServices),
-    ClaudeCommand("/sc:design", "System design", Icons.Rounded.Architecture),
-    ClaudeCommand("/sc:document", "Generate documentation", Icons.Rounded.Description),
-    ClaudeCommand("/sc:estimate", "Development estimates", Icons.Rounded.Timer),
-    ClaudeCommand("/sc:explain", "Code explanation", Icons.Rounded.School),
-    ClaudeCommand("/sc:git", "Git operations", Icons.Rounded.Hub),
-    ClaudeCommand("/sc:help", "SC help", Icons.AutoMirrored.Rounded.Help),
-    ClaudeCommand("/sc:implement", "Feature implementation", Icons.Rounded.Code),
-    ClaudeCommand("/sc:improve", "Code improvements", Icons.AutoMirrored.Rounded.TrendingUp),
-    ClaudeCommand("/sc:index", "Project indexing", Icons.Rounded.FindInPage),
-    ClaudeCommand("/sc:load", "Load session context", Icons.Rounded.Download),
-    ClaudeCommand("/sc:pm", "Project manager agent", Icons.Rounded.ManageAccounts),
-    ClaudeCommand("/sc:recommend", "Command recommendation", Icons.Rounded.Recommend),
-    ClaudeCommand("/sc:reflect", "Task reflection", Icons.Rounded.Psychology),
-    ClaudeCommand("/sc:research", "Deep web research", Icons.Rounded.Search),
-    ClaudeCommand("/sc:save", "Save session context", Icons.Rounded.Save),
-    ClaudeCommand("/sc:select-tool", "MCP tool selection", Icons.Rounded.Handyman),
-    ClaudeCommand("/sc:spawn", "Task orchestration", Icons.Rounded.AccountTree),
-    ClaudeCommand("/sc:spec-panel", "Spec review panel", Icons.Rounded.RateReview),
-    ClaudeCommand("/sc:task", "Task management", Icons.Rounded.Task),
-    ClaudeCommand("/sc:test", "Test execution", Icons.Rounded.Science),
-    ClaudeCommand("/sc:troubleshoot", "Issue diagnosis", Icons.Rounded.Troubleshoot),
-    ClaudeCommand("/sc:workflow", "Workflow generation", Icons.Rounded.Route),
-)
-
 @Composable
 private fun UnifiedCommandPalette(
     project: Project,
     scanSkillsUseCase: ScanSkillsUseCase,
     settingsService: PluginSettingsService,
-    superClaudeInstalled: Boolean,
     onDismiss: () -> Unit,
     onItemSelected: (PaletteItem) -> Unit,
 ) {
@@ -722,7 +690,7 @@ private fun UnifiedCommandPalette(
         }
     }
 
-    val allItems = remember(skills, agents, superClaudeInstalled) {
+    val allItems = remember(skills, agents) {
         buildList {
             skills.forEach { skill ->
                 add(
@@ -762,20 +730,6 @@ private fun UnifiedCommandPalette(
                     )
                 )
             }
-            if (superClaudeInstalled) {
-                scCommands.forEach { cmd ->
-                    add(
-                        PaletteItem(
-                            category = PaletteCategory.SC_COMMAND,
-                            title = cmd.command,
-                            description = cmd.description,
-                            icon = cmd.icon,
-                            terminalText = cmd.command,
-                            autoRun = false,
-                        )
-                    )
-                }
-            }
         }
     }
 
@@ -786,7 +740,6 @@ private fun UnifiedCommandPalette(
                 PaletteFilter.SKILLS -> item.category == PaletteCategory.SKILL
                 PaletteFilter.AGENTS -> item.category == PaletteCategory.AGENT
                 PaletteFilter.COMMANDS -> item.category == PaletteCategory.COMMAND
-                PaletteFilter.SC_COMMANDS -> item.category == PaletteCategory.SC_COMMAND
             }
             val matchesSearch = searchQuery.isBlank() ||
                 item.title.contains(searchQuery, ignoreCase = true) ||
@@ -868,13 +821,11 @@ private fun UnifiedCommandPalette(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 PaletteFilter.entries.forEach { filter ->
-                    if (filter == PaletteFilter.SC_COMMANDS && !superClaudeInstalled) return@forEach
                     val label = when (filter) {
                         PaletteFilter.ALL -> "All"
                         PaletteFilter.SKILLS -> "Skills"
                         PaletteFilter.AGENTS -> "Agents"
                         PaletteFilter.COMMANDS -> "Commands"
-                        PaletteFilter.SC_COMMANDS -> "SC"
                     }
                     val isSelected = selectedFilter == filter
                     Text(
@@ -914,13 +865,11 @@ private fun UnifiedCommandPalette(
                                 PaletteCategory.SKILL -> "SKILLS"
                                 PaletteCategory.AGENT -> "AGENTS"
                                 PaletteCategory.COMMAND -> "COMMANDS"
-                                PaletteCategory.SC_COMMAND -> "SC COMMANDS"
                             }
                             val headerColor = when (category) {
                                 PaletteCategory.SKILL -> RTheme.colors.blue
                                 PaletteCategory.AGENT -> RTheme.colors.blue
                                 PaletteCategory.COMMAND -> RTheme.colors.purple
-                                PaletteCategory.SC_COMMAND -> RTheme.colors.blue
                             }
                             Text(
                                 text = headerText,
@@ -939,7 +888,6 @@ private fun UnifiedCommandPalette(
                                 PaletteCategory.SKILL -> RTheme.colors.blue
                                 PaletteCategory.AGENT -> RTheme.colors.blue
                                 PaletteCategory.COMMAND -> RTheme.colors.purple
-                                PaletteCategory.SC_COMMAND -> RTheme.colors.blue
                             }
                             Row(
                                 modifier = Modifier

@@ -1,6 +1,6 @@
 package com.github.cnrture.rune.actions
 
-import com.github.cnrture.rune.toolwindow.claude.ClaudeSessionService
+import com.github.cnrture.rune.toolwindow.ClaudeSessionService
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent

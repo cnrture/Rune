@@ -1,4 +1,4 @@
-package com.github.cnrture.rune.toolwindow.claude
+package com.github.cnrture.rune.toolwindow
 
 import androidx.compose.ui.awt.ComposePanel
 import com.github.cnrture.rune.common.Constants
