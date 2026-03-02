@@ -115,6 +115,7 @@ fun ClaudeTerminalContent(project: Project) {
                             onSelectSession = { service.switchToSession(it) },
                             onCloseSession = { service.closeSession(it) },
                             onAddSession = { service.addNewSession() },
+                            onUsageClick = { sendToTerminal("/usage", true) },
                             onSettingsClick = {
                                 ShowSettingsUtil.getInstance()
                                     .editConfigurable(project, PluginConfigurable(project))
@@ -179,7 +180,6 @@ fun ClaudeTerminalContent(project: Project) {
                             onSlashClick = { showCommandPalette = !showCommandPalette },
                             onChangeModelClick = { sendToTerminal("/model", true) },
                             onCreateSkillClick = { CreateSkillDialog(project).show() },
-                            onUsageClick = { sendToTerminal("/usage", true) },
                             isRemoteControlActive = state.remoteControlActive,
                             onRemoteControlStart = { showRCDialog = true },
                             onRemoteControlStop = { service.stopRemoteControl() },
@@ -222,19 +222,37 @@ private fun SessionTabBar(
     onSelectSession: (Int) -> Unit,
     onCloseSession: (Int) -> Unit,
     onAddSession: () -> Unit,
+    onUsageClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(TPTheme.colors.black)
             .padding(horizontal = 8.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
-            modifier = Modifier
-                .weight(1f)
-                .horizontalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TPActionCard(
+                title = "Usage",
+                icon = Icons.Rounded.DataUsage,
+                actionColor = TPTheme.colors.blue,
+                type = TPActionCardType.SMALL,
+                onClick = { onUsageClick() },
+            )
+            TPActionCard(
+                title = "Settings",
+                icon = Icons.Rounded.Settings,
+                actionColor = TPTheme.colors.purple,
+                type = TPActionCardType.SMALL,
+                onClick = { onSettingsClick() },
+            )
+        }
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -278,16 +296,6 @@ private fun SessionTabBar(
                     .clickable { onAddSession() }
             )
         }
-
-        Spacer(modifier = Modifier.width(6.dp))
-
-        TPActionCard(
-            title = "Settings",
-            icon = Icons.Rounded.Settings,
-            actionColor = TPTheme.colors.purple,
-            type = TPActionCardType.SMALL,
-            onClick = { onSettingsClick() },
-        )
     }
 }
 
@@ -462,7 +470,6 @@ private fun TerminalInputBar(
     onSlashClick: () -> Unit,
     onChangeModelClick: () -> Unit,
     onCreateSkillClick: () -> Unit,
-    onUsageClick: () -> Unit,
     isRemoteControlActive: Boolean = false,
     onRemoteControlStart: () -> Unit = {},
     onRemoteControlStop: () -> Unit = {},
@@ -517,14 +524,6 @@ private fun TerminalInputBar(
                 actionColor = TPTheme.colors.blue,
                 type = TPActionCardType.EXTRA_SMALL,
                 onClick = { onCreateSkillClick() },
-            )
-            Spacer(modifier = Modifier.size(4.dp))
-            TPActionCard(
-                title = "Usage",
-                icon = Icons.Rounded.DataUsage,
-                actionColor = TPTheme.colors.blue,
-                type = TPActionCardType.EXTRA_SMALL,
-                onClick = { onUsageClick() },
             )
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.size(8.dp))
