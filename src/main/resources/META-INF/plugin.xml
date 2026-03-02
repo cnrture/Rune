@@ -6,21 +6,10 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
-    <depends>com.intellij.modules.java</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="TP Notification Group"
-                           displayType="BALLOON"/>
-    </extensions>
-
-    <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="TeknasyonAndroidStudioPlugin" displayType="BALLOON" isLogByDefault="false"/>
-        <toolWindow
-                factoryClass="com.github.teknasyon.plugin.TPToolWindowFactory"
-                id="Teknasyon Plugin"
-                anchor="right"
-                icon="/icons/pluginIcon.svg"/>
         <toolWindow
                 factoryClass="com.github.teknasyon.plugin.toolwindow.claude.ClaudeToolWindowFactory"
                 id="Claude"
@@ -39,20 +28,6 @@
     </extensions>
 
     <actions>
-        <action id="TPDevTools.NewFeature"
-                class="com.github.teknasyon.plugin.toolwindow.manager.featuregenerator.action.FeatureGeneratorAction"
-                text="Add Feature"
-                description="Create a new feature"
-                icon="/icons/pluginIcon.svg">
-            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewDir"/>
-        </action>
-        <action id="TPDevTools.NewModule"
-                class="com.github.teknasyon.plugin.toolwindow.manager.modulegenerator.action.ModuleGeneratorAction"
-                text="New Module with This Files"
-                description="Create a new module with the selected files"
-                icon="/icons/pluginIcon.svg">
-            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewDir"/>
-        </action>
         <action
                 id="TeknasyonAndroidStudioPlugin.GenerateCommitMessage"
                 class="com.github.teknasyon.plugin.actions.GenerateCommitMessageAction"
