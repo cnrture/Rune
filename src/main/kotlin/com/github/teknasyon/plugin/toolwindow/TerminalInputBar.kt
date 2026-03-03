@@ -82,9 +82,8 @@ internal fun TerminalInputBar(
             .background(TPTheme.colors.gray)
             .padding(8.dp),
     ) {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
             TPActionCard(
                 title = "Change Model",
