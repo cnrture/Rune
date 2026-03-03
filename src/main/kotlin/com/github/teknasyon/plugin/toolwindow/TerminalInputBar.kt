@@ -1,5 +1,6 @@
 package com.github.teknasyon.plugin.toolwindow
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +48,7 @@ internal fun TerminalInputBar(
     isRemoteControlActive: Boolean = false,
     onRemoteControlStart: () -> Unit = {},
     onRemoteControlStop: () -> Unit = {},
+    onClickPreviewImage: (String) -> Unit = {},
 ) {
     var inputValue by remember { mutableStateOf(TextFieldValue("")) }
 
@@ -147,7 +150,6 @@ internal fun TerminalInputBar(
             Column(
                 modifier = Modifier.weight(1f),
             ) {
-                // Image chips
                 if (selectedImagePaths.isNotEmpty()) {
                     Row(
                         modifier = Modifier
@@ -158,26 +160,41 @@ internal fun TerminalInputBar(
                     ) {
                         selectedImagePaths.forEach { path ->
                             val fileName = path.substringAfterLast("/")
+                            val thumbnail = remember(path) { loadImageBitmapFromPath(path) }
                             Row(
                                 modifier = Modifier
                                     .background(
                                         color = TPTheme.colors.blue.copy(alpha = 0.15f),
                                         shape = RoundedCornerShape(6.dp)
                                     )
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    .clickable { onClickPreviewImage(path) }
+                                    .padding(horizontal = 6.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Image,
-                                    contentDescription = null,
-                                    tint = TPTheme.colors.blue,
-                                    modifier = Modifier.size(14.dp)
-                                )
+                                if (thumbnail != null) {
+                                    Image(
+                                        bitmap = thumbnail,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .clip(RoundedCornerShape(4.dp)),
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Image,
+                                        contentDescription = null,
+                                        tint = TPTheme.colors.blue,
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                }
                                 Spacer(modifier = Modifier.size(4.dp))
+                                val fileNameWithoutExtension = fileName.substringBefore(".")
+                                val shortedFileName = if (fileNameWithoutExtension.length > 8) fileNameWithoutExtension.take(3).plus("...").plus(fileNameWithoutExtension.takeLast(4)) else fileNameWithoutExtension
                                 TPText(
-                                    text = fileName,
+                                    text = shortedFileName,
                                     color = TPTheme.colors.blue,
-                                    style = TextStyle(fontSize = 12.sp),
+                                    style = TextStyle(fontSize = 10.sp),
                                 )
                                 Spacer(modifier = Modifier.size(6.dp))
                                 Icon(
@@ -186,7 +203,7 @@ internal fun TerminalInputBar(
                                     tint = TPTheme.colors.blue,
                                     modifier = Modifier
                                         .size(14.dp)
-                                        .clickable { onRemoveImage(path) }
+                                        .clickable { onRemoveImage(path) },
                                 )
                             }
                         }

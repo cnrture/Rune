@@ -34,6 +34,7 @@ fun ClaudeTerminalContent(project: Project) {
 
     var showCommandPalette by remember { mutableStateOf(false) }
     var showRCDialog by remember { mutableStateOf(false) }
+    var previewImagePath by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         service.checkClaudeInstalled()
@@ -91,7 +92,7 @@ fun ClaudeTerminalContent(project: Project) {
                             },
                         )
 
-                        if (showCommandPalette || showRCDialog) {
+                        if (showCommandPalette || showRCDialog || previewImagePath != null) {
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -152,6 +153,7 @@ fun ClaudeTerminalContent(project: Project) {
                             isRemoteControlActive = state.remoteControlActive,
                             onRemoteControlStart = { showRCDialog = true },
                             onRemoteControlStop = { service.stopRemoteControl() },
+                            onClickPreviewImage = { previewImagePath = it },
                         )
                     }
                 }
@@ -179,6 +181,13 @@ fun ClaudeTerminalContent(project: Project) {
                     showRCDialog = false
                     service.startRemoteControl(preventSleep)
                 },
+            )
+        }
+
+        if (previewImagePath != null) {
+            ImagePreviewDialog(
+                imagePath = previewImagePath!!,
+                onDismiss = { previewImagePath = null },
             )
         }
     }
