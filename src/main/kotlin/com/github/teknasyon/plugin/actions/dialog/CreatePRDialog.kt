@@ -27,15 +27,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.components.*
-import com.github.teknasyon.plugin.service.GitHubCacheService
 import com.github.teknasyon.plugin.service.JiraService
+import com.github.teknasyon.plugin.service.VcsCacheService
+import com.github.teknasyon.plugin.service.VcsPlatformService
+import com.github.teknasyon.plugin.service.VcsUser
 import com.github.teknasyon.plugin.theme.TPTheme
-import java.io.File
-import java.util.concurrent.TimeUnit
 
 data class PRDialogState(
     val isLoading: Boolean = true,
-    val collaborators: List<String> = emptyList(),
+    val reviewerUsers: List<VcsUser> = emptyList(),
     val labels: List<String> = emptyList(),
     val selectedReviewers: Set<String> = emptySet(),
     val selectedLabels: Set<String> = emptySet(),
@@ -46,12 +46,11 @@ data class PRDialogState(
 )
 
 class CreatePRDialog(
-    private val ghPath: String,
-    private val dir: File,
+    private val platformService: VcsPlatformService,
     private val owner: String,
     private val repo: String,
     private val ticketId: String? = null,
-    private val onConfirm: (reviewers: List<String>, labels: List<String>) -> Unit,
+    private val onConfirm: (reviewers: List<VcsUser>, labels: List<String>) -> Unit,
 ) : TPDialogWrapper(
     width = 600,
     height = 500,
@@ -59,7 +58,7 @@ class CreatePRDialog(
 
     private var state = mutableStateOf(PRDialogState())
 
-    private val cacheService = GitHubCacheService.getInstance()
+    private val cacheService = VcsCacheService.getInstance()
 
     init {
         title = "Create Review PR"
@@ -69,19 +68,23 @@ class CreatePRDialog(
     private fun loadData() {
         val cached = cacheService.getRepoCache(owner, repo)
         if (cached != null) {
+            val cachedUsers = cacheService.getUserDetails(owner, repo)
+            val reviewerUsers = cachedUsers ?: cached.collaborators.map { VcsUser(it, it) }
             state.value = state.value.copy(
                 isLoading = false,
-                collaborators = cached.collaborators.sorted(),
+                reviewerUsers = reviewerUsers.sortedBy { it.displayName },
                 labels = cached.labels.sorted(),
             )
-            autoSelectLabels(cached.labels)
+            if (platformService.supportsLabels) {
+                autoSelectLabels(cached.labels)
+            }
         } else {
-            fetchGitHubData()
+            fetchData()
         }
     }
 
     private fun autoSelectLabels(labels: List<String>) {
-        if (ticketId == null) return
+        if (ticketId == null || !platformService.supportsLabels) return
 
         // Team label mapping: ticket prefix -> label name
         val teamLabelMap = mapOf(
@@ -117,52 +120,40 @@ class CreatePRDialog(
         }
     }
 
-    private fun fetchGitHubData() {
+    private fun fetchData() {
         state.value = state.value.copy(isLoading = true, errorMessage = null)
         kotlin.concurrent.thread {
-            var collaborators: List<String> = emptyList()
+            var reviewerUsers: List<VcsUser> = emptyList()
             var labels: List<String> = emptyList()
             var error: String? = null
 
-            try {
-                val collabOutput = runProcess(
-                    ghPath, "api", "repos/$owner/$repo/contributors",
-                    "--jq", ".[].login", "--paginate"
-                )
-                collaborators = collabOutput.lines()
-                    .map { it.trim() }
-                    .filter { it.isNotBlank() }
-                    .sorted()
-            } catch (e: Exception) {
-                error = "Failed to fetch contributors: ${e.message}"
-            }
+            platformService.fetchReviewerCandidates().fold(
+                onSuccess = { reviewerUsers = it.sortedBy { u -> u.displayName } },
+                onFailure = { error = "Failed to fetch reviewers: ${it.message}" },
+            )
 
-            try {
-                val labelsOutput = runProcess(
-                    ghPath, "api", "repos/$owner/$repo/labels",
-                    "--jq", ".[].name", "--paginate"
+            if (platformService.supportsLabels) {
+                platformService.fetchLabels().fold(
+                    onSuccess = { labels = it.sorted() },
+                    onFailure = { e ->
+                        val labelError = "Failed to fetch labels: ${e.message}"
+                        error = if (error != null) "$error\n$labelError" else labelError
+                    },
                 )
-                labels = labelsOutput.lines()
-                    .map { it.trim() }
-                    .filter { it.isNotBlank() }
-                    .sorted()
-            } catch (e: Exception) {
-                val labelError = "Failed to fetch labels: ${e.message}"
-                error = if (error != null) "$error\n$labelError" else labelError
             }
 
             if (error == null) {
-                cacheService.saveRepoCache(owner, repo, collaborators, labels)
+                cacheService.saveRepoCacheWithUsers(owner, repo, reviewerUsers, labels)
             }
 
             state.value = state.value.copy(
                 isLoading = false,
-                collaborators = collaborators,
+                reviewerUsers = reviewerUsers,
                 labels = labels,
                 errorMessage = error,
             )
 
-            if (error == null) {
+            if (error == null && platformService.supportsLabels) {
                 autoSelectLabels(labels)
             }
         }
@@ -171,37 +162,27 @@ class CreatePRDialog(
     private fun createLabel(name: String) {
         state.value = state.value.copy(isCreatingLabel = true)
         kotlin.concurrent.thread {
-            try {
-                runProcess(ghPath, "label", "create", name, "--repo", "$owner/$repo")
-                val updatedLabels = (state.value.labels + name).sorted()
-                cacheService.saveRepoCache(owner, repo, state.value.collaborators, updatedLabels)
-                state.value = state.value.copy(
-                    isCreatingLabel = false,
-                    labels = updatedLabels,
-                    selectedLabels = state.value.selectedLabels + name,
-                    labelFilter = "",
-                )
-            } catch (e: Exception) {
-                state.value = state.value.copy(
-                    isCreatingLabel = false,
-                    errorMessage = "Failed to create label: ${e.message}",
-                )
-            }
+            platformService.createLabel(name).fold(
+                onSuccess = {
+                    val updatedLabels = (state.value.labels + name).sorted()
+                    cacheService.saveRepoCacheWithUsers(
+                        owner, repo, state.value.reviewerUsers, updatedLabels,
+                    )
+                    state.value = state.value.copy(
+                        isCreatingLabel = false,
+                        labels = updatedLabels,
+                        selectedLabels = state.value.selectedLabels + name,
+                        labelFilter = "",
+                    )
+                },
+                onFailure = { e ->
+                    state.value = state.value.copy(
+                        isCreatingLabel = false,
+                        errorMessage = "Failed to create label: ${e.message}",
+                    )
+                },
+            )
         }
-    }
-
-    private fun runProcess(vararg cmd: String): String {
-        val process = ProcessBuilder(*cmd)
-            .directory(dir)
-            .redirectErrorStream(true)
-            .start()
-        process.outputStream.close()
-        val completed = process.waitFor(Constants.TIMEOUT_PROCESS_DEFAULT_SECONDS, TimeUnit.SECONDS)
-        val output = process.inputStream.bufferedReader().readText().trim()
-        if (!completed || process.exitValue() != 0) {
-            throw RuntimeException(output.ifBlank { "Command timed out" })
-        }
-        return output
     }
 
     @Composable
@@ -248,7 +229,7 @@ class CreatePRDialog(
                 CircularProgressIndicator(color = TPTheme.colors.blue)
                 Spacer(modifier = Modifier.size(16.dp))
                 TPText(
-                    text = "Fetching GitHub data...",
+                    text = "Fetching data...",
                     color = TPTheme.colors.lightGray,
                     style = TextStyle(fontSize = 14.sp),
                 )
@@ -281,7 +262,7 @@ class CreatePRDialog(
                     filterValue = currentState.reviewerFilter,
                     onFilterChange = { state.value = state.value.copy(reviewerFilter = it) },
                     filterPlaceholder = "Filter reviewers...",
-                    items = currentState.collaborators,
+                    items = currentState.reviewerUsers.map { it.displayName },
                     selectedItems = currentState.selectedReviewers,
                     onToggle = { item ->
                         val current = state.value.selectedReviewers
@@ -291,35 +272,37 @@ class CreatePRDialog(
                     },
                 )
 
-                Spacer(modifier = Modifier.size(16.dp))
+                if (platformService.supportsLabels) {
+                    Spacer(modifier = Modifier.size(16.dp))
 
-                SectionContent(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(
-                            width = 1.dp,
-                            color = TPTheme.colors.gray,
-                            shape = RoundedCornerShape(8.dp),
-                        )
-                        .padding(12.dp),
-                    title = "Labels",
-                    filterValue = currentState.labelFilter,
-                    onFilterChange = { state.value = state.value.copy(labelFilter = it) },
-                    filterPlaceholder = "Filter or create label...",
-                    items = currentState.labels,
-                    selectedItems = currentState.selectedLabels,
-                    onToggle = { item ->
-                        val current = state.value.selectedLabels
-                        state.value = state.value.copy(
-                            selectedLabels = if (item in current) current - item else current + item
-                        )
-                    },
-                    onAdd = if (!currentState.isCreatingLabel) {
-                        { name -> createLabel(name) }
-                    } else null,
-                    isAdding = currentState.isCreatingLabel,
-                )
+                    SectionContent(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .border(
+                                width = 1.dp,
+                                color = TPTheme.colors.gray,
+                                shape = RoundedCornerShape(8.dp),
+                            )
+                            .padding(12.dp),
+                        title = "Labels",
+                        filterValue = currentState.labelFilter,
+                        onFilterChange = { state.value = state.value.copy(labelFilter = it) },
+                        filterPlaceholder = "Filter or create label...",
+                        items = currentState.labels,
+                        selectedItems = currentState.selectedLabels,
+                        onToggle = { item ->
+                            val current = state.value.selectedLabels
+                            state.value = state.value.copy(
+                                selectedLabels = if (item in current) current - item else current + item
+                            )
+                        },
+                        onAdd = if (!currentState.isCreatingLabel) {
+                            { name -> createLabel(name) }
+                        } else null,
+                        isAdding = currentState.isCreatingLabel,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.size(16.dp))
@@ -334,7 +317,7 @@ class CreatePRDialog(
                     icon = Icons.Rounded.Refresh,
                     actionColor = TPTheme.colors.hintGray,
                     type = TPActionCardType.MEDIUM,
-                    onClick = { fetchGitHubData() },
+                    onClick = { fetchData() },
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 TPActionCard(
@@ -351,8 +334,11 @@ class CreatePRDialog(
                     actionColor = TPTheme.colors.blue,
                     type = TPActionCardType.MEDIUM,
                     onClick = {
+                        val selectedUserNames = state.value.selectedReviewers
+                        val selectedUsers = state.value.reviewerUsers
+                            .filter { it.displayName in selectedUserNames }
                         onConfirm(
-                            state.value.selectedReviewers.toList(),
+                            selectedUsers,
                             state.value.selectedLabels.toList(),
                         )
                         close(0)
@@ -384,7 +370,7 @@ class CreatePRDialog(
                 icon = Icons.Rounded.Refresh,
                 actionColor = TPTheme.colors.red,
                 type = TPActionCardType.SMALL,
-                onClick = { fetchGitHubData() },
+                onClick = { fetchData() },
             )
         }
     }

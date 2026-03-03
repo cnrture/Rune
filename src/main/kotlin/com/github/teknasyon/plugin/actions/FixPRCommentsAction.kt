@@ -3,6 +3,13 @@ package com.github.teknasyon.plugin.actions
 import com.github.teknasyon.plugin.actions.dialog.FixPRCommentsDialog
 import com.github.teknasyon.plugin.common.CliUtils
 import com.github.teknasyon.plugin.common.Constants
+import com.github.teknasyon.plugin.common.VcsProvider
+import com.github.teknasyon.plugin.common.VcsProviderDetector
+import com.github.teknasyon.plugin.service.BitbucketCloudPlatformService
+import com.github.teknasyon.plugin.service.BitbucketCredentialService
+import com.github.teknasyon.plugin.service.GitHubPlatformService
+import com.github.teknasyon.plugin.service.PluginSettingsService
+import com.github.teknasyon.plugin.service.VcsPlatformService
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -24,28 +31,50 @@ class FixPRCommentsAction : AnAction() {
         val project = e.project ?: return
         val dir = File(project.basePath ?: return)
 
-        val ghPath = findGhCli()
-        if (ghPath == null) {
-            notify(project)
+        val settings = PluginSettingsService.getInstance(project)
+
+        val remoteUrl = CliUtils.runGit(dir, "remote", "get-url", "origin").trim()
+        if (remoteUrl.isBlank()) {
+            notify(project, "Could not get remote URL. Ensure 'origin' remote is set.")
             return
         }
 
+        val provider = settings.getVcsProvider()
+        val remoteInfo = VcsProviderDetector.parseRemote(remoteUrl)
+        if (remoteInfo == null) {
+            notify(project, "Could not parse owner/repo from git remote.")
+            return
+        }
+
+        val platformService: VcsPlatformService = when (provider) {
+            VcsProvider.GITHUB -> {
+                val ghPath = CliUtils.findGhCli()
+                if (ghPath == null) {
+                    notify(project, Constants.GH_CLI_NOT_FOUND_MESSAGE)
+                    return
+                }
+                GitHubPlatformService(ghPath, dir, remoteInfo.ownerOrProject, remoteInfo.repo)
+            }
+            VcsProvider.BITBUCKET_CLOUD -> {
+                if (!BitbucketCredentialService.hasCredentials()) {
+                    notify(project, Constants.BITBUCKET_CREDENTIALS_MISSING_MESSAGE)
+                    return
+                }
+                BitbucketCloudPlatformService(remoteInfo.ownerOrProject, remoteInfo.repo)
+            }
+        }
+
         ApplicationManager.getApplication().invokeLater {
-            val dialog = FixPRCommentsDialog(project, ghPath, dir)
+            val dialog = FixPRCommentsDialog(project, platformService)
             dialog.show()
         }
     }
 
-    private fun findGhCli(): String? = CliUtils.findGhCli()
-
-    private fun notify(project: Project) {
+    private fun notify(project: Project, message: String) {
         ApplicationManager.getApplication().invokeLater {
             NotificationGroupManager.getInstance()
                 .getNotificationGroup("TeknasyonIntelliJPlugin")
-                .createNotification(
-                    Constants.GH_CLI_NOT_FOUND_MESSAGE,
-                    NotificationType.ERROR,
-                )
+                .createNotification(message, NotificationType.ERROR)
                 .notify(project)
         }
     }

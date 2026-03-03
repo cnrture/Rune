@@ -3,7 +3,14 @@ package com.github.teknasyon.plugin.actions
 import com.github.teknasyon.plugin.actions.dialog.CreatePRDialog
 import com.github.teknasyon.plugin.common.CliUtils
 import com.github.teknasyon.plugin.common.Constants
+import com.github.teknasyon.plugin.common.VcsProvider
+import com.github.teknasyon.plugin.common.VcsProviderDetector
+import com.github.teknasyon.plugin.service.BitbucketCloudPlatformService
+import com.github.teknasyon.plugin.service.BitbucketCredentialService
+import com.github.teknasyon.plugin.service.GitHubPlatformService
 import com.github.teknasyon.plugin.service.PluginSettingsService
+import com.github.teknasyon.plugin.service.VcsPlatformService
+import com.github.teknasyon.plugin.service.VcsUser
 import com.intellij.ide.BrowserUtil
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -31,7 +38,8 @@ class CreateReviewPRAction : AnAction() {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Preparing review PR…", false) {
             override fun run(indicator: ProgressIndicator) {
                 val dir = File(project.basePath ?: return)
-                val useReviewBranch = PluginSettingsService.getInstance(project).isUseReviewBranch()
+                val settings = PluginSettingsService.getInstance(project)
+                val useReviewBranch = settings.isUseReviewBranch()
 
                 // 1. Current branch
                 val currentBranch = runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
@@ -66,27 +74,23 @@ class CreateReviewPRAction : AnAction() {
                 indicator.text = "Pushing $currentBranch…"
                 runGit(dir, "push", "-u", "origin", currentBranch)
 
-                // 6. Find gh CLI
-                val ghPath = findGhCli()
-                if (ghPath == null) {
-                    notify(
-                        project,
-                        Constants.GH_CLI_NOT_FOUND_MESSAGE,
-                        NotificationType.ERROR
-                    )
+                // 6. Parse remote URL
+                val remoteUrl = runGit(dir, "remote", "get-url", "origin").trim()
+                if (remoteUrl.isBlank()) {
+                    notify(project, "Could not get remote URL. Ensure 'origin' remote is set.", NotificationType.ERROR)
                     return
                 }
 
-                // 7. Parse owner/repo
-                val ownerRepo = parseOwnerRepo(dir)
-                if (ownerRepo == null) {
-                    notify(
-                        project,
-                        "Could not parse owner/repo from git remote. Ensure 'origin' remote is set.",
-                        NotificationType.ERROR,
-                    )
+                val provider = settings.getVcsProvider()
+                val remoteInfo = VcsProviderDetector.parseRemote(remoteUrl)
+                if (remoteInfo == null) {
+                    notify(project, "Could not parse owner/repo from git remote.", NotificationType.ERROR)
                     return
                 }
+
+                // 7. Create platform service
+                val platformService = createPlatformService(provider, remoteInfo, dir)
+                if (platformService == null) return
 
                 // 8. Extract Jira ticket ID from branch name
                 val ticketId = Constants.JIRA_TICKET_REGEX.find(currentBranch)?.value
@@ -94,19 +98,17 @@ class CreateReviewPRAction : AnAction() {
                 // 9. Open dialog on EDT for reviewer/label selection
                 ApplicationManager.getApplication().invokeLater {
                     val dialog = CreatePRDialog(
-                        ghPath = ghPath,
-                        dir = dir,
-                        owner = ownerRepo.first,
-                        repo = ownerRepo.second,
+                        platformService = platformService,
+                        owner = remoteInfo.ownerOrProject,
+                        repo = remoteInfo.repo,
                         ticketId = ticketId,
                         onConfirm = { reviewers, labels ->
                             createPR(
                                 project = project,
-                                dir = dir,
-                                ghPath = ghPath,
+                                platformService = platformService,
                                 currentBranch = currentBranch,
                                 targetBranch = targetBranch,
-                                ownerRepo = ownerRepo,
+                                jiraUrl = getJiraTicketUrl(dir),
                                 reviewers = reviewers,
                                 labels = labels,
                             )
@@ -118,151 +120,63 @@ class CreateReviewPRAction : AnAction() {
         })
     }
 
+    private fun createPlatformService(
+        provider: VcsProvider,
+        remoteInfo: com.github.teknasyon.plugin.common.RemoteInfo,
+        dir: File,
+    ): VcsPlatformService? {
+        return when (provider) {
+            VcsProvider.GITHUB -> {
+                val ghPath = CliUtils.findGhCli()
+                if (ghPath == null) return null
+                GitHubPlatformService(ghPath, dir, remoteInfo.ownerOrProject, remoteInfo.repo)
+            }
+            VcsProvider.BITBUCKET_CLOUD -> {
+                if (!BitbucketCredentialService.hasCredentials()) return null
+                BitbucketCloudPlatformService(remoteInfo.ownerOrProject, remoteInfo.repo)
+            }
+        }
+    }
+
     private fun createPR(
         project: Project,
-        dir: File,
-        ghPath: String,
+        platformService: VcsPlatformService,
         currentBranch: String,
         targetBranch: String,
-        ownerRepo: Pair<String, String>,
-        reviewers: List<String>,
+        jiraUrl: String?,
+        reviewers: List<VcsUser>,
         labels: List<String>,
     ) {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Creating PR…", false) {
             override fun run(indicator: ProgressIndicator) {
                 indicator.text = "Creating PR $currentBranch → $targetBranch…"
 
-                val jiraUrl = getJiraTicketUrl(dir)
+                val result = platformService.createPullRequest(
+                    currentBranch = currentBranch,
+                    targetBranch = targetBranch,
+                    title = currentBranch,
+                    body = jiraUrl ?: "",
+                    reviewers = reviewers,
+                    labels = labels,
+                )
 
-                // Check if a tag with the same name as targetBranch exists on remote.
-                // If so, gh pr create (GraphQL) fails with "Base ref must be a branch"
-                // because it resolves the ambiguous ref to the tag. Use REST API instead.
-                val hasTagCollision = runGit(dir, "ls-remote", "--tags", "origin", targetBranch).isNotBlank()
-
-                val prUrl = if (hasTagCollision) {
-                    createPRviaRestApi(dir, ghPath, ownerRepo, currentBranch, targetBranch, jiraUrl, reviewers, labels)
-                } else {
-                    createPRviaGhCli(dir, ghPath, currentBranch, targetBranch, jiraUrl, reviewers, labels)
-                }
-
-                if (prUrl != null) {
-                    ApplicationManager.getApplication().invokeLater { BrowserUtil.browse(prUrl) }
-                    notify(project, "PR created: $prUrl", NotificationType.INFORMATION)
-                } else {
-                    val existingUrl = runProcess(dir, ghPath, "pr", "view", "--json", "url", "--jq", ".url")
-                        .trim().takeIf { it.startsWith("https://") }
-                    if (existingUrl != null) {
-                        ApplicationManager.getApplication().invokeLater { BrowserUtil.browse(existingUrl) }
-                        notify(project, "PR already exists: $existingUrl", NotificationType.INFORMATION)
+                if (result.url != null) {
+                    ApplicationManager.getApplication().invokeLater { BrowserUtil.browse(result.url) }
+                    val message = if (result.errorMessage != null) {
+                        "${result.errorMessage}: ${result.url}"
                     } else {
-                        notify(project, "PR creation failed. A tag with the same name as '$targetBranch' may exist on remote, causing ambiguity.", NotificationType.WARNING)
+                        "PR created: ${result.url}"
                     }
+                    notify(project, message, NotificationType.INFORMATION)
+                } else {
+                    notify(
+                        project,
+                        result.errorMessage ?: "PR creation failed.",
+                        NotificationType.WARNING,
+                    )
                 }
             }
         })
-    }
-
-    private fun createPRviaGhCli(
-        dir: File,
-        ghPath: String,
-        currentBranch: String,
-        targetBranch: String,
-        jiraUrl: String?,
-        reviewers: List<String>,
-        labels: List<String>,
-    ): String? {
-        val cmd = mutableListOf(
-            ghPath,
-            "pr", "create",
-            "--assignee", "@me",
-            "--base", targetBranch,
-            "--head", currentBranch,
-            "--title", currentBranch,
-            "--body", jiraUrl ?: "",
-        )
-
-        if (reviewers.isNotEmpty()) {
-            cmd += "--reviewer"
-            cmd += reviewers.joinToString(",")
-        }
-        if (labels.isNotEmpty()) {
-            cmd += "--label"
-            cmd += labels.joinToString(",")
-        }
-
-        val prOutput = runProcess(dir, *cmd.toTypedArray())
-        return prOutput.lines().firstOrNull { it.startsWith("https://github.com") }
-    }
-
-    /**
-     * Creates a PR via GitHub REST API (`gh api`), which resolves `base` to a branch
-     * even when a tag with the same name exists.
-     */
-    private fun createPRviaRestApi(
-        dir: File,
-        ghPath: String,
-        ownerRepo: Pair<String, String>,
-        currentBranch: String,
-        targetBranch: String,
-        jiraUrl: String?,
-        reviewers: List<String>,
-        labels: List<String>,
-    ): String? {
-        val (owner, repo) = ownerRepo
-
-        // Create PR via REST API
-        val createCmd = mutableListOf(
-            ghPath, "api",
-            "repos/$owner/$repo/pulls",
-            "--method", "POST",
-            "-f", "title=$currentBranch",
-            "-f", "head=$currentBranch",
-            "-f", "base=$targetBranch",
-            "-f", "body=${jiraUrl ?: ""}",
-            "--jq", ".html_url,.number",
-        )
-
-        val createOutput = runProcess(dir, *createCmd.toTypedArray()).trim()
-        val outputLines = createOutput.lines()
-        val prUrl = outputLines.firstOrNull { it.startsWith("https://github.com") } ?: return null
-        val prNumber = outputLines.lastOrNull()?.trim() ?: return prUrl
-
-        // Add assignee, reviewers, labels via gh pr edit
-        val editCmd = mutableListOf(ghPath, "pr", "edit", prNumber, "--add-assignee", "@me")
-        if (reviewers.isNotEmpty()) {
-            editCmd += "--add-reviewer"
-            editCmd += reviewers.joinToString(",")
-        }
-        if (labels.isNotEmpty()) {
-            editCmd += "--add-label"
-            editCmd += labels.joinToString(",")
-        }
-        runProcess(dir, *editCmd.toTypedArray())
-
-        return prUrl
-    }
-
-    /**
-     * Parses owner and repo name from the 'origin' remote URL.
-     * Supports both HTTPS (https://github.com/owner/repo.git) and SSH (git@github.com:owner/repo.git) formats.
-     */
-    private fun parseOwnerRepo(dir: File): Pair<String, String>? {
-        val remoteUrl = runGit(dir, "remote", "get-url", "origin").trim()
-        if (remoteUrl.isBlank()) return null
-
-        // SSH: git@github.com:owner/repo.git
-        val sshMatch = Regex("""git@[^:]+:([^/]+)/(.+?)(?:\.git)?$""").find(remoteUrl)
-        if (sshMatch != null) {
-            return sshMatch.groupValues[1] to sshMatch.groupValues[2]
-        }
-
-        // HTTPS: https://github.com/owner/repo.git
-        val httpsMatch = Regex("""https?://[^/]+/([^/]+)/(.+?)(?:\.git)?$""").find(remoteUrl)
-        if (httpsMatch != null) {
-            return httpsMatch.groupValues[1] to httpsMatch.groupValues[2]
-        }
-
-        return null
     }
 
     /**
@@ -308,8 +222,6 @@ class CreateReviewPRAction : AnAction() {
         return remote.isNotBlank()
     }
 
-    private fun findGhCli(): String? = CliUtils.findGhCli()
-
     private fun getJiraTicketUrl(dir: File): String? {
         val branch = CliUtils.runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
         val ticketId = Constants.JIRA_TICKET_REGEX.find(branch)?.value ?: return null
@@ -317,8 +229,6 @@ class CreateReviewPRAction : AnAction() {
     }
 
     private fun runGit(dir: File, vararg args: String): String = CliUtils.runGit(dir, *args)
-
-    private fun runProcess(dir: File, vararg cmd: String): String = CliUtils.runProcess(dir, *cmd)
 
     private fun notify(project: Project, message: String, type: NotificationType) {
         ApplicationManager.getApplication().invokeLater {

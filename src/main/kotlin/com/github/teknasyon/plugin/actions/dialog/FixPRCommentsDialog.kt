@@ -29,13 +29,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.components.*
+import com.github.teknasyon.plugin.service.VcsPlatformService
 import com.github.teknasyon.plugin.theme.TPTheme
 import com.github.teknasyon.plugin.toolwindow.ClaudeSessionService
-import com.google.gson.JsonParser
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
-import java.io.File
-import java.util.concurrent.TimeUnit
 
 // region Data models
 
@@ -67,8 +65,7 @@ private data class FixPRCommentsState(
 
 class FixPRCommentsDialog(
     private val project: Project,
-    private val ghPath: String,
-    private val dir: File,
+    private val platformService: VcsPlatformService,
 ) : TPDialogWrapper(
     width = 800,
     height = 600,
@@ -76,64 +73,29 @@ class FixPRCommentsDialog(
 
     private var state = mutableStateOf(FixPRCommentsState())
 
-    private val prUrlRegex = Regex("""https?://github\.com/([^/]+)/([^/]+)/pull/(\d+)""")
-
     init {
         title = "Fix PR Comments"
     }
 
-    // region GitHub API
+    // region VCS API
 
     private fun fetchPRComments() {
         val url = state.value.prUrl.trim()
-        val match = prUrlRegex.find(url)
-        if (match == null) {
-            state.value = state.value.copy(errorMessage = "Invalid PR URL. Expected: https://github.com/owner/repo/pull/123")
+        val prIdentifier = platformService.parsePrUrl(url)
+        if (prIdentifier == null) {
+            state.value = state.value.copy(
+                errorMessage = "Invalid PR URL. Expected format: ${platformService.getPlaceholderUrl()}"
+            )
             return
         }
-
-        val owner = match.groupValues[1]
-        val repo = match.groupValues[2]
-        val number = match.groupValues[3].toInt()
 
         state.value = state.value.copy(isLoading = true, errorMessage = null, threads = emptyList())
 
         kotlin.concurrent.thread {
             try {
-                // Fetch PR title
-                val prTitle = runProcess(
-                    ghPath, "pr", "view", number.toString(),
-                    "--repo", "$owner/$repo",
-                    "--json", "title", "--jq", ".title",
-                )
+                val prTitle = platformService.fetchPrTitle(prIdentifier).getOrThrow()
 
-                // Fetch unresolved review threads via GraphQL
-                val query = """
-                    {
-                      repository(owner: "$owner", name: "$repo") {
-                        pullRequest(number: $number) {
-                          reviewThreads(first: 100) {
-                            nodes {
-                              isResolved
-                              comments(first: 10) {
-                                nodes {
-                                  body
-                                  path
-                                  line
-                                  originalLine
-                                  diffHunk
-                                  author { login }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                """.trimIndent()
-
-                val graphqlOutput = runProcess(ghPath, "api", "graphql", "-f", "query=$query")
-                val threads = parseThreads(graphqlOutput)
+                val threads = platformService.fetchUnresolvedComments(prIdentifier).getOrThrow()
 
                 state.value = state.value.copy(
                     isLoading = false,
@@ -148,74 +110,6 @@ class FixPRCommentsDialog(
                 )
             }
         }
-    }
-
-    private fun parseThreads(json: String): List<CommentThread> {
-        val root = JsonParser.parseString(json).asJsonObject
-        val threads = root
-            .getAsJsonObject("data")
-            .getAsJsonObject("repository")
-            .getAsJsonObject("pullRequest")
-            .getAsJsonObject("reviewThreads")
-            .getAsJsonArray("nodes")
-
-        val result = mutableListOf<CommentThread>()
-        var idCounter = 1L
-
-        for (threadElement in threads) {
-            val thread = threadElement.asJsonObject
-            if (thread.get("isResolved").asBoolean) continue
-
-            val comments = thread.getAsJsonObject("comments").getAsJsonArray("nodes")
-            if (comments.size() == 0) continue
-
-            val first = comments[0].asJsonObject
-            val path = first.get("path")?.asString ?: ""
-            val line = when {
-                first.has("line") && !first.get("line").isJsonNull -> first.get("line").asInt
-                first.has("originalLine") && !first.get("originalLine").isJsonNull -> first.get("originalLine").asInt
-                else -> null
-            }
-            val body = first.get("body")?.asString ?: ""
-            val reviewer = first.getAsJsonObject("author")?.get("login")?.asString ?: "unknown"
-            val diffHunk = first.get("diffHunk")?.asString ?: ""
-
-            val replies = (1 until comments.size()).map { i ->
-                val reply = comments[i].asJsonObject
-                Reply(
-                    user = reply.getAsJsonObject("author")?.get("login")?.asString ?: "unknown",
-                    body = reply.get("body")?.asString ?: "",
-                )
-            }
-
-            result.add(
-                CommentThread(
-                    id = idCounter++,
-                    path = path,
-                    line = line,
-                    body = body,
-                    reviewer = reviewer,
-                    diffHunk = diffHunk,
-                    replies = replies,
-                )
-            )
-        }
-
-        return result
-    }
-
-    private fun runProcess(vararg cmd: String): String {
-        val process = ProcessBuilder(*cmd)
-            .directory(dir)
-            .redirectErrorStream(true)
-            .start()
-        process.outputStream.close()
-        val completed = process.waitFor(Constants.TIMEOUT_PROCESS_DEFAULT_SECONDS, TimeUnit.SECONDS)
-        val output = process.inputStream.bufferedReader().readText().trim()
-        if (!completed || process.exitValue() != 0) {
-            throw RuntimeException(output.ifBlank { "Command timed out" })
-        }
-        return output
     }
 
     // endregion
@@ -318,7 +212,7 @@ class FixPRCommentsDialog(
                     modifier = Modifier.weight(1f),
                     value = currentState.prUrl,
                     onValueChange = { state.value = state.value.copy(prUrl = it, errorMessage = null) },
-                    placeholder = "https://github.com/owner/repo/pull/123",
+                    placeholder = platformService.getPlaceholderUrl(),
                 )
                 Spacer(modifier = Modifier.size(12.dp))
                 TPActionCard(

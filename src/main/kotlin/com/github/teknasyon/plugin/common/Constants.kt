@@ -30,6 +30,7 @@ object Constants {
     // Messages
     const val GH_CLI_NOT_FOUND_MESSAGE =
         "GitHub CLI (gh) not found. Install from $GH_CLI_INSTALL_URL and run 'gh auth login'."
-
+    const val BITBUCKET_CREDENTIALS_MISSING_MESSAGE =
+        "Bitbucket credentials not configured. Go to Settings > Tools > Teknasyon Plugin Settings."
     fun jiraBrowseUrl(ticketId: String): String = "$JIRA_BASE_URL/browse/$ticketId"
 }

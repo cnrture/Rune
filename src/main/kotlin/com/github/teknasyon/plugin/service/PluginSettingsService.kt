@@ -1,5 +1,6 @@
 package com.github.teknasyon.plugin.service
 
+import com.github.teknasyon.plugin.common.VcsProvider
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
@@ -19,6 +20,7 @@ class PluginSettingsService :
         var commitMessagePrompt: String = DEFAULT_COMMIT_PROMPT,
         var includeJiraUrlInCommit: Boolean = false,
         var useReviewBranch: Boolean = false,
+        var vcsProviderOverride: String = "",
     )
 
     private var state = State()
@@ -57,6 +59,16 @@ class PluginSettingsService :
 
     fun setUseReviewBranch(use: Boolean) {
         state.useReviewBranch = use
+    }
+
+    fun getVcsProvider(): VcsProvider {
+        return state.vcsProviderOverride.takeIf { it.isNotBlank() }?.let {
+            try { VcsProvider.valueOf(it) } catch (_: Exception) { null }
+        } ?: VcsProvider.GITHUB
+    }
+
+    fun setVcsProvider(provider: VcsProvider) {
+        state.vcsProviderOverride = provider.name
     }
 
     companion object {

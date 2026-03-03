@@ -1,12 +1,16 @@
 package com.github.teknasyon.plugin.service
 
+import com.github.teknasyon.plugin.common.VcsProvider
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.layout.ComponentPredicate
+import javax.swing.DefaultComboBoxModel
 import javax.swing.JCheckBox
+import javax.swing.JComboBox
 import javax.swing.JPasswordField
 import javax.swing.JTextArea
 import javax.swing.JTextField
@@ -22,6 +26,13 @@ class PluginConfigurable(private val project: Project) :
     private lateinit var useReviewBranchField: JCheckBox
     private lateinit var jiraEmailField: JTextField
     private lateinit var jiraTokenField: JPasswordField
+
+    // VCS / Bitbucket fields
+    private lateinit var vcsProviderCombo: JComboBox<String>
+    private lateinit var bitbucketUsernameField: JTextField
+    private lateinit var bitbucketTokenField: JPasswordField
+
+    private val vcsProviderOptions = arrayOf("GitHub", "Bitbucket Cloud")
 
     override fun createPanel(): DialogPanel {
         return panel {
@@ -92,6 +103,39 @@ class PluginConfigurable(private val project: Project) :
                 }
             }
 
+            group("VCS Provider") {
+                row("Provider:") {
+                    vcsProviderCombo = JComboBox(DefaultComboBoxModel(vcsProviderOptions)).apply {
+                        selectedIndex = getVcsProviderIndex(settingsService.getVcsProvider())
+                    }
+                    cell(vcsProviderCombo)
+                }
+                val isBitbucket = object : ComponentPredicate() {
+                    override fun invoke(): Boolean = vcsProviderCombo.selectedIndex == 1
+                    override fun addListener(listener: (Boolean) -> Unit) {
+                        vcsProviderCombo.addItemListener { listener(invoke()) }
+                    }
+                }
+
+                row("Email:") {
+                    bitbucketUsernameField = JTextField(BitbucketCredentialService.getUsername() ?: "", 30)
+                    cell(bitbucketUsernameField)
+                }.visibleIf(isBitbucket)
+                row {
+                    comment("Your Atlassian account email address")
+                }.visibleIf(isBitbucket)
+                row("API Token:") {
+                    bitbucketTokenField = JPasswordField(30)
+                    cell(bitbucketTokenField)
+                }.visibleIf(isBitbucket)
+                row {
+                    comment(
+                        "Atlassian API Token (same as Jira). " +
+                            "Create at: <b>id.atlassian.com > Security > API tokens</b>"
+                    )
+                }.visibleIf(isBitbucket)
+            }
+
             group("Jira Integration") {
                 row("Email:") {
                     jiraEmailField = JTextField(JiraService.getEmail() ?: "", 30)
@@ -114,6 +158,17 @@ class PluginConfigurable(private val project: Project) :
         settingsService.setIncludeJiraUrlInCommit(commitMessageJiraUrlField.isSelected)
         settingsService.setUseReviewBranch(useReviewBranchField.isSelected)
 
+        // VCS settings
+        settingsService.setVcsProvider(getVcsProviderFromIndex(vcsProviderCombo.selectedIndex))
+
+        // Bitbucket credentials (token yeterli, username opsiyonel)
+        val bbUsername = bitbucketUsernameField.text.trim()
+        val bbToken = String(bitbucketTokenField.password).trim()
+        if (bbToken.isNotBlank()) {
+            BitbucketCredentialService.saveCredentials(bbUsername, bbToken)
+        }
+
+        // Jira credentials
         val email = jiraEmailField.text.trim()
         val token = String(jiraTokenField.password).trim()
         if (email.isNotBlank() && token.isNotBlank()) {
@@ -129,7 +184,14 @@ class PluginConfigurable(private val project: Project) :
             agentsPathField.text.trim() != settingsService.getAgentsRootPath()
         val jiraModified = jiraEmailField.text.trim() != (JiraService.getEmail() ?: "") ||
             String(jiraTokenField.password).trim().isNotBlank()
-        return promptModified || jiraUrlToggleModified || reviewBranchModified || pathsModified || jiraModified
+
+        val vcsProviderModified =
+            getVcsProviderFromIndex(vcsProviderCombo.selectedIndex) != settingsService.getVcsProvider()
+        val bbCredModified = bitbucketUsernameField.text.trim() != (BitbucketCredentialService.getUsername() ?: "") ||
+            String(bitbucketTokenField.password).trim().isNotBlank()
+
+        return promptModified || jiraUrlToggleModified || reviewBranchModified || pathsModified ||
+            jiraModified || vcsProviderModified || bbCredModified
     }
 
     override fun reset() {
@@ -140,5 +202,23 @@ class PluginConfigurable(private val project: Project) :
         useReviewBranchField.isSelected = settingsService.isUseReviewBranch()
         jiraEmailField.text = JiraService.getEmail() ?: ""
         jiraTokenField.text = ""
+
+        vcsProviderCombo.selectedIndex = getVcsProviderIndex(settingsService.getVcsProvider())
+        bitbucketUsernameField.text = BitbucketCredentialService.getUsername() ?: ""
+        bitbucketTokenField.text = ""
+    }
+
+    private fun getVcsProviderIndex(provider: VcsProvider?): Int {
+        return when (provider) {
+            VcsProvider.GITHUB, null -> 0
+            VcsProvider.BITBUCKET_CLOUD -> 1
+        }
+    }
+
+    private fun getVcsProviderFromIndex(index: Int): VcsProvider {
+        return when (index) {
+            1 -> VcsProvider.BITBUCKET_CLOUD
+            else -> VcsProvider.GITHUB
+        }
     }
 }
