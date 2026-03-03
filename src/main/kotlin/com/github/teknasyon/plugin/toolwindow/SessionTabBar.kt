@@ -46,14 +46,14 @@ internal fun SessionTabBar(
                 title = "Usage",
                 icon = Icons.Rounded.DataUsage,
                 actionColor = TPTheme.colors.blue,
-                type = TPActionCardType.SMALL,
+                type = TPActionCardType.EXTRA_SMALL,
                 onClick = { onUsageClick() },
             )
             TPActionCard(
                 title = "Settings",
                 icon = Icons.Rounded.Settings,
                 actionColor = TPTheme.colors.purple,
-                type = TPActionCardType.SMALL,
+                type = TPActionCardType.EXTRA_SMALL,
                 onClick = { onSettingsClick() },
             )
         }
