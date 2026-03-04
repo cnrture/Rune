@@ -15,6 +15,7 @@
 ### 🔧 Improvements
 
 - **Smarter PR Creation** — CLI tool resolution has been refactored with a REST API fallback, making PR creation more reliable across different environments.
+- **Input Bar Layout** — `TerminalInputBar` now uses `FlowRow` for a more flexible and responsive layout.
 
 ## [0.0.4] - 2026-03-02
 - **Bug Fixes** — Commit message input now properly clears after PR creation, and the plugin gracefully handles cases where the CLI tool is not found by showing an error notification instead of crashing.
