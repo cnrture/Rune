@@ -16,9 +16,6 @@
                 anchor="right"
                 icon="/icons/pluginIcon.svg"/>
 
-        <editorNotificationProvider
-                implementation="com.github.teknasyon.plugin.actions.SkillBestPracticesNotificationProvider"/>
-
         <!-- Settings Configurable -->
         <projectConfigurable
                 parentId="tools"
@@ -62,6 +59,15 @@
                 icon="/icons/pluginIcon.svg">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ConsoleEditorPopupMenu" anchor="last"/>
+        </action>
+        <action
+                id="TeknasyonAndroidStudioPlugin.CheckSkillBestPractices"
+                class="com.github.teknasyon.plugin.actions.CheckSkillBestPracticesAction"
+                text="Check Skill with Claude"
+                description="Review SKILL.md against Claude platform best practices"
+                icon="/icons/pluginIcon.svg">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>

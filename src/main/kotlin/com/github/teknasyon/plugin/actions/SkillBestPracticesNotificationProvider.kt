@@ -2,64 +2,48 @@ package com.github.teknasyon.plugin.actions
 
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.toolwindow.ClaudeSessionService
-import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.actionSystem.ActionUpdateThread
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditor
-import com.intellij.openapi.project.DumbAware
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.ui.EditorNotificationPanel
-import com.intellij.ui.EditorNotificationProvider
-import java.util.function.Function
-import javax.swing.JComponent
 
-class SkillBestPracticesNotificationProvider : EditorNotificationProvider, DumbAware {
+class CheckSkillBestPracticesAction : AnAction() {
 
-    override fun collectNotificationData(
-        project: Project,
-        file: VirtualFile,
-    ): Function<in FileEditor, out JComponent?> {
-        if (!file.name.endsWith("SKILL.md")) {
-            return Function { null }
-        }
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
-        return Function { fileEditor ->
-            val panel = EditorNotificationPanel(fileEditor, EditorNotificationPanel.Status.Info)
-            panel.text = "Check this skill against Claude platform best practices"
-            panel.createActionLabel("Open best practices") {
-                BrowserUtil.browse(Constants.CLAUDE_SKILL_BEST_PRACTICES_URL)
-            }
-            panel.createActionLabel("Check with Claude") {
-                val document = fileEditor.file?.let {
-                    FileDocumentManager.getInstance().getDocument(it)
-                }
-                val content = document?.text ?: return@createActionLabel
+    override fun actionPerformed(e: AnActionEvent) {
+        val project = e.project ?: return
+        val file = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return
+        val document = FileDocumentManager.getInstance().getDocument(file) ?: return
+        val content = document.text
 
-                val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Claude")
-                toolWindow?.show()
+        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Claude")
+        toolWindow?.show()
 
-                val service = ClaudeSessionService.getInstance(project)
-                val hadSession = service.state.value.sessions.isNotEmpty()
-                service.ensureSession()
+        val service = ClaudeSessionService.getInstance(project)
+        val hadSession = service.state.value.sessions.isNotEmpty()
+        service.ensureSession()
 
-                val prompt = buildPrompt(content)
+        val prompt = buildPrompt(content)
 
-                if (hadSession) {
+        if (hadSession) {
+            service.sendToTerminal(prompt, autoRun = true)
+        } else {
+            ApplicationManager.getApplication().executeOnPooledThread {
+                Thread.sleep(Constants.DELAY_NEW_SESSION_CLI_MS)
+                ApplicationManager.getApplication().invokeLater {
                     service.sendToTerminal(prompt, autoRun = true)
-                } else {
-                    // New session needs time for claude CLI to start (~2s)
-                    ApplicationManager.getApplication().executeOnPooledThread {
-                        Thread.sleep(Constants.DELAY_NEW_SESSION_CLI_MS)
-                        ApplicationManager.getApplication().invokeLater {
-                            service.sendToTerminal(prompt, autoRun = true)
-                        }
-                    }
                 }
             }
-            panel
         }
+    }
+
+    override fun update(e: AnActionEvent) {
+        val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
+        e.presentation.isEnabledAndVisible = e.project != null && file?.name?.endsWith("SKILL.md") == true
     }
 
     private fun buildPrompt(skillContent: String): String {
