@@ -77,8 +77,9 @@ jobs:
           ZIP_NAME=$(ls build/distributions/*.zip | head -1 | xargs basename)
           echo "filename=$ZIP_NAME" >> $GITHUB_OUTPUT
 
-      # Deploy updatePlugins.xml + plugin ZIP to public distribution repo
-      # This allows Android Studio to fetch the plugin without authentication
+      # Deploy plugin ZIP via GitHub Releases and updatePlugins.xml via git
+      # to public distribution repo. Uses Releases for the ZIP to avoid
+      # GitHub's 100 MB file size limit on regular git objects.
       - name: Deploy to Distribution Repository
         env:
           VERSION: ${{ steps.properties.outputs.version }}
@@ -88,42 +89,53 @@ jobs:
           SINCE_BUILD=$(grep -oP 'pluginSinceBuild=\K.*' gradle.properties)
           UNTIL_BUILD=$(grep -oP 'pluginUntilBuild=\K.*' gradle.properties)
           DIST_REPO="Teknasyon/intellij-ai-plugin-releases"
+          RELEASE_TAG="v${VERSION}"
 
-          # Prepare distribution content
-          mkdir -p /tmp/plugin-dist
+          # Clone the distribution repo (shallow)
+          git clone --depth 1 "https://x-access-token:${DEPLOY_TOKEN}@github.com/${DIST_REPO}.git" /tmp/plugin-dist || {
+            mkdir -p /tmp/plugin-dist
+            cd /tmp/plugin-dist
+            git init -b main
+            git remote add origin "https://x-access-token:${DEPLOY_TOKEN}@github.com/${DIST_REPO}.git"
+          }
+          cd /tmp/plugin-dist
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
 
-          # Copy the built plugin ZIP
-          cp "build/distributions/${ZIP_NAME}" /tmp/plugin-dist/plugin.zip
+          # Create or update a GitHub Release on the distribution repo
+          # and upload the plugin ZIP as a release asset
+          GITHUB_TOKEN="${DEPLOY_TOKEN}" gh release delete "${RELEASE_TAG}" \
+            --repo "${DIST_REPO}" --yes 2>/dev/null || true
+          GITHUB_TOKEN="${DEPLOY_TOKEN}" gh release create "${RELEASE_TAG}" \
+            "${GITHUB_WORKSPACE}/build/distributions/${ZIP_NAME}#plugin.zip" \
+            --repo "${DIST_REPO}" \
+            --title "Plugin ${VERSION}" \
+            --notes "Automated release of Teknasyon AI Plugin v${VERSION}"
+
+          # Build the download URL pointing to the release asset
+          DOWNLOAD_URL="https://github.com/${DIST_REPO}/releases/download/${RELEASE_TAG}/${ZIP_NAME}"
 
           # Generate updatePlugins.xml
-          cat > /tmp/plugin-dist/updatePlugins.xml << 'XMLEOF'
+          cat > /tmp/plugin-dist/updatePlugins.xml << XMLEOF
           <?xml version="1.0" encoding="UTF-8"?>
           <plugins>
             <plugin
                 id="com.github.teknasyon.plugin"
-                url="https://raw.githubusercontent.com/DIST_REPO_PLACEHOLDER/main/plugin.zip"
-                version="VERSION_PLACEHOLDER">
+                url="${DOWNLOAD_URL}"
+                version="${VERSION}">
               <name>Teknasyon AI</name>
               <description>Internal Teknasyon AI</description>
-              <idea-version since-build="SINCE_PLACEHOLDER" until-build="UNTIL_PLACEHOLDER"/>
+              <idea-version since-build="${SINCE_BUILD}" until-build="${UNTIL_BUILD}"/>
             </plugin>
           </plugins>
           XMLEOF
 
-          # Replace placeholders
-          sed -i "s|DIST_REPO_PLACEHOLDER|${DIST_REPO}|g" /tmp/plugin-dist/updatePlugins.xml
-          sed -i "s|VERSION_PLACEHOLDER|${VERSION}|g" /tmp/plugin-dist/updatePlugins.xml
-          sed -i "s|SINCE_PLACEHOLDER|${SINCE_BUILD}|g" /tmp/plugin-dist/updatePlugins.xml
-          sed -i "s|UNTIL_PLACEHOLDER|${UNTIL_BUILD}|g" /tmp/plugin-dist/updatePlugins.xml
+          # Remove plugin.zip from git tracking if it exists from previous runs
+          git rm -f plugin.zip 2>/dev/null || true
 
-          # Push to distribution repo
-          cd /tmp/plugin-dist
-          git init -b main
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
-          git add .
-          git commit -m "Plugin v${VERSION}"
-          git remote add origin "https://x-access-token:${DEPLOY_TOKEN}@github.com/${DIST_REPO}.git"
+          # Commit and push only the updatePlugins.xml (small file)
+          git add updatePlugins.xml
+          git commit -m "Plugin v${VERSION}" --allow-empty
           git push origin main --force
 
       # Create a pull request
