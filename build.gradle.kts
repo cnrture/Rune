@@ -45,10 +45,20 @@ repositories {
 dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.opentest4j)
-    implementation(compose.desktop.currentOs) {
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-jvm")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-swing")
+    // Include all platform Skiko natives so the plugin works on any OS,
+    // regardless of which OS the CI build runs on.
+    listOf(
+        compose.desktop.macos_arm64,
+        compose.desktop.macos_x64,
+        compose.desktop.linux_x64,
+        compose.desktop.linux_arm64,
+        compose.desktop.windows_x64,
+    ).forEach {
+        implementation(it) {
+            exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+            exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-jvm")
+            exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-swing")
+        }
     }
     implementation(compose.materialIconsExtended)
 
