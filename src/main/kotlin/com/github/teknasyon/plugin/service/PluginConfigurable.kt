@@ -8,15 +8,9 @@ import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.ComponentPredicate
-import javax.swing.DefaultComboBoxModel
-import javax.swing.JCheckBox
-import javax.swing.JComboBox
-import javax.swing.JPasswordField
-import javax.swing.JTextArea
-import javax.swing.JTextField
+import javax.swing.*
 
-class PluginConfigurable(private val project: Project) :
-    BoundConfigurable("Teknasyon Plugin Settings") {
+class PluginConfigurable(private val project: Project) : BoundConfigurable("Teknasyon Plugin Settings") {
 
     private val settingsService = PluginSettingsService.getInstance(project)
     private lateinit var skillsPathField: TextFieldWithBrowseButton
@@ -36,28 +30,27 @@ class PluginConfigurable(private val project: Project) :
 
     override fun createPanel(): DialogPanel {
         return panel {
-            group("Skills Directory") {
-                row("Root Path:") {
-                    skillsPathField = textFieldWithBrowseButton(
-                        FileChooserDescriptorFactory.createSingleFolderDescriptor()
-                            .withTitle("Select Skills Directory"),
-                        project
-                    ) { it.path }.component
-                    skillsPathField.text = settingsService.getSkillsRootPath()
-                }
-                row { comment("Directory containing your SKILLS.md files") }
-            }
-
-            group("Agents Directory") {
-                row("Root Path:") {
-                    agentsPathField = textFieldWithBrowseButton(
-                        FileChooserDescriptorFactory.createSingleFolderDescriptor()
-                            .withTitle("Select Agents Directory"),
-                        project
-                    ) { it.path }.component
-                    agentsPathField.text = settingsService.getAgentsRootPath()
-                }
-                row { comment("Directory containing your agent SKILLS.md files") }
+            group("Skills - Agents Directory") {
+                twoColumnsRow(
+                    column1 = {
+                        skillsPathField = textFieldWithBrowseButton(
+                            FileChooserDescriptorFactory.createSingleFolderDescriptor()
+                                .withTitle("Select Skills Directory"),
+                            project
+                        ) { it.path }.component
+                        skillsPathField.text = settingsService.getSkillsRootPath()
+                        rowComment("Directory containing your SKILLS.md files")
+                    },
+                    column2 = {
+                        agentsPathField = textFieldWithBrowseButton(
+                            FileChooserDescriptorFactory.createSingleFolderDescriptor()
+                                .withTitle("Select Agents Directory"),
+                            project
+                        ) { it.path }.component
+                        agentsPathField.text = settingsService.getAgentsRootPath()
+                        rowComment("Directory containing your agent files")
+                    },
+                )
             }
 
             group("Commit Message") {
