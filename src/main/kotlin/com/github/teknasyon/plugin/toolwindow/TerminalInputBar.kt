@@ -12,8 +12,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -54,6 +57,7 @@ internal fun TerminalInputBar(
     onClickPreviewImage: (String) -> Unit = {},
 ) {
     var inputValue by remember { mutableStateOf(TextFieldValue("")) }
+    var isFocused by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(shouldClearSlash) {
@@ -93,7 +97,13 @@ internal fun TerminalInputBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
             .background(TPTheme.colors.gray)
+            .border(
+                width = 1.dp,
+                color = TPTheme.colors.outline.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
+            )
             .padding(8.dp),
     ) {
         FlowRow(
@@ -101,29 +111,11 @@ internal fun TerminalInputBar(
             verticalArrangement = Arrangement.Center,
         ) {
             TPActionCard(
-                title = "Model",
-                icon = Icons.Rounded.SmartToy,
-                actionColor = TPTheme.colors.hintGray,
-                type = TPActionCardType.EXTRA_SMALL,
-                onClick = { onChangeModelClick() },
-            )
-            Spacer(modifier = Modifier.size(4.dp))
-            TPActionCard(
-                title = "Plan",
-                icon = Icons.Rounded.Map,
-                actionColor = TPTheme.colors.warning,
-                type = TPActionCardType.EXTRA_SMALL,
-                onClick = {
-                    onSend("/plan")
-                    focusRequester.requestFocus()
-                },
-            )
-            Spacer(modifier = Modifier.size(4.dp))
-            TPActionCard(
                 title = "Skills",
                 icon = Icons.Rounded.AutoFixHigh,
                 actionColor = TPTheme.colors.blue,
                 type = TPActionCardType.EXTRA_SMALL,
+                isBorderless = true,
                 onClick = { onSkillsClick() },
             )
             Spacer(modifier = Modifier.size(4.dp))
@@ -132,16 +124,30 @@ internal fun TerminalInputBar(
                 icon = Icons.Rounded.PlayArrow,
                 actionColor = TPTheme.colors.purple,
                 type = TPActionCardType.EXTRA_SMALL,
+                isBorderless = true,
                 onClick = { onCommandsClick() },
             )
-            Spacer(modifier = Modifier.size(8.dp))
-            Box(
-                modifier = Modifier
-                    .height(20.dp)
-                    .width(1.dp)
-                    .background(TPTheme.colors.hintGray.copy(alpha = 0.4f))
+            Spacer(modifier = Modifier.size(4.dp))
+            TPActionCard(
+                title = "Plan",
+                icon = Icons.Rounded.Map,
+                actionColor = TPTheme.colors.warning,
+                type = TPActionCardType.EXTRA_SMALL,
+                isBorderless = true,
+                onClick = {
+                    onSend("/plan")
+                    focusRequester.requestFocus()
+                },
             )
-            Spacer(modifier = Modifier.size(8.dp))
+            Spacer(modifier = Modifier.size(4.dp))
+            TPActionCard(
+                title = "Model",
+                icon = Icons.Rounded.SmartToy,
+                actionColor = TPTheme.colors.hintGray,
+                type = TPActionCardType.EXTRA_SMALL,
+                isBorderless = true,
+                onClick = { onChangeModelClick() },
+            )
             Spacer(modifier = Modifier.weight(1f))
             TPSwitch(
                 checked = isRemoteControlActive,
@@ -213,15 +219,20 @@ internal fun TerminalInputBar(
                                     style = TextStyle(fontSize = 10.sp),
                                 )
                                 Spacer(modifier = Modifier.size(6.dp))
-                                Icon(
-                                    imageVector = Icons.Rounded.Close,
-                                    contentDescription = "Remove image",
-                                    tint = TPTheme.colors.blue,
+                                Box(
                                     modifier = Modifier
-                                        .size(14.dp)
+                                        .size(24.dp)
                                         .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
                                         .clickable { onRemoveImage(path) },
-                                )
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = "Remove image",
+                                        tint = TPTheme.colors.blue,
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                }
                             }
                         }
                     }
@@ -238,10 +249,17 @@ internal fun TerminalInputBar(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = if (isFocused) TPTheme.colors.blue.copy(alpha = 0.5f)
+                                else TPTheme.colors.outline.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(8.dp),
+                        )
                         .clip(RoundedCornerShape(8.dp))
                         .background(TPTheme.colors.black)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                         .focusRequester(focusRequester)
+                        .onFocusChanged { isFocused = it.isFocused }
                         .onPreviewKeyEvent { event ->
                             if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
                                 if (event.isShiftPressed) {
@@ -286,12 +304,15 @@ internal fun TerminalInputBar(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 // File inject button
+                                val fileHover = remember { MutableInteractionSource() }
+                                val isFileHovered by fileHover.collectIsHoveredAsState()
                                 Icon(
                                     imageVector = Icons.Rounded.AlternateEmail,
                                     contentDescription = "Add active file path",
-                                    tint = TPTheme.colors.lightGray,
+                                    tint = if (isFileHovered) TPTheme.colors.blue else TPTheme.colors.lightGray,
                                     modifier = Modifier
                                         .size(18.dp)
+                                        .hoverable(fileHover)
                                         .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
                                         .clickable {
                                             val path = onInjectFile() ?: return@clickable
@@ -301,12 +322,15 @@ internal fun TerminalInputBar(
                                         }
                                 )
                                 // Image picker button
+                                val imageHover = remember { MutableInteractionSource() }
+                                val isImageHovered by imageHover.collectIsHoveredAsState()
                                 Icon(
                                     imageVector = Icons.Rounded.Image,
                                     contentDescription = "Add image",
-                                    tint = if (selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                                    tint = if (isImageHovered || selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
                                     modifier = Modifier
                                         .size(18.dp)
+                                        .hoverable(imageHover)
                                         .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
                                         .clickable { onPickImage() }
                                 )
@@ -324,19 +348,29 @@ internal fun TerminalInputBar(
             }
 
             // Send button
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.Send,
-                contentDescription = "Send",
-                tint = if (hasContent) TPTheme.colors.blue else TPTheme.colors.hintGray,
+            Box(
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(36.dp)
+                    .background(
+                        color = if (hasContent) TPTheme.colors.blue
+                            else TPTheme.colors.outline.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(10.dp),
+                    )
                     .then(
                         if (hasContent) Modifier
                             .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
                             .clickable { doSend() }
                         else Modifier
-                    )
-            )
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.Send,
+                    contentDescription = "Send",
+                    tint = if (hasContent) TPTheme.colors.white else TPTheme.colors.hintGray,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }

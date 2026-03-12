@@ -48,6 +48,7 @@ internal fun SessionTabBar(
                 icon = Icons.Rounded.AutoFixHigh,
                 actionColor = TPTheme.colors.blue,
                 type = TPActionCardType.EXTRA_SMALL,
+                isBorderless = true,
                 onClick = { onCreateSkillClick() },
             )
             TPActionCard(
@@ -55,6 +56,7 @@ internal fun SessionTabBar(
                 icon = Icons.Rounded.DataUsage,
                 actionColor = TPTheme.colors.blue,
                 type = TPActionCardType.EXTRA_SMALL,
+                isBorderless = true,
                 onClick = { onUsageClick() },
             )
             TPActionCard(
@@ -62,6 +64,7 @@ internal fun SessionTabBar(
                 icon = Icons.Rounded.Settings,
                 actionColor = TPTheme.colors.purple,
                 type = TPActionCardType.EXTRA_SMALL,
+                isBorderless = true,
                 onClick = { onSettingsClick() },
             )
         }

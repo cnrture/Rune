@@ -29,6 +29,7 @@ fun TPActionCard(
     isTextVisible: Boolean = true,
     type: TPActionCardType = TPActionCardType.LARGE,
     isEnabled: Boolean = true,
+    isBorderless: Boolean = false,
     onClick: () -> Unit,
 ) {
     val fontSize = when (type) {
@@ -63,14 +64,21 @@ fun TPActionCard(
     }
     Row(
         modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
             .background(
-                color = if (isEnabled) TPTheme.colors.gray else TPTheme.colors.lightGray.copy(alpha = 0.1f),
+                color = if (isBorderless) {
+                    if (isEnabled) actionColor.copy(alpha = 0.12f) else TPTheme.colors.lightGray.copy(alpha = 0.05f)
+                } else {
+                    if (isEnabled) TPTheme.colors.gray else TPTheme.colors.lightGray.copy(alpha = 0.1f)
+                },
                 shape = RoundedCornerShape(12.dp),
             )
-            .border(
-                width = borderSize,
-                color = if (isEnabled) actionColor else TPTheme.colors.outline.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(12.dp)
+            .then(
+                if (!isBorderless) Modifier.border(
+                    width = borderSize,
+                    color = if (isEnabled) actionColor else TPTheme.colors.outline.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(12.dp)
+                ) else Modifier
             )
             .then(
                 if (isEnabled) Modifier.clickable { onClick() }
