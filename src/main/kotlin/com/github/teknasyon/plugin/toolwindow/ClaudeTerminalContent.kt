@@ -41,6 +41,7 @@ fun ClaudeTerminalContent(project: Project) {
     var activePanel by remember { mutableStateOf(ActivePanel.NONE) }
     var slashTriggered by remember { mutableStateOf(false) }
     var showRCDialog by remember { mutableStateOf(false) }
+    var showModelPicker by remember { mutableStateOf(false) }
     var previewImagePath by remember { mutableStateOf<String?>(null) }
     val inputFocusRequester = remember { FocusRequester() }
 
@@ -84,6 +85,7 @@ fun ClaudeTerminalContent(project: Project) {
                 true -> {
                     LaunchedEffect(Unit) {
                         service.ensureSession()
+                        service.loadCachedModel()
                     }
 
                     if (state.sessions.isNotEmpty()) {
@@ -101,7 +103,7 @@ fun ClaudeTerminalContent(project: Project) {
                             },
                         )
 
-                        if (activePanel == ActivePanel.NONE && !showRCDialog && previewImagePath == null) {
+                        if (activePanel == ActivePanel.NONE && !showRCDialog && previewImagePath == null && !showModelPicker) {
                             SwingPanel(
                                 modifier = Modifier
                                     .weight(1f)
@@ -200,7 +202,9 @@ fun ClaudeTerminalContent(project: Project) {
                             onClearImages = { selectedImagePaths = emptyList() },
                             pendingInput = pendingInput,
                             onPendingInputConsumed = { service.consumePendingInput() },
-                            onChangeModelClick = { sendToTerminal("/model", true) },
+                            onChangeModelClick = { showModelPicker = true },
+                            activeModel = state.activeModel,
+                            modelLoading = state.modelLoading,
                             onSkillsClick = {
                                 activePanel =
                                     if (activePanel == ActivePanel.SKILLS) ActivePanel.NONE else ActivePanel.SKILLS
@@ -224,6 +228,14 @@ fun ClaudeTerminalContent(project: Project) {
                     }
                 }
             }
+        }
+
+        if (showModelPicker) {
+            ModelPickerDialog(
+                currentModelId = state.activeModel,
+                onSelect = { model -> service.selectModel(model) },
+                onDismiss = { showModelPicker = false },
+            )
         }
 
         if (showRCDialog) {

@@ -2,6 +2,7 @@ package com.github.teknasyon.plugin.toolwindow
 
 import com.github.teknasyon.plugin.common.CliUtils
 import com.github.teknasyon.plugin.common.Constants
+import com.github.teknasyon.plugin.service.PluginSettingsService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
@@ -29,12 +30,31 @@ data class ClaudeSession(
     val widget: JBTerminalWidget? = null,
 )
 
+data class ClaudeModel(
+    val id: String,
+    val alias: String,
+    val displayName: String,
+) {
+    companion object {
+        val AVAILABLE = listOf(
+            ClaudeModel("claude-opus-4-6", "opus", "Opus 4.6"),
+            ClaudeModel("claude-sonnet-4-6", "sonnet", "Sonnet 4.6"),
+            ClaudeModel("claude-haiku-4-5-20251001", "haiku", "Haiku 4.5"),
+        )
+
+        val DEFAULT = AVAILABLE.first() // Opus 4.6
+        fun findById(id: String): ClaudeModel? = AVAILABLE.find { it.id == id }
+    }
+}
+
 data class ClaudeSessionState(
     val sessions: List<ClaudeSession> = emptyList(),
     val activeSessionId: Int = 0,
     val claudeInstalled: Boolean? = null,
     val superClaudeInstalled: Boolean? = null,
     val remoteControlActive: Boolean = false,
+    val activeModel: String? = null,
+    val modelLoading: Boolean = false,
 )
 
 @Service(Service.Level.PROJECT)
@@ -170,6 +190,38 @@ class ClaudeSessionService(private val project: Project) : Disposable {
             }
         }
         stopCaffeinate()
+    }
+
+    fun loadCachedModel() {
+        val cached = PluginSettingsService.getInstance(project).getCachedClaudeModel()
+        if (cached != null) {
+            _state.value = _state.value.copy(activeModel = cached)
+        } else {
+            fetchActiveModel()
+        }
+    }
+
+    private fun fetchActiveModel() {
+        _state.value = _state.value.copy(modelLoading = true)
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val projectDir = File(project.basePath ?: ".")
+            val model = CliUtils.queryClaudeModel(projectDir)
+            ApplicationManager.getApplication().invokeLater {
+                _state.value = _state.value.copy(
+                    activeModel = model,
+                    modelLoading = false,
+                )
+                if (model != null) {
+                    PluginSettingsService.getInstance(project).setCachedClaudeModel(model)
+                }
+            }
+        }
+    }
+
+    fun selectModel(model: ClaudeModel) {
+        sendToTerminal("/model ${model.alias}", true)
+        _state.value = _state.value.copy(activeModel = model.id)
+        PluginSettingsService.getInstance(project).setCachedClaudeModel(model.id)
     }
 
     private fun startCaffeinate() {

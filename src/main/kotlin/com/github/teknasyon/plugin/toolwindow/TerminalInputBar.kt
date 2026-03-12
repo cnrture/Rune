@@ -44,6 +44,17 @@ import javax.swing.SwingUtilities
 
 private val urlRegex = Regex("""https?://\S+""")
 
+private fun formatModelName(model: String): String {
+    // "claude-sonnet-4-20250514" → "Sonnet 4"
+    // "claude-opus-4-20250115" → "Opus 4"
+    // "claude-haiku-3-5-20241022" → "Haiku 3.5"
+    val parts = model.removePrefix("claude-").split("-")
+    val name = parts.firstOrNull()?.replaceFirstChar { it.uppercase() } ?: return model
+    val versionParts = parts.drop(1).takeWhile { it.all { c -> c.isDigit() } }
+    val version = versionParts.joinToString(".")
+    return if (version.isNotEmpty()) "$name $version" else name
+}
+
 private class UrlHighlightTransformation(private val urlColor: androidx.compose.ui.graphics.Color) : VisualTransformation {
     override fun filter(text: androidx.compose.ui.text.AnnotatedString): TransformedText {
         val annotated = buildAnnotatedString {
@@ -74,6 +85,8 @@ internal fun TerminalInputBar(
     pendingInput: String?,
     onPendingInputConsumed: () -> Unit,
     onChangeModelClick: () -> Unit,
+    activeModel: String? = null,
+    modelLoading: Boolean = false,
     onSkillsClick: () -> Unit,
     onCommandsClick: () -> Unit,
     onSlashTyped: () -> Unit = {},
@@ -172,9 +185,13 @@ internal fun TerminalInputBar(
             )
             Spacer(modifier = Modifier.size(4.dp))
             TPActionCard(
-                title = "Model",
+                title = when {
+                    modelLoading -> "Loading..."
+                    activeModel != null -> formatModelName(activeModel)
+                    else -> "Model"
+                },
                 icon = Icons.Rounded.SmartToy,
-                actionColor = TPTheme.colors.hintGray,
+                actionColor = if (activeModel != null) TPTheme.colors.blue else TPTheme.colors.hintGray,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
                 onClick = { onChangeModelClick() },
@@ -440,3 +457,4 @@ internal fun TerminalInputBar(
         }
     }
 }
+

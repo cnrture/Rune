@@ -74,6 +74,58 @@ object CliUtils {
         return runProcess(dir, "git", *args)
     }
 
+    private val modelUsageRegex = Regex(""""modelUsage"\s*:\s*\{\s*"([^"]+)"""")
+
+    fun queryClaudeModel(projectDir: File): String? {
+        val claudePath = findClaudeCli() ?: return null
+        return try {
+            val output = runProcessWithStdin(
+                dir = projectDir,
+                cmd = arrayOf(claudePath, "-p", "--output-format", "json", "--max-turns", "1", "-"),
+                stdin = "reply with just: ok",
+                timeoutSeconds = 15,
+            )
+            if (output.isBlank()) return null
+            modelUsageRegex.find(output)?.groupValues?.get(1)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun runProcessWithStdin(
+        dir: File,
+        cmd: Array<String>,
+        stdin: String,
+        timeoutSeconds: Long = Constants.TIMEOUT_PROCESS_DEFAULT_SECONDS,
+    ): String {
+        return try {
+            val pb = ProcessBuilder(*cmd)
+                .directory(dir)
+                .redirectErrorStream(true)
+            getLoginShellPath()?.let { shellPath ->
+                pb.environment()["PATH"] = shellPath
+            }
+            val process = pb.start()
+            process.outputStream.bufferedWriter().use { it.write(stdin) }
+            var output = ""
+            val readerThread = Thread {
+                output = process.inputStream.bufferedReader().readText().trim()
+            }
+            readerThread.isDaemon = true
+            readerThread.start()
+            val finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
+            if (!finished) {
+                process.destroyForcibly()
+                readerThread.join(2000)
+                return output
+            }
+            readerThread.join(5000)
+            output
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
     fun runProcess(dir: File, vararg cmd: String, timeoutSeconds: Long = Constants.TIMEOUT_PROCESS_DEFAULT_SECONDS): String {
         return try {
             val pb = ProcessBuilder(*cmd)

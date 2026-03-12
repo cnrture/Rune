@@ -21,6 +21,7 @@ class PluginSettingsService :
         var includeJiraUrlInCommit: Boolean = false,
         var useReviewBranch: Boolean = false,
         var vcsProviderOverride: String = "",
+        var cachedClaudeModel: String = "",
     )
 
     private var state = State()
@@ -59,6 +60,12 @@ class PluginSettingsService :
 
     fun setUseReviewBranch(use: Boolean) {
         state.useReviewBranch = use
+    }
+
+    fun getCachedClaudeModel(): String? = state.cachedClaudeModel.takeIf { it.isNotBlank() }
+
+    fun setCachedClaudeModel(model: String?) {
+        state.cachedClaudeModel = model ?: ""
     }
 
     fun getVcsProvider(): VcsProvider {
