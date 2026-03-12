@@ -146,11 +146,16 @@ class ClaudeSessionService(private val project: Project) : Disposable {
     @Suppress("DEPRECATION")
     fun sendToTerminal(text: String, autoRun: Boolean) {
         val widget = activeWidget ?: return
-        widget.terminalStarter?.sendString(text, true)
-        widget.preferredFocusableComponent.requestFocusInWindow()
+        val starter = widget.terminalStarter ?: return
+        starter.sendString(text, true)
         if (autoRun) {
-            SwingUtilities.invokeLater {
-                widget.terminalStarter?.sendBytes("\r".toByteArray(), true)
+            // Send Enter separately after a short delay so it falls outside
+            // the terminal's bracketed paste sequence for multi-line input
+            ApplicationManager.getApplication().executeOnPooledThread {
+                Thread.sleep(Constants.DELAY_SEND_ENTER_MS)
+                ApplicationManager.getApplication().invokeLater {
+                    widget.terminalStarter?.sendBytes("\r".toByteArray(), true)
+                }
             }
         }
     }
@@ -339,6 +344,10 @@ private fun createClaudeTerminalPanel(
                         widget.terminalStarter?.sendString("\u001B", true)
                         e.consume()
                         return@KeyEventDispatcher true
+                    }
+                    // Enter → allow sending to terminal as fallback
+                    e.keyCode == KeyEvent.VK_ENTER -> {
+                        return@KeyEventDispatcher false
                     }
                 }
             }

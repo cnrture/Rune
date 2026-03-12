@@ -24,6 +24,7 @@ object Constants {
     const val DELAY_MENU_RENDER_MS = 1000L
     const val DELAY_KEY_INPUT_MS = 200L
     const val DELAY_CLI_STARTUP_MS = 1500L
+    const val DELAY_SEND_ENTER_MS = 150L
     const val DELAY_NEW_SESSION_CLI_MS = 3000L
 
     // Messages
