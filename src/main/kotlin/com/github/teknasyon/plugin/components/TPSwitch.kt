@@ -42,7 +42,7 @@ fun TPSwitch(
                 color = if (checked) TPTheme.colors.blue.copy(alpha = 0.3f) else TPTheme.colors.blue.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(12.dp)
             )
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = 8.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TPText(

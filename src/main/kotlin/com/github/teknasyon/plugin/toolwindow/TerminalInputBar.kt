@@ -7,7 +7,10 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.AlternateEmail
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.SmartToy
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +20,6 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -104,35 +106,6 @@ internal fun TerminalInputBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            // Left side icons — horizontal row
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                // File inject button
-                Icon(
-                    imageVector = Icons.Rounded.AlternateEmail,
-                    contentDescription = "Add active file path",
-                    tint = TPTheme.colors.lightGray,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
-                            val path = onInjectFile() ?: return@clickable
-                            val newText = if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
-                            inputValue = TextFieldValue(newText, TextRange(newText.length))
-                        }
-                )
-                // Image picker button
-                Icon(
-                    imageVector = Icons.Rounded.Image,
-                    contentDescription = "Add image",
-                    tint = if (selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable { onPickImage() }
-                )
-            }
-
             // Middle area: image chips + input field
             Column(
                 modifier = Modifier.weight(1f),
@@ -234,11 +207,41 @@ internal fun TerminalInputBar(
                         fontSize = 14.sp,
                     ),
                     cursorBrush = SolidColor(TPTheme.colors.white),
-                    decorationBox = { inneTPTextField ->
+                    decorationBox = { innerTPTextField ->
                         Row(
                             verticalAlignment = Alignment.Top,
                             horizontalArrangement = Arrangement.Start,
                         ) {
+                            // Left side icons — horizontal row
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                // File inject button
+                                Icon(
+                                    imageVector = Icons.Rounded.AlternateEmail,
+                                    contentDescription = "Add active file path",
+                                    tint = TPTheme.colors.lightGray,
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .clickable {
+                                            val path = onInjectFile() ?: return@clickable
+                                            val newText =
+                                                if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
+                                            inputValue = TextFieldValue(newText, TextRange(newText.length))
+                                        }
+                                )
+                                // Image picker button
+                                Icon(
+                                    imageVector = Icons.Rounded.Image,
+                                    contentDescription = "Add image",
+                                    tint = if (selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .clickable { onPickImage() }
+                                )
+                            }
+                            Spacer(modifier = Modifier.size(8.dp))
                             Box(
                                 modifier = Modifier.weight(1f),
                             ) {
@@ -249,31 +252,7 @@ internal fun TerminalInputBar(
                                         style = TextStyle(fontSize = 14.sp),
                                     )
                                 }
-                                inneTPTextField()
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .background(TPTheme.colors.primaryContainer, RoundedCornerShape(6.dp))
-                                    .clickable { onSlashClick() }
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                ) {
-                                    TPText(
-                                        text = "/",
-                                        color = TPTheme.colors.white,
-                                        style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Rounded.UnfoldMore,
-                                        contentDescription = null,
-                                        tint = TPTheme.colors.white,
-                                        modifier = Modifier.size(14.dp),
-                                    )
-                                }
+                                innerTPTextField()
                             }
                         }
                     },
