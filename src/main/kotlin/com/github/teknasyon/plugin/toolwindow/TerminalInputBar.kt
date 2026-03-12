@@ -392,6 +392,13 @@ internal fun TerminalInputBar(
                                     )
                                 }
                                 Spacer(modifier = Modifier.weight(1f))
+                                if (inputValue.text.isNotEmpty()) {
+                                    TPText(
+                                        text = "${inputValue.text.length} characters",
+                                        color = TPTheme.colors.hintGray.copy(alpha = 0.6f),
+                                        style = TextStyle(fontSize = 10.sp),
+                                    )
+                                }
                                 TPText(
                                     text = "Shift+Enter for new line",
                                     color = TPTheme.colors.hintGray,
