@@ -112,7 +112,7 @@ internal fun TerminalInputBar(
             Spacer(modifier = Modifier.size(8.dp))
             TPSwitch(
                 checked = isRemoteControlActive,
-                text = "Remote Control",
+                text = "Remote",
                 onCheckedChange = {
                     if (isRemoteControlActive) onRemoteControlStop() else onRemoteControlStart()
                 },
