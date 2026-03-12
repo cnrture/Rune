@@ -28,6 +28,7 @@ internal fun SessionTabBar(
     onSelectSession: (Int) -> Unit,
     onCloseSession: (Int) -> Unit,
     onAddSession: () -> Unit,
+    onCreateSkillClick: () -> Unit,
     onUsageClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
@@ -42,6 +43,13 @@ internal fun SessionTabBar(
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            TPActionCard(
+                title = "Create Skill",
+                icon = Icons.Rounded.AutoFixHigh,
+                actionColor = TPTheme.colors.blue,
+                type = TPActionCardType.EXTRA_SMALL,
+                onClick = { onCreateSkillClick() },
+            )
             TPActionCard(
                 title = "Usage",
                 icon = Icons.Rounded.DataUsage,

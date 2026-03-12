@@ -44,7 +44,6 @@ internal fun TerminalInputBar(
     onPendingInputConsumed: () -> Unit,
     onSlashClick: () -> Unit,
     onChangeModelClick: () -> Unit,
-    onCreateSkillClick: () -> Unit,
     isRemoteControlActive: Boolean = false,
     onRemoteControlStart: () -> Unit = {},
     onRemoteControlStop: () -> Unit = {},
@@ -86,19 +85,11 @@ internal fun TerminalInputBar(
             modifier = Modifier.fillMaxWidth(),
         ) {
             TPActionCard(
-                title = "Change Model",
+                title = "Model",
                 icon = Icons.Rounded.SmartToy,
                 actionColor = TPTheme.colors.purple,
                 type = TPActionCardType.EXTRA_SMALL,
                 onClick = { onChangeModelClick() },
-            )
-            Spacer(modifier = Modifier.size(4.dp))
-            TPActionCard(
-                title = "Create Skill",
-                icon = Icons.Rounded.AutoFixHigh,
-                actionColor = TPTheme.colors.blue,
-                type = TPActionCardType.EXTRA_SMALL,
-                onClick = { onCreateSkillClick() },
             )
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.size(8.dp))

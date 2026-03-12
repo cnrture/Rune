@@ -85,6 +85,7 @@ fun ClaudeTerminalContent(project: Project) {
                             onSelectSession = { service.switchToSession(it) },
                             onCloseSession = { service.closeSession(it) },
                             onAddSession = { service.addNewSession() },
+                            onCreateSkillClick = { CreateSkillDialog(project).show() },
                             onUsageClick = { sendToTerminal("/usage", true) },
                             onSettingsClick = {
                                 ShowSettingsUtil.getInstance()
@@ -149,7 +150,6 @@ fun ClaudeTerminalContent(project: Project) {
                             onPendingInputConsumed = { service.consumePendingInput() },
                             onSlashClick = { showCommandPalette = !showCommandPalette },
                             onChangeModelClick = { sendToTerminal("/model", true) },
-                            onCreateSkillClick = { CreateSkillDialog(project).show() },
                             isRemoteControlActive = state.remoteControlActive,
                             onRemoteControlStart = { showRCDialog = true },
                             onRemoteControlStop = { service.stopRemoteControl() },
