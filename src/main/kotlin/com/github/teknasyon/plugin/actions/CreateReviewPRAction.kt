@@ -7,6 +7,8 @@ import com.github.teknasyon.plugin.common.VcsProvider
 import com.github.teknasyon.plugin.common.VcsProviderDetector
 import com.github.teknasyon.plugin.service.BitbucketCloudPlatformService
 import com.github.teknasyon.plugin.service.BitbucketCredentialService
+import com.github.teknasyon.plugin.service.GitHubApiClient
+import com.github.teknasyon.plugin.service.GitHubCredentialService
 import com.github.teknasyon.plugin.service.GitHubPlatformService
 import com.github.teknasyon.plugin.service.PluginSettingsService
 import com.github.teknasyon.plugin.service.VcsPlatformService
@@ -44,37 +46,7 @@ class CreateReviewPRAction : AnAction() {
                 // 1. Current branch
                 val currentBranch = runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
 
-                // 2. Detect base branch automatically
-                indicator.text = "Detecting base branch…"
-                val baseBranch = detectBaseBranch(dir, currentBranch)
-                indicator.text = "Base branch: $baseBranch"
-
-                // 3. Fetch remote refs
-                indicator.text = "Fetching remote…"
-                runGit(dir, "fetch", "origin")
-
-                // 4. Determine target branch
-                val targetBranch = if (useReviewBranch) {
-                    val reviewBranch = "review/$currentBranch"
-                    val reviewExists = runGit(dir, "ls-remote", "--heads", "origin", reviewBranch).isNotBlank()
-                    if (!reviewExists) {
-                        indicator.text = "Creating $reviewBranch from $baseBranch…"
-                        val result = runGit(dir, "push", "origin", "origin/$baseBranch:refs/heads/$reviewBranch")
-                        if (result.contains("error") || result.contains("fatal")) {
-                            notify(project, "Failed to create $reviewBranch: $result", NotificationType.ERROR)
-                            return
-                        }
-                    }
-                    reviewBranch
-                } else {
-                    baseBranch
-                }
-
-                // 5. Push current branch
-                indicator.text = "Pushing $currentBranch…"
-                runGit(dir, "push", "-u", "origin", currentBranch)
-
-                // 6. Parse remote URL
+                // 2. Parse remote URL
                 val remoteUrl = runGit(dir, "remote", "get-url", "origin").trim()
                 if (remoteUrl.isBlank()) {
                     notify(project, "Could not get remote URL. Ensure 'origin' remote is set.", NotificationType.ERROR)
@@ -88,21 +60,40 @@ class CreateReviewPRAction : AnAction() {
                     return
                 }
 
-                // 7. Create platform service
-                val platformService = createPlatformService(provider, remoteInfo, dir)
+                // 3. Create platform service
+                val platformService = createPlatformService(project, provider, remoteInfo)
                 if (platformService == null) return
 
-                // 8. Extract Jira ticket ID from branch name
-                val ticketId = Constants.JIRA_TICKET_REGEX.find(currentBranch)?.value
+                // 4. Read local branches for base branch selection
+                indicator.text = "Reading branches…"
+                val localBranches = getLocalBranches(dir).filter { it != currentBranch }
 
-                // 9. Open dialog on EDT for reviewer/label selection
+                // 5. Detect suggested base branch via merge-base
+                val suggestedBase = detectBaseBranch(dir, localBranches)
+
+                // 6. Push current branch
+                indicator.text = "Pushing $currentBranch…"
+                runGit(dir, "push", "-u", "origin", currentBranch)
+
+                // 7. Extract Jira ticket ID from branch name
+                val ticketId = Constants.JIRA_TICKET_REGEX.find(currentBranch)?.value?.uppercase()
+
+                // 8. Open dialog on EDT for reviewer/label/base branch selection
                 ApplicationManager.getApplication().invokeLater {
                     val dialog = CreatePRDialog(
                         platformService = platformService,
                         owner = remoteInfo.ownerOrProject,
                         repo = remoteInfo.repo,
                         ticketId = ticketId,
-                        onConfirm = { reviewers, labels ->
+                        remoteBranches = localBranches,
+                        suggestedBaseBranch = suggestedBase,
+                        useReviewBranch = useReviewBranch,
+                        onConfirm = { reviewers, labels, baseBranch ->
+                            val targetBranch = if (useReviewBranch) {
+                                createReviewBranch(project, dir, currentBranch, baseBranch) ?: return@CreatePRDialog
+                            } else {
+                                baseBranch
+                            }
                             createPR(
                                 project = project,
                                 platformService = platformService,
@@ -120,19 +111,38 @@ class CreateReviewPRAction : AnAction() {
         })
     }
 
+    private fun createReviewBranch(project: Project, dir: File, currentBranch: String, baseBranch: String): String? {
+        val reviewBranch = "review/$currentBranch"
+        val reviewExists = runGit(dir, "ls-remote", "--heads", "origin", reviewBranch).isNotBlank()
+        if (!reviewExists) {
+            val result = runGit(dir, "push", "origin", "origin/$baseBranch:refs/heads/$reviewBranch")
+            if (result.contains("error") || result.contains("fatal")) {
+                notify(project, "Failed to create $reviewBranch: $result", NotificationType.ERROR)
+                return null
+            }
+        }
+        return reviewBranch
+    }
+
     private fun createPlatformService(
+        project: Project,
         provider: VcsProvider,
         remoteInfo: com.github.teknasyon.plugin.common.RemoteInfo,
-        dir: File,
     ): VcsPlatformService? {
         return when (provider) {
             VcsProvider.GITHUB -> {
-                val ghPath = CliUtils.findGhCli()
-                if (ghPath == null) return null
-                GitHubPlatformService(ghPath, dir, remoteInfo.ownerOrProject, remoteInfo.repo)
+                if (!GitHubCredentialService.hasCredentials()) {
+                    notify(project, Constants.GITHUB_TOKEN_MISSING_MESSAGE, NotificationType.ERROR)
+                    return null
+                }
+                val token = GitHubCredentialService.getToken()!!
+                GitHubPlatformService(GitHubApiClient(token), remoteInfo.ownerOrProject, remoteInfo.repo)
             }
             VcsProvider.BITBUCKET_CLOUD -> {
-                if (!BitbucketCredentialService.hasCredentials()) return null
+                if (!BitbucketCredentialService.hasCredentials()) {
+                    notify(project, Constants.BITBUCKET_CREDENTIALS_MISSING_MESSAGE, NotificationType.ERROR)
+                    return null
+                }
                 BitbucketCloudPlatformService(remoteInfo.ownerOrProject, remoteInfo.repo)
             }
         }
@@ -180,51 +190,38 @@ class CreateReviewPRAction : AnAction() {
     }
 
     /**
-     * Detects the base branch this branch was created from.
-     *
-     * Method 1: reflog — looks for "Created from <branch>" in the oldest reflog entry.
-     * Method 2: merge-base — compares with common branches and picks the closest one.
+     * Detects the base branch this branch was likely created from.
+     * Uses merge-base distance against local branches to find the closest ancestor.
      */
-    private fun detectBaseBranch(dir: File, currentBranch: String): String {
-        // Method 1: reflog
-        val reflogLines = runGit(dir, "reflog", "show", "--format=%gs", currentBranch).lines()
-        val createdFromEntry = reflogLines
-            .lastOrNull { it.contains("Created from", ignoreCase = true) }
-            ?: reflogLines.lastOrNull { it.startsWith("branch:") }
+    private fun detectBaseBranch(
+        dir: File,
+        localBranches: List<String>,
+    ): String {
+        val priorityBranches = listOf("develop", "main", "master", "staging", "release")
+        val candidates = (priorityBranches.filter { it in localBranches } +
+            localBranches.filter { it !in priorityBranches }).distinct()
 
-        if (createdFromEntry != null) {
-            val match = Regex("(?i)(?:created from|moving from .+ to) ([^\\s]+)$").find(createdFromEntry)
-            val detected = match?.groupValues?.get(1)
-                ?.removePrefix("refs/heads/")
-                ?.removePrefix("origin/")
-                ?.trim()
-            if (!detected.isNullOrBlank() && detected != currentBranch && isBranch(dir, detected)) {
-                return detected
-            }
-        }
+        if (candidates.isEmpty()) return "main"
 
-        // Method 2: find closest common ancestor among known branches
-        val candidates = listOf("develop", "main", "master", "staging", "release")
-        return candidates.minByOrNull { candidate ->
-            val mergeBase = runGit(dir, "merge-base", "HEAD", "origin/$candidate").trim()
+        val closest = candidates.minByOrNull { candidate ->
+            val mergeBase = runGit(dir, "merge-base", "HEAD", candidate).trim()
             if (mergeBase.isBlank()) Int.MAX_VALUE
             else runGit(dir, "rev-list", "--count", "$mergeBase..HEAD").trim().toIntOrNull() ?: Int.MAX_VALUE
-        } ?: "develop"
+        }
+
+        return closest ?: "main"
     }
 
-    /**
-     * Checks whether the given ref name is a branch (local or remote), not a tag.
-     */
-    private fun isBranch(dir: File, ref: String): Boolean {
-        val local = runGit(dir, "branch", "--list", ref).trim()
-        if (local.isNotBlank()) return true
-        val remote = runGit(dir, "branch", "--list", "--remotes", "origin/$ref").trim()
-        return remote.isNotBlank()
+    private fun getLocalBranches(dir: File): List<String> {
+        return runGit(dir, "branch", "--format=%(refname:short)")
+            .lines()
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
     }
 
     private fun getJiraTicketUrl(dir: File): String? {
         val branch = CliUtils.runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
-        val ticketId = Constants.JIRA_TICKET_REGEX.find(branch)?.value ?: return null
+        val ticketId = Constants.JIRA_TICKET_REGEX.find(branch)?.value?.uppercase() ?: return null
         return Constants.jiraBrowseUrl(ticketId)
     }
 

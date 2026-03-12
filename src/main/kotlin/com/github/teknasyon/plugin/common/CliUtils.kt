@@ -5,12 +5,7 @@ import java.util.concurrent.TimeUnit
 
 object CliUtils {
 
-    fun findGhCli(): String? {
-        return resolveViaShell("gh") ?: run {
-            listOf("/usr/local/bin/gh", "/usr/bin/gh", "/opt/homebrew/bin/gh")
-                .firstOrNull { File(it).exists() }
-        }
-    }
+    private val cachedLoginShellPath: String? by lazy { resolveLoginShellPath() }
 
     fun findClaudeCli(): String? {
         return resolveViaShell("claude") ?: run {
@@ -25,6 +20,29 @@ object CliUtils {
                 "$home/.bun/bin/claude",
                 "$home/.volta/bin/claude",
             ).firstOrNull { File(it).exists() }
+        }
+    }
+
+    /**
+     * Returns the PATH value from the user's login shell.
+     * This is needed because IntelliJ's process environment often lacks paths
+     * configured in shell profiles (e.g., nvm, volta, homebrew).
+     */
+    fun getLoginShellPath(): String? = cachedLoginShellPath
+
+    private fun resolveLoginShellPath(): String? {
+        return try {
+            val shell = System.getenv("SHELL") ?: "/bin/bash"
+            val process = ProcessBuilder(shell, "-l", "-c", "echo \$PATH")
+                .redirectErrorStream(true)
+                .start()
+            process.outputStream.close()
+            val finished = process.waitFor(Constants.TIMEOUT_CLI_LOOKUP_SECONDS, TimeUnit.SECONDS)
+            if (!finished || process.exitValue() != 0) return null
+            val path = process.inputStream.bufferedReader().readText().trim()
+            if (path.isNotBlank()) path else null
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -58,13 +76,29 @@ object CliUtils {
 
     fun runProcess(dir: File, vararg cmd: String, timeoutSeconds: Long = Constants.TIMEOUT_PROCESS_DEFAULT_SECONDS): String {
         return try {
-            val process = ProcessBuilder(*cmd)
+            val pb = ProcessBuilder(*cmd)
                 .directory(dir)
                 .redirectErrorStream(true)
-                .start()
+            getLoginShellPath()?.let { shellPath ->
+                pb.environment()["PATH"] = shellPath
+            }
+            val process = pb.start()
             process.outputStream.close()
-            process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
-            process.inputStream.bufferedReader().readText().trim()
+            // Read output in a separate thread to prevent buffer deadlock
+            var output = ""
+            val readerThread = Thread {
+                output = process.inputStream.bufferedReader().readText().trim()
+            }
+            readerThread.isDaemon = true
+            readerThread.start()
+            val finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
+            if (!finished) {
+                process.destroyForcibly()
+                readerThread.join(2000)
+                return output
+            }
+            readerThread.join(5000)
+            output
         } catch (_: Exception) {
             ""
         }

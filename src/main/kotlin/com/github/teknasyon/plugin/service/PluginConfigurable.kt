@@ -8,6 +8,7 @@ import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.ComponentPredicate
+import java.awt.Color
 import javax.swing.*
 
 class PluginConfigurable(private val project: Project) : BoundConfigurable("Teknasyon Plugin Settings") {
@@ -23,6 +24,7 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Tekn
 
     // VCS / Bitbucket fields
     private lateinit var vcsProviderCombo: JComboBox<String>
+    private lateinit var githubTokenField: JPasswordField
     private lateinit var bitbucketUsernameField: JTextField
     private lateinit var bitbucketTokenField: JPasswordField
 
@@ -103,6 +105,14 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Tekn
                     }
                     cell(vcsProviderCombo)
                 }
+
+                val isGitHub = object : ComponentPredicate() {
+                    override fun invoke(): Boolean = vcsProviderCombo.selectedIndex == 0
+                    override fun addListener(listener: (Boolean) -> Unit) {
+                        vcsProviderCombo.addItemListener { listener(invoke()) }
+                    }
+                }
+
                 val isBitbucket = object : ComponentPredicate() {
                     override fun invoke(): Boolean = vcsProviderCombo.selectedIndex == 1
                     override fun addListener(listener: (Boolean) -> Unit) {
@@ -110,6 +120,29 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Tekn
                     }
                 }
 
+                // GitHub fields
+                if (GitHubCredentialService.hasCredentials()) {
+                    row {
+                        cell(savedCredentialLabel("Token saved"))
+                    }.visibleIf(isGitHub)
+                }
+                row("Personal Access Token:") {
+                    githubTokenField = JPasswordField(30)
+                    cell(githubTokenField)
+                }.visibleIf(isGitHub)
+                row {
+                    comment(
+                        "GitHub Personal Access Token with <b>repo</b> scope. " +
+                            "Create at: <b>github.com > Settings > Developer settings > Personal access tokens</b>"
+                    )
+                }.visibleIf(isGitHub)
+
+                // Bitbucket fields
+                if (BitbucketCredentialService.hasCredentials()) {
+                    row {
+                        cell(savedCredentialLabel("Token saved"))
+                    }.visibleIf(isBitbucket)
+                }
                 row("Email:") {
                     bitbucketUsernameField = JTextField(BitbucketCredentialService.getUsername() ?: "", 30)
                     cell(bitbucketUsernameField)
@@ -130,6 +163,11 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Tekn
             }
 
             group("Jira Integration") {
+                if (JiraService.hasCredentials()) {
+                    row {
+                        cell(savedCredentialLabel("Credentials saved (${JiraService.getEmail()})"))
+                    }
+                }
                 row("Email:") {
                     jiraEmailField = JTextField(JiraService.getEmail() ?: "", 30)
                     cell(jiraEmailField)
@@ -153,6 +191,12 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Tekn
 
         // VCS settings
         settingsService.setVcsProvider(getVcsProviderFromIndex(vcsProviderCombo.selectedIndex))
+
+        // GitHub credentials
+        val ghToken = String(githubTokenField.password).trim()
+        if (ghToken.isNotBlank()) {
+            GitHubCredentialService.saveToken(ghToken)
+        }
 
         // Bitbucket credentials (token yeterli, username opsiyonel)
         val bbUsername = bitbucketUsernameField.text.trim()
@@ -180,11 +224,12 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Tekn
 
         val vcsProviderModified =
             getVcsProviderFromIndex(vcsProviderCombo.selectedIndex) != settingsService.getVcsProvider()
+        val ghTokenModified = String(githubTokenField.password).trim().isNotBlank()
         val bbCredModified = bitbucketUsernameField.text.trim() != (BitbucketCredentialService.getUsername() ?: "") ||
             String(bitbucketTokenField.password).trim().isNotBlank()
 
         return promptModified || jiraUrlToggleModified || reviewBranchModified || pathsModified ||
-            jiraModified || vcsProviderModified || bbCredModified
+            jiraModified || vcsProviderModified || ghTokenModified || bbCredModified
     }
 
     override fun reset() {
@@ -197,8 +242,15 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Tekn
         jiraTokenField.text = ""
 
         vcsProviderCombo.selectedIndex = getVcsProviderIndex(settingsService.getVcsProvider())
+        githubTokenField.text = ""
         bitbucketUsernameField.text = BitbucketCredentialService.getUsername() ?: ""
         bitbucketTokenField.text = ""
+    }
+
+    private fun savedCredentialLabel(text: String): JLabel {
+        return JLabel(text).apply {
+            foreground = Color(75, 181, 67)
+        }
     }
 
     private fun getVcsProviderIndex(provider: VcsProvider?): Int {

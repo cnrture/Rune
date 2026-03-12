@@ -7,12 +7,11 @@ object Constants {
 
     // URLs
     const val JIRA_BASE_URL = "https://pozitim.atlassian.net"
-    const val GH_CLI_INSTALL_URL = "https://cli.github.com"
     const val CLAUDE_SKILL_BEST_PRACTICES_URL =
         "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices.md"
 
     // Regex patterns
-    val JIRA_TICKET_REGEX = Regex("[A-Z]+-\\d+")
+    val JIRA_TICKET_REGEX = Regex("[A-Za-z]+-\\d+")
 
     // Timeouts (seconds)
     const val TIMEOUT_CLI_LOOKUP_SECONDS = 5L
@@ -28,8 +27,8 @@ object Constants {
     const val DELAY_NEW_SESSION_CLI_MS = 3000L
 
     // Messages
-    const val GH_CLI_NOT_FOUND_MESSAGE =
-        "GitHub CLI (gh) not found. Install from $GH_CLI_INSTALL_URL and run 'gh auth login'."
+    const val GITHUB_TOKEN_MISSING_MESSAGE =
+        "GitHub token not configured. Go to Settings > Tools > Teknasyon Plugin Settings."
     const val BITBUCKET_CREDENTIALS_MISSING_MESSAGE =
         "Bitbucket credentials not configured. Go to Settings > Tools > Teknasyon Plugin Settings."
     fun jiraBrowseUrl(ticketId: String): String = "$JIRA_BASE_URL/browse/$ticketId"

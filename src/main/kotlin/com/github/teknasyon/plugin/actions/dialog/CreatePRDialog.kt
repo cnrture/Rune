@@ -43,6 +43,9 @@ data class PRDialogState(
     val labelFilter: String = "",
     val errorMessage: String? = null,
     val isCreatingLabel: Boolean = false,
+    val selectedBaseBranch: String = "",
+    val baseBranchFilter: String = "",
+    val remoteBranches: List<String> = emptyList(),
 )
 
 class CreatePRDialog(
@@ -50,13 +53,21 @@ class CreatePRDialog(
     private val owner: String,
     private val repo: String,
     private val ticketId: String? = null,
-    private val onConfirm: (reviewers: List<VcsUser>, labels: List<String>) -> Unit,
+    remoteBranches: List<String> = emptyList(),
+    suggestedBaseBranch: String = "main",
+    private val useReviewBranch: Boolean = false,
+    private val onConfirm: (reviewers: List<VcsUser>, labels: List<String>, baseBranch: String) -> Unit,
 ) : TPDialogWrapper(
-    width = 600,
-    height = 500,
+    width = 700,
+    height = 550,
 ) {
 
-    private var state = mutableStateOf(PRDialogState())
+    private var state = mutableStateOf(
+        PRDialogState(
+            selectedBaseBranch = suggestedBaseBranch,
+            remoteBranches = remoteBranches,
+        )
+    )
 
     private val cacheService = VcsCacheService.getInstance()
 
@@ -245,9 +256,16 @@ class CreatePRDialog(
                 Spacer(modifier = Modifier.size(12.dp))
             }
 
+            Spacer(modifier = Modifier.size(12.dp))
+
             Row(
                 modifier = Modifier.weight(1f),
             ) {
+                // Base branch selector
+                BaseBranchSelector(currentState)
+
+                Spacer(modifier = Modifier.size(16.dp))
+
                 SectionContent(
                     modifier = Modifier
                         .weight(1f)
@@ -316,7 +334,7 @@ class CreatePRDialog(
                     title = "Refresh",
                     icon = Icons.Rounded.Refresh,
                     actionColor = TPTheme.colors.hintGray,
-                    type = TPActionCardType.MEDIUM,
+                    type = TPActionCardType.SMALL,
                     onClick = { fetchData() },
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -324,7 +342,7 @@ class CreatePRDialog(
                     title = "Cancel",
                     icon = Icons.Rounded.Cancel,
                     actionColor = TPTheme.colors.lightGray,
-                    type = TPActionCardType.MEDIUM,
+                    type = TPActionCardType.SMALL,
                     onClick = { close(Constants.DEFAULT_EXIT_CODE) },
                 )
                 Spacer(modifier = Modifier.size(12.dp))
@@ -332,7 +350,7 @@ class CreatePRDialog(
                     title = "Create PR",
                     icon = Icons.Rounded.CheckCircle,
                     actionColor = TPTheme.colors.blue,
-                    type = TPActionCardType.MEDIUM,
+                    type = TPActionCardType.SMALL,
                     onClick = {
                         val selectedUserNames = state.value.selectedReviewers
                         val selectedUsers = state.value.reviewerUsers
@@ -340,10 +358,77 @@ class CreatePRDialog(
                         onConfirm(
                             selectedUsers,
                             state.value.selectedLabels.toList(),
+                            state.value.selectedBaseBranch,
                         )
                         close(0)
                     },
                 )
+            }
+        }
+    }
+
+    @Composable
+    private fun RowScope.BaseBranchSelector(currentState: PRDialogState) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(8.dp))
+                .border(
+                    width = 1.dp,
+                    color = TPTheme.colors.gray,
+                    shape = RoundedCornerShape(8.dp),
+                )
+                .padding(12.dp),
+        ) {
+            val targetLabel = if (useReviewBranch) {
+                "Base Branch (review/ branch will be created from this)"
+            } else {
+                "Base Branch (PR target)"
+            }
+            TPText(
+                text = targetLabel,
+                color = TPTheme.colors.white,
+                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+            )
+
+            Spacer(modifier = Modifier.size(8.dp))
+
+            TPTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = currentState.baseBranchFilter,
+                onValueChange = { state.value = state.value.copy(baseBranchFilter = it) },
+                placeholder = "Filter branches...",
+            )
+
+            Spacer(modifier = Modifier.size(8.dp))
+
+            val filtered = currentState.remoteBranches
+                .filter { currentState.baseBranchFilter.isBlank() || it.contains(currentState.baseBranchFilter, ignoreCase = true) }
+                .sortedByDescending { it == currentState.selectedBaseBranch }
+                .take(10)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                filtered.forEach { branch ->
+                    TPCheckbox(
+                        modifier = Modifier.fillMaxWidth(),
+                        checked = branch == currentState.selectedBaseBranch,
+                        label = branch,
+                        onCheckedChange = {
+                            state.value = state.value.copy(selectedBaseBranch = branch)
+                        },
+                    )
+                }
+                if (filtered.isEmpty()) {
+                    TPText(
+                        text = "No matching branches",
+                        color = TPTheme.colors.hintGray,
+                        style = TextStyle(fontSize = 12.sp),
+                    )
+                }
             }
         }
     }

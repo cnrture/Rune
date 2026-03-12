@@ -83,10 +83,13 @@ class GenerateCommitMessageAction : AnAction() {
         val prompt = promptTemplate.replace("{diff}", truncatedDiff)
 
         return try {
-            val process = ProcessBuilder(claudePath, "-p", "--output-format", "text", "-")
+            val pb = ProcessBuilder(claudePath, "-p", "--output-format", "text", "-")
                 .directory(File(projectDir))
                 .redirectErrorStream(true)
-                .start()
+            CliUtils.getLoginShellPath()?.let { shellPath ->
+                pb.environment()["PATH"] = shellPath
+            }
+            val process = pb.start()
 
             // Send prompt via stdin to avoid command-line length issues
             process.outputStream.bufferedWriter().use { it.write(prompt) }
@@ -158,7 +161,7 @@ class GenerateCommitMessageAction : AnAction() {
 
     private fun getJiraTicketUrl(projectDir: String): String? {
         val branch = CliUtils.runGit(File(projectDir), "rev-parse", "--abbrev-ref", "HEAD")
-        val ticketId = Constants.JIRA_TICKET_REGEX.find(branch)?.value ?: return null
+        val ticketId = Constants.JIRA_TICKET_REGEX.find(branch)?.value?.uppercase() ?: return null
         return Constants.jiraBrowseUrl(ticketId)
     }
 

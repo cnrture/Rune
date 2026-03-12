@@ -2,14 +2,17 @@ package com.github.teknasyon.plugin.service
 
 import com.github.teknasyon.plugin.actions.dialog.CommentThread
 import com.github.teknasyon.plugin.actions.dialog.Reply
-import com.github.teknasyon.plugin.common.CliUtils
 import com.github.teknasyon.plugin.common.VcsProvider
-import com.google.gson.JsonParser
-import java.io.File
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class GitHubPlatformService(
-    private val ghPath: String,
-    private val dir: File,
+    private val api: GitHubApiClient,
     private val owner: String,
     private val repo: String,
 ) : VcsPlatformService {
@@ -20,15 +23,11 @@ class GitHubPlatformService(
 
     override fun fetchReviewerCandidates(): Result<List<VcsUser>> {
         return try {
-            val output = CliUtils.runProcess(
-                dir,
-                ghPath, "api", "repos/$owner/$repo/contributors",
-                "--jq", ".[].login", "--paginate",
-            )
-            val users = output.lines()
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
-                .map { VcsUser(displayName = it, username = it) }
+            val pages = api.getPaginated("/repos/$owner/$repo/contributors")
+            val users = pages.flatMap { page ->
+                val array = Json.parseToJsonElement(page).jsonArray
+                array.map { it.jsonObject["login"]!!.jsonPrimitive.content }
+            }.distinct().map { VcsUser(displayName = it, username = it) }
             Result.success(users)
         } catch (e: Exception) {
             Result.failure(e)
@@ -37,15 +36,25 @@ class GitHubPlatformService(
 
     override fun fetchLabels(): Result<List<String>> {
         return try {
-            val output = CliUtils.runProcess(
-                dir,
-                ghPath, "api", "repos/$owner/$repo/labels",
-                "--jq", ".[].name", "--paginate",
-            )
-            val labels = output.lines()
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
+            val pages = api.getPaginated("/repos/$owner/$repo/labels")
+            val labels = pages.flatMap { page ->
+                val array = Json.parseToJsonElement(page).jsonArray
+                array.map { it.jsonObject["name"]!!.jsonPrimitive.content }
+            }.distinct()
             Result.success(labels)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun fetchAuthenticatedUser(): Result<String> {
+        return try {
+            val response = api.get("/user")
+            if (!response.isSuccess) {
+                return Result.failure(IllegalStateException(response.parseErrorMessage()))
+            }
+            val json = Json.parseToJsonElement(response.body).jsonObject
+            Result.success(json["login"]!!.jsonPrimitive.content)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -59,122 +68,106 @@ class GitHubPlatformService(
         reviewers: List<VcsUser>,
         labels: List<String>,
     ): PrCreationResult {
-        // Check if a tag with the same name as targetBranch exists on remote.
-        // If so, gh pr create (GraphQL) fails with "Base ref must be a branch"
-        val hasTagCollision = CliUtils.runGit(dir, "ls-remote", "--tags", "origin", targetBranch).isNotBlank()
-
-        val prUrl = if (hasTagCollision) {
-            createPRviaRestApi(currentBranch, targetBranch, body, reviewers, labels)
-        } else {
-            createPRviaGhCli(currentBranch, targetBranch, body, reviewers, labels)
-        }
-
-        if (prUrl != null) {
-            return PrCreationResult(url = prUrl)
-        }
-
-        // Check if PR already exists
-        val existingUrl = findExistingPr(currentBranch)
-        if (existingUrl != null) {
-            return PrCreationResult(url = existingUrl, errorMessage = "PR already exists")
-        }
-
-        return PrCreationResult(
-            errorMessage = "PR creation failed. A tag with the same name as '$targetBranch' may exist on remote."
-        )
-    }
-
-    private fun createPRviaGhCli(
-        currentBranch: String,
-        targetBranch: String,
-        body: String,
-        reviewers: List<VcsUser>,
-        labels: List<String>,
-    ): String? {
-        val cmd = mutableListOf(
-            ghPath,
-            "pr", "create",
-            "--assignee", "@me",
-            "--base", targetBranch,
-            "--head", currentBranch,
-            "--title", currentBranch,
-            "--body", body,
+        // Create PR
+        val createBody = buildJsonObject(
+            "title" to title,
+            "head" to currentBranch,
+            "base" to targetBranch,
+            "body" to body,
         )
 
+        val createResponse = api.post("/repos/$owner/$repo/pulls", createBody)
+
+        if (!createResponse.isSuccess) {
+            // Check if PR already exists
+            val existingUrl = findExistingPr(currentBranch)
+            if (existingUrl != null) {
+                return PrCreationResult(url = existingUrl, errorMessage = "PR already exists")
+            }
+            val hint = when (createResponse.statusCode) {
+                404 -> " (token may lack 'repo' scope or repository access)"
+                401 -> " (invalid or expired token)"
+                403 -> " (insufficient permissions)"
+                422 -> " (${createResponse.parseErrorMessage()})"
+                else -> ""
+            }
+            return PrCreationResult(
+                errorMessage = "PR creation failed (HTTP ${createResponse.statusCode})$hint"
+            )
+        }
+
+        val prJson = Json.parseToJsonElement(createResponse.body).jsonObject
+        val prUrl = prJson["html_url"]!!.jsonPrimitive.content
+        val prNumber = prJson["number"]!!.jsonPrimitive.int
+
+        // Assign to self
+        val username = fetchAuthenticatedUser().getOrNull()
+        if (username != null) {
+            api.post(
+                "/repos/$owner/$repo/issues/$prNumber/assignees",
+                """{"assignees":["$username"]}""",
+            )
+        }
+
+        // Add reviewers
+        var warningMessage: String? = null
         if (reviewers.isNotEmpty()) {
-            cmd += "--reviewer"
-            cmd += reviewers.joinToString(",") { it.username }
+            val reviewerList = reviewers.joinToString(",") { "\"${it.username}\"" }
+            val reviewerResponse = api.post(
+                "/repos/$owner/$repo/pulls/$prNumber/requested_reviewers",
+                """{"reviewers":[$reviewerList]}""",
+            )
+            if (!reviewerResponse.isSuccess) {
+                warningMessage = "PR created but failed to add reviewers: ${reviewerResponse.parseErrorMessage()}"
+            }
         }
+
+        // Add labels
         if (labels.isNotEmpty()) {
-            cmd += "--label"
-            cmd += labels.joinToString(",")
+            val labelList = labels.joinToString(",") { "\"$it\"" }
+            val labelResponse = api.post(
+                "/repos/$owner/$repo/issues/$prNumber/labels",
+                """{"labels":[$labelList]}""",
+            )
+            if (!labelResponse.isSuccess) {
+                val labelError = "Failed to add labels: ${labelResponse.parseErrorMessage()}"
+                warningMessage = if (warningMessage != null) "$warningMessage; $labelError" else "PR created but $labelError"
+            }
         }
 
-        val prOutput = CliUtils.runProcess(dir, *cmd.toTypedArray())
-        return prOutput.lines().firstOrNull { it.startsWith("https://github.com") }
-    }
-
-    private fun createPRviaRestApi(
-        currentBranch: String,
-        targetBranch: String,
-        body: String,
-        reviewers: List<VcsUser>,
-        labels: List<String>,
-    ): String? {
-        val createCmd = mutableListOf(
-            ghPath, "api",
-            "repos/$owner/$repo/pulls",
-            "--method", "POST",
-            "-f", "title=$currentBranch",
-            "-f", "head=$currentBranch",
-            "-f", "base=$targetBranch",
-            "-f", "body=$body",
-            "--jq", ".html_url,.number",
-        )
-
-        val createOutput = CliUtils.runProcess(dir, *createCmd.toTypedArray()).trim()
-        val outputLines = createOutput.lines()
-        val prUrl = outputLines.firstOrNull { it.startsWith("https://github.com") } ?: return null
-        val prNumber = outputLines.lastOrNull()?.trim() ?: return prUrl
-
-        val editCmd = mutableListOf(ghPath, "pr", "edit", prNumber, "--add-assignee", "@me")
-        if (reviewers.isNotEmpty()) {
-            editCmd += "--add-reviewer"
-            editCmd += reviewers.joinToString(",") { it.username }
-        }
-        if (labels.isNotEmpty()) {
-            editCmd += "--add-label"
-            editCmd += labels.joinToString(",")
-        }
-        CliUtils.runProcess(dir, *editCmd.toTypedArray())
-
-        return prUrl
+        return PrCreationResult(url = prUrl, errorMessage = warningMessage)
     }
 
     override fun createLabel(name: String): Result<Unit> {
         return try {
-            CliUtils.runProcess(dir, ghPath, "label", "create", name, "--repo", "$owner/$repo")
-            Result.success(Unit)
+            val body = """{"name":"$name"}"""
+            val response = api.post("/repos/$owner/$repo/labels", body)
+            if (response.isSuccess) {
+                Result.success(Unit)
+            } else {
+                Result.failure(IllegalStateException(response.parseErrorMessage()))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     override fun findExistingPr(currentBranch: String): String? {
-        val output = CliUtils.runProcess(dir, ghPath, "pr", "view", "--json", "url", "--jq", ".url")
-            .trim()
-        return output.takeIf { it.startsWith("https://") }
+        val response = api.get("/repos/$owner/$repo/pulls?head=$owner:$currentBranch&state=open")
+        if (!response.isSuccess) return null
+        val array = Json.parseToJsonElement(response.body).jsonArray
+        if (array.isEmpty()) return null
+        return array[0].jsonObject["html_url"]!!.jsonPrimitive.content
     }
 
     override fun fetchPrTitle(prIdentifier: PrIdentifier): Result<String> {
         return try {
-            val title = CliUtils.runProcess(
-                dir,
-                ghPath, "pr", "view", prIdentifier.number.toString(),
-                "--repo", "${prIdentifier.owner}/${prIdentifier.repo}",
-                "--json", "title", "--jq", ".title",
-            )
-            Result.success(title)
+            val response = api.get("/repos/${prIdentifier.owner}/${prIdentifier.repo}/pulls/${prIdentifier.number}")
+            if (!response.isSuccess) {
+                return Result.failure(IllegalStateException(response.parseErrorMessage()))
+            }
+            val json = Json.parseToJsonElement(response.body).jsonObject
+            Result.success(json["title"]!!.jsonPrimitive.content)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -206,8 +199,12 @@ class GitHubPlatformService(
                 }
             """.trimIndent()
 
-            val graphqlOutput = CliUtils.runProcess(dir, ghPath, "api", "graphql", "-f", "query=$query")
-            val threads = parseGitHubThreads(graphqlOutput)
+            val response = api.graphql(query)
+            if (!response.isSuccess) {
+                return Result.failure(IllegalStateException("GitHub GraphQL error: ${response.parseErrorMessage()}"))
+            }
+
+            val threads = parseGitHubThreads(response.body)
             Result.success(threads)
         } catch (e: Exception) {
             Result.failure(e)
@@ -215,40 +212,45 @@ class GitHubPlatformService(
     }
 
     private fun parseGitHubThreads(json: String): List<CommentThread> {
-        val root = JsonParser.parseString(json).asJsonObject
-        val threads = root
-            .getAsJsonObject("data")
-            .getAsJsonObject("repository")
-            .getAsJsonObject("pullRequest")
-            .getAsJsonObject("reviewThreads")
-            .getAsJsonArray("nodes")
+        val root = try {
+            Json.parseToJsonElement(json).jsonObject
+        } catch (e: Exception) {
+            throw IllegalStateException("GitHub API returned invalid JSON: ${json.take(200)}", e)
+        }
+        if ("errors" in root) {
+            val errors = root["errors"]?.jsonArray
+                ?.joinToString { it.jsonObject["message"]?.jsonPrimitive?.content ?: it.toString() }
+            throw IllegalStateException("GitHub GraphQL error: $errors")
+        }
+        val threads = root["data"]!!.jsonObject["repository"]!!.jsonObject["pullRequest"]!!
+            .jsonObject["reviewThreads"]!!.jsonObject["nodes"]!!.jsonArray
 
         val result = mutableListOf<CommentThread>()
         var idCounter = 1L
 
         for (threadElement in threads) {
-            val thread = threadElement.asJsonObject
-            if (thread.get("isResolved").asBoolean) continue
+            val thread = threadElement.jsonObject
+            if (thread["isResolved"]!!.jsonPrimitive.boolean) continue
 
-            val comments = thread.getAsJsonObject("comments").getAsJsonArray("nodes")
-            if (comments.size() == 0) continue
+            val comments = thread["comments"]!!.jsonObject["nodes"]!!.jsonArray
+            if (comments.isEmpty()) continue
 
-            val first = comments[0].asJsonObject
-            val path = first.get("path")?.asString ?: ""
+            val first = comments[0].jsonObject
+            val path = first["path"]?.jsonPrimitive?.content ?: ""
             val line = when {
-                first.has("line") && !first.get("line").isJsonNull -> first.get("line").asInt
-                first.has("originalLine") && !first.get("originalLine").isJsonNull -> first.get("originalLine").asInt
+                first["line"] != null && first["line"] !is JsonNull -> first["line"]!!.jsonPrimitive.int
+                first["originalLine"] != null && first["originalLine"] !is JsonNull -> first["originalLine"]!!.jsonPrimitive.int
                 else -> null
             }
-            val body = first.get("body")?.asString ?: ""
-            val reviewer = first.getAsJsonObject("author")?.get("login")?.asString ?: "unknown"
-            val diffHunk = first.get("diffHunk")?.asString ?: ""
+            val body = first["body"]?.jsonPrimitive?.content ?: ""
+            val reviewer = first["author"]?.jsonObject?.get("login")?.jsonPrimitive?.content ?: "unknown"
+            val diffHunk = first["diffHunk"]?.jsonPrimitive?.content ?: ""
 
-            val replies = (1 until comments.size()).map { i ->
-                val reply = comments[i].asJsonObject
+            val replies = (1 until comments.size).map { i ->
+                val reply = comments[i].jsonObject
                 Reply(
-                    user = reply.getAsJsonObject("author")?.get("login")?.asString ?: "unknown",
-                    body = reply.get("body")?.asString ?: "",
+                    user = reply["author"]?.jsonObject?.get("login")?.jsonPrimitive?.content ?: "unknown",
+                    body = reply["body"]?.jsonPrimitive?.content ?: "",
                 )
             }
 
@@ -278,4 +280,12 @@ class GitHubPlatformService(
     }
 
     override fun getPlaceholderUrl(): String = "https://github.com/owner/repo/pull/123"
+
+    private fun buildJsonObject(vararg pairs: Pair<String, String>): String {
+        val entries = pairs.joinToString(",") { (k, v) ->
+            val escaped = v.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
+            "\"$k\":\"$escaped\""
+        }
+        return "{$entries}"
+    }
 }

@@ -7,6 +7,8 @@ import com.github.teknasyon.plugin.common.VcsProvider
 import com.github.teknasyon.plugin.common.VcsProviderDetector
 import com.github.teknasyon.plugin.service.BitbucketCloudPlatformService
 import com.github.teknasyon.plugin.service.BitbucketCredentialService
+import com.github.teknasyon.plugin.service.GitHubApiClient
+import com.github.teknasyon.plugin.service.GitHubCredentialService
 import com.github.teknasyon.plugin.service.GitHubPlatformService
 import com.github.teknasyon.plugin.service.PluginSettingsService
 import com.github.teknasyon.plugin.service.VcsPlatformService
@@ -48,12 +50,12 @@ class FixPRCommentsAction : AnAction() {
 
         val platformService: VcsPlatformService = when (provider) {
             VcsProvider.GITHUB -> {
-                val ghPath = CliUtils.findGhCli()
-                if (ghPath == null) {
-                    notify(project, Constants.GH_CLI_NOT_FOUND_MESSAGE)
+                if (!GitHubCredentialService.hasCredentials()) {
+                    notify(project, Constants.GITHUB_TOKEN_MISSING_MESSAGE)
                     return
                 }
-                GitHubPlatformService(ghPath, dir, remoteInfo.ownerOrProject, remoteInfo.repo)
+                val token = GitHubCredentialService.getToken()!!
+                GitHubPlatformService(GitHubApiClient(token), remoteInfo.ownerOrProject, remoteInfo.repo)
             }
             VcsProvider.BITBUCKET_CLOUD -> {
                 if (!BitbucketCredentialService.hasCredentials()) {
