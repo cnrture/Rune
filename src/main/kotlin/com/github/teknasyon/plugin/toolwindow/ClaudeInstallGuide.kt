@@ -10,6 +10,7 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,10 +56,8 @@ internal fun ClaudeInstallGuide(onRetry: () -> Unit) {
 
         Row(
             modifier = Modifier
-                .background(
-                    color = TPTheme.colors.gray,
-                    shape = RoundedCornerShape(8.dp)
-                )
+                .clip(RoundedCornerShape(8.dp))
+                .background(color = TPTheme.colors.gray)
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -87,11 +86,9 @@ internal fun ClaudeInstallGuide(onRetry: () -> Unit) {
             color = TPTheme.colors.blue,
             style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
             modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(color = TPTheme.colors.blue.copy(alpha = 0.15f))
                 .clickable { onRetry() }
-                .background(
-                    color = TPTheme.colors.blue.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(8.dp)
-                )
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }

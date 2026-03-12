@@ -1,19 +1,23 @@
 package com.github.teknasyon.plugin.toolwindow
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.components.TPActionCard
@@ -77,9 +81,14 @@ internal fun SessionTabBar(
                 val isActive = session.id == activeSessionId
                 Row(
                     modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
                         .background(
                             color = if (isActive) TPTheme.colors.gray else TPTheme.colors.black,
-                            shape = RoundedCornerShape(6.dp)
+                        )
+                        .border(
+                            width = if (isActive) 1.dp else 0.dp,
+                            color = if (isActive) TPTheme.colors.blue else Color.Transparent,
+                            shape = RoundedCornerShape(6.dp),
                         )
                         .clickable { onSelectSession(session.id) }
                         .padding(horizontal = 8.dp, vertical = 6.dp),
@@ -94,24 +103,50 @@ internal fun SessionTabBar(
                         )
                     )
                     Spacer(modifier = Modifier.size(6.dp))
+                    val closeHover = remember { MutableInteractionSource() }
+                    val isCloseHovered by closeHover.collectIsHoveredAsState()
                     Icon(
                         imageVector = Icons.Rounded.Close,
                         contentDescription = "Close session",
-                        tint = if (isActive) TPTheme.colors.lightGray else TPTheme.colors.hintGray,
+                        tint = if (isCloseHovered) TPTheme.colors.red
+                        else if (isActive) TPTheme.colors.lightGray
+                        else TPTheme.colors.hintGray,
                         modifier = Modifier
                             .size(14.dp)
+                            .hoverable(closeHover)
                             .clickable { onCloseSession(session.id) }
                     )
                 }
             }
-            Icon(
-                imageVector = Icons.Rounded.Add,
-                contentDescription = "New session",
-                tint = TPTheme.colors.lightGray,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onAddSession() }
-            )
+            @OptIn(ExperimentalFoundationApi::class)
+            TooltipArea(
+                tooltip = {
+                    Box(
+                        modifier = Modifier
+                            .background(TPTheme.colors.gray, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        TPText(
+                            text = "New session",
+                            color = TPTheme.colors.white,
+                            fontSize = 11.sp,
+                        )
+                    }
+                },
+                tooltipPlacement = TooltipPlacement.CursorPoint(offset = DpOffset(0.dp, 16.dp)),
+            ) {
+                val addHover = remember { MutableInteractionSource() }
+                val isAddHovered by addHover.collectIsHoveredAsState()
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = "New session",
+                    tint = if (isAddHovered) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .hoverable(addHover)
+                        .clickable { onAddSession() }
+                )
+            }
         }
     }
 }

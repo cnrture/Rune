@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.components.TPActionCard
@@ -180,10 +181,8 @@ internal fun TerminalInputBar(
                             val thumbnail = remember(path) { loadImageBitmapFromPath(path) }
                             Row(
                                 modifier = Modifier
-                                    .background(
-                                        color = TPTheme.colors.blue.copy(alpha = 0.15f),
-                                        shape = RoundedCornerShape(6.dp)
-                                    )
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(color = TPTheme.colors.blue.copy(alpha = 0.15f))
                                     .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
                                     .clickable { onClickPreviewImage(path) }
                                     .padding(horizontal = 6.dp, vertical = 4.dp),
@@ -306,34 +305,62 @@ internal fun TerminalInputBar(
                                 // File inject button
                                 val fileHover = remember { MutableInteractionSource() }
                                 val isFileHovered by fileHover.collectIsHoveredAsState()
-                                Icon(
-                                    imageVector = Icons.Rounded.AlternateEmail,
-                                    contentDescription = "Add active file path",
-                                    tint = if (isFileHovered) TPTheme.colors.blue else TPTheme.colors.lightGray,
-                                    modifier = Modifier
-                                        .size(18.dp)
-                                        .hoverable(fileHover)
-                                        .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
-                                        .clickable {
-                                            val path = onInjectFile() ?: return@clickable
-                                            val newText =
-                                                if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
-                                            inputValue = TextFieldValue(newText, TextRange(newText.length))
+                                @OptIn(ExperimentalFoundationApi::class)
+                                TooltipArea(
+                                    tooltip = {
+                                        Box(
+                                            modifier = Modifier
+                                                .background(TPTheme.colors.gray, RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            TPText(text = "Add active file", color = TPTheme.colors.white, fontSize = 11.sp)
                                         }
-                                )
+                                    },
+                                    tooltipPlacement = TooltipPlacement.CursorPoint(offset = DpOffset(0.dp, 16.dp)),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.AlternateEmail,
+                                        contentDescription = "Add active file path",
+                                        tint = if (isFileHovered) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .hoverable(fileHover)
+                                            .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+                                            .clickable {
+                                                val path = onInjectFile() ?: return@clickable
+                                                val newText =
+                                                    if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
+                                                inputValue = TextFieldValue(newText, TextRange(newText.length))
+                                            }
+                                    )
+                                }
                                 // Image picker button
                                 val imageHover = remember { MutableInteractionSource() }
                                 val isImageHovered by imageHover.collectIsHoveredAsState()
-                                Icon(
-                                    imageVector = Icons.Rounded.Image,
-                                    contentDescription = "Add image",
-                                    tint = if (isImageHovered || selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
-                                    modifier = Modifier
-                                        .size(18.dp)
-                                        .hoverable(imageHover)
-                                        .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
-                                        .clickable { onPickImage() }
-                                )
+                                @OptIn(ExperimentalFoundationApi::class)
+                                TooltipArea(
+                                    tooltip = {
+                                        Box(
+                                            modifier = Modifier
+                                                .background(TPTheme.colors.gray, RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            TPText(text = "Add image", color = TPTheme.colors.white, fontSize = 11.sp)
+                                        }
+                                    },
+                                    tooltipPlacement = TooltipPlacement.CursorPoint(offset = DpOffset(0.dp, 16.dp)),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Image,
+                                        contentDescription = "Add image",
+                                        tint = if (isImageHovered || selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .hoverable(imageHover)
+                                            .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+                                            .clickable { onPickImage() }
+                                    )
+                                }
                                 Spacer(modifier = Modifier.weight(1f))
                                 TPText(
                                     text = "Shift+Enter for new line",
@@ -351,10 +378,10 @@ internal fun TerminalInputBar(
             Box(
                 modifier = Modifier
                     .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
                     .background(
                         color = if (hasContent) TPTheme.colors.blue
                             else TPTheme.colors.outline.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(10.dp),
                     )
                     .then(
                         if (hasContent) Modifier

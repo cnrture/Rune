@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -21,7 +22,7 @@ fun TPTabRow(
     onTabSelected: () -> Unit,
 ) {
     Card(
-        modifier = Modifier.clickable { onTabSelected() }.then(modifier),
+        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onTabSelected() }.then(modifier),
         shape = RoundedCornerShape(8.dp),
         backgroundColor = if (isSelected) TPTheme.colors.primaryContainer else TPTheme.colors.gray,
         elevation = 0.dp

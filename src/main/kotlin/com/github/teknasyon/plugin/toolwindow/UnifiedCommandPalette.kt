@@ -2,6 +2,9 @@ package com.github.teknasyon.plugin.toolwindow
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -16,6 +19,7 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -309,9 +313,9 @@ internal fun InlineCommandPanel(
                 TPText(
                     text = label,
                     modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
                         .background(
                             color = if (isSelected) TPTheme.colors.primaryContainer else Color.Transparent,
-                            shape = RoundedCornerShape(6.dp)
                         )
                         .clickable { selectedFilter = filter }
                         .padding(horizontal = 10.dp, vertical = 4.dp),
@@ -330,7 +334,16 @@ internal fun InlineCommandPanel(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
-                TPText(text = "No results found", color = TPTheme.colors.lightGray, fontSize = 13.sp)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Rounded.SearchOff,
+                        contentDescription = null,
+                        tint = TPTheme.colors.hintGray,
+                        modifier = Modifier.size(32.dp),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    TPText(text = "No results found", color = TPTheme.colors.lightGray, fontSize = 13.sp)
+                }
             }
         } else {
             LazyVerticalGrid(
@@ -375,13 +388,17 @@ internal fun InlineCommandPanel(
                             PaletteCategory.COMMAND -> TPTheme.colors.purple
                             PaletteCategory.SC_COMMAND -> TPTheme.colors.blue
                         }
+                        val itemHover = remember { MutableInteractionSource() }
+                        val isItemHovered by itemHover.collectIsHoveredAsState()
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(
-                                    color = TPTheme.colors.gray.copy(alpha = 0.5f),
-                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (isItemHovered) accentColor.copy(alpha = 0.15f)
+                                        else TPTheme.colors.gray.copy(alpha = 0.5f),
                                 )
+                                .hoverable(itemHover)
                                 .clickable { onItemSelected(paletteItem) }
                                 .padding(horizontal = 6.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
