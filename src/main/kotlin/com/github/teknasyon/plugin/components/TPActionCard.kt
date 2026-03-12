@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,7 +24,7 @@ enum class TPActionCardType { EXTRA_SMALL, SMALL, MEDIUM, LARGE }
 fun TPActionCard(
     modifier: Modifier = Modifier,
     title: String? = null,
-    icon: ImageVector? = null,
+    icon: Painter? = null,
     actionColor: Color,
     isTextVisible: Boolean = true,
     type: TPActionCardType = TPActionCardType.LARGE,
@@ -98,7 +98,7 @@ fun TPActionCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = icon,
+                        painter = icon,
                         contentDescription = null,
                         tint = TPTheme.colors.white,
                         modifier = Modifier.size(iconSize)
@@ -106,7 +106,7 @@ fun TPActionCard(
                 }
             } else {
                 Icon(
-                    imageVector = icon,
+                    painter = icon,
                     contentDescription = null,
                     tint = actionColor,
                     modifier = Modifier.size(iconSize)

@@ -5,8 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,6 +13,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.plugin.common.AppIcons
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.theme.TPTheme
 import java.awt.Toolkit
@@ -32,7 +31,7 @@ internal fun ClaudeInstallGuide(onRetry: () -> Unit) {
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
-            imageVector = Icons.Rounded.Terminal,
+            painter = AppIcons.painter("terminal"),
             contentDescription = null,
             tint = TPTheme.colors.purple,
             modifier = Modifier.size(48.dp)
@@ -68,7 +67,7 @@ internal fun ClaudeInstallGuide(onRetry: () -> Unit) {
             )
             Spacer(modifier = Modifier.size(12.dp))
             Icon(
-                imageVector = Icons.Rounded.ContentCopy,
+                painter = AppIcons.painter("content_copy"),
                 contentDescription = "Copy",
                 tint = TPTheme.colors.lightGray,
                 modifier = Modifier

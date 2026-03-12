@@ -10,10 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +22,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.plugin.common.AppIcons
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.components.*
 import com.github.teknasyon.plugin.service.PluginSettingsService
@@ -366,7 +363,7 @@ class CreateSkillDialog(
                             )
                             Spacer(modifier = Modifier.size(8.dp))
                             Icon(
-                                imageVector = Icons.Rounded.FolderOpen,
+                                painter = AppIcons.painter("folder_open"),
                                 contentDescription = "Select directory",
                                 tint = TPTheme.colors.lightGray,
                                 modifier = Modifier
@@ -493,7 +490,7 @@ class CreateSkillDialog(
                 ) {
                     TPActionCard(
                         title = "Cancel",
-                        icon = Icons.Rounded.Cancel,
+                        icon = AppIcons.painter("cancel"),
                         actionColor = TPTheme.colors.lightGray,
                         type = TPActionCardType.SMALL,
                         onClick = { close(Constants.DEFAULT_EXIT_CODE) },
@@ -501,7 +498,7 @@ class CreateSkillDialog(
                     Spacer(modifier = Modifier.size(12.dp))
                     TPActionCard(
                         title = "Create & Open",
-                        icon = Icons.Rounded.CheckCircle,
+                        icon = AppIcons.painter("check_circle"),
                         actionColor = TPTheme.colors.blue,
                         type = TPActionCardType.SMALL,
                         isEnabled = isValid(),

@@ -6,8 +6,6 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -20,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.plugin.common.AppIcons
 import com.github.teknasyon.plugin.components.TPActionCard
 import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.components.TPText
@@ -49,7 +48,7 @@ internal fun SessionTabBar(
         ) {
             TPActionCard(
                 title = "Create Skill",
-                icon = Icons.Rounded.AutoFixHigh,
+                icon = AppIcons.painter("auto_fix_high"),
                 actionColor = TPTheme.colors.blue,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
@@ -57,7 +56,7 @@ internal fun SessionTabBar(
             )
             TPActionCard(
                 title = "Usage",
-                icon = Icons.Rounded.DataUsage,
+                icon = AppIcons.painter("data_usage"),
                 actionColor = TPTheme.colors.blue,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
@@ -65,7 +64,7 @@ internal fun SessionTabBar(
             )
             TPActionCard(
                 title = "Settings",
-                icon = Icons.Rounded.Settings,
+                icon = AppIcons.painter("settings"),
                 actionColor = TPTheme.colors.purple,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
@@ -106,7 +105,7 @@ internal fun SessionTabBar(
                     val closeHover = remember { MutableInteractionSource() }
                     val isCloseHovered by closeHover.collectIsHoveredAsState()
                     Icon(
-                        imageVector = Icons.Rounded.Close,
+                        painter = AppIcons.painter("close"),
                         contentDescription = "Close session",
                         tint = if (isCloseHovered) TPTheme.colors.red
                         else if (isActive) TPTheme.colors.lightGray
@@ -138,7 +137,7 @@ internal fun SessionTabBar(
                 val addHover = remember { MutableInteractionSource() }
                 val isAddHovered by addHover.collectIsHoveredAsState()
                 Icon(
-                    imageVector = Icons.Rounded.Add,
+                    painter = AppIcons.painter("add"),
                     contentDescription = "New session",
                     tint = if (isAddHovered) TPTheme.colors.blue else TPTheme.colors.lightGray,
                     modifier = Modifier

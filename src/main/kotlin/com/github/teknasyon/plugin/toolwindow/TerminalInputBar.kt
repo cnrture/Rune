@@ -1,19 +1,16 @@
 package com.github.teknasyon.plugin.toolwindow
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Send
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -26,14 +23,15 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.plugin.common.AppIcons
 import com.github.teknasyon.plugin.components.TPActionCard
 import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.components.TPSwitch
@@ -55,7 +53,8 @@ private fun formatModelName(model: String): String {
     return if (version.isNotEmpty()) "$name $version" else name
 }
 
-private class UrlHighlightTransformation(private val urlColor: androidx.compose.ui.graphics.Color) : VisualTransformation {
+private class UrlHighlightTransformation(private val urlColor: androidx.compose.ui.graphics.Color) :
+    VisualTransformation {
     override fun filter(text: androidx.compose.ui.text.AnnotatedString): TransformedText {
         val annotated = buildAnnotatedString {
             append(text)
@@ -156,7 +155,7 @@ internal fun TerminalInputBar(
         ) {
             TPActionCard(
                 title = "Skills",
-                icon = Icons.Rounded.AutoFixHigh,
+                icon = AppIcons.painter("auto_fix_high"),
                 actionColor = TPTheme.colors.blue,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
@@ -165,7 +164,7 @@ internal fun TerminalInputBar(
             Spacer(modifier = Modifier.size(4.dp))
             TPActionCard(
                 title = "Commands",
-                icon = Icons.Rounded.PlayArrow,
+                icon = AppIcons.painter("play_arrow"),
                 actionColor = TPTheme.colors.purple,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
@@ -174,7 +173,7 @@ internal fun TerminalInputBar(
             Spacer(modifier = Modifier.size(4.dp))
             TPActionCard(
                 title = "Plan",
-                icon = Icons.Rounded.Map,
+                icon = AppIcons.painter("map"),
                 actionColor = TPTheme.colors.warning,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
@@ -190,7 +189,7 @@ internal fun TerminalInputBar(
                     activeModel != null -> formatModelName(activeModel)
                     else -> "Model"
                 },
-                icon = Icons.Rounded.SmartToy,
+                icon = AppIcons.painter("smart_toy"),
                 actionColor = if (activeModel != null) TPTheme.colors.blue else TPTheme.colors.hintGray,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
@@ -246,7 +245,7 @@ internal fun TerminalInputBar(
                                     )
                                 } else {
                                     Icon(
-                                        imageVector = Icons.Rounded.Image,
+                                        painter = AppIcons.painter("image"),
                                         contentDescription = null,
                                         tint = TPTheme.colors.blue,
                                         modifier = Modifier.size(18.dp),
@@ -254,7 +253,8 @@ internal fun TerminalInputBar(
                                 }
                                 Spacer(modifier = Modifier.size(4.dp))
                                 val nameWithoutExt = fileName.substringBeforeLast(".")
-                                val extension = if (fileName.contains(".")) ".${fileName.substringAfterLast(".")}" else ""
+                                val extension =
+                                    if (fileName.contains(".")) ".${fileName.substringAfterLast(".")}" else ""
                                 val shortedName =
                                     if (nameWithoutExt.length > 14) nameWithoutExt.take(5)
                                         .plus("...")
@@ -273,7 +273,7 @@ internal fun TerminalInputBar(
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Rounded.Close,
+                                        painter = AppIcons.painter("close"),
                                         contentDescription = "Remove image",
                                         tint = TPTheme.colors.blue,
                                         modifier = Modifier.size(14.dp),
@@ -298,7 +298,7 @@ internal fun TerminalInputBar(
                         .border(
                             width = 1.dp,
                             color = if (isFocused) TPTheme.colors.blue.copy(alpha = 0.5f)
-                                else TPTheme.colors.outline.copy(alpha = 0.3f),
+                            else TPTheme.colors.outline.copy(alpha = 0.3f),
                             shape = RoundedCornerShape(8.dp),
                         )
                         .clip(RoundedCornerShape(8.dp))
@@ -360,13 +360,17 @@ internal fun TerminalInputBar(
                                                 .background(TPTheme.colors.gray, RoundedCornerShape(4.dp))
                                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                                         ) {
-                                            TPText(text = "Add active file", color = TPTheme.colors.white, fontSize = 11.sp)
+                                            TPText(
+                                                text = "Add active file",
+                                                color = TPTheme.colors.white,
+                                                fontSize = 11.sp
+                                            )
                                         }
                                     },
                                     tooltipPlacement = TooltipPlacement.CursorPoint(offset = DpOffset(0.dp, 16.dp)),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Rounded.AlternateEmail,
+                                        painter = AppIcons.painter("alternate_email"),
                                         contentDescription = "Add active file path",
                                         tint = if (isFileHovered) TPTheme.colors.blue else TPTheme.colors.lightGray,
                                         modifier = Modifier
@@ -398,7 +402,7 @@ internal fun TerminalInputBar(
                                     tooltipPlacement = TooltipPlacement.CursorPoint(offset = DpOffset(0.dp, 16.dp)),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Rounded.Image,
+                                        painter = AppIcons.painter("image"),
                                         contentDescription = "Add image",
                                         tint = if (isImageHovered || selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
                                         modifier = Modifier
@@ -437,7 +441,7 @@ internal fun TerminalInputBar(
                     .clip(RoundedCornerShape(10.dp))
                     .background(
                         color = if (hasContent) TPTheme.colors.blue
-                            else TPTheme.colors.outline.copy(alpha = 0.3f),
+                        else TPTheme.colors.outline.copy(alpha = 0.3f),
                     )
                     .then(
                         if (hasContent) Modifier
@@ -448,7 +452,7 @@ internal fun TerminalInputBar(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.Send,
+                    painter = AppIcons.painter("send"),
                     contentDescription = "Send",
                     tint = if (hasContent) TPTheme.colors.white else TPTheme.colors.hintGray,
                     modifier = Modifier.size(18.dp),

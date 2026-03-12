@@ -8,11 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Surface
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.plugin.common.AppIcons
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.components.*
 import com.github.teknasyon.plugin.service.JiraService
@@ -332,7 +328,7 @@ class CreatePRDialog(
             ) {
                 TPActionCard(
                     title = "Refresh",
-                    icon = Icons.Rounded.Refresh,
+                    icon = AppIcons.painter("refresh"),
                     actionColor = TPTheme.colors.hintGray,
                     type = TPActionCardType.SMALL,
                     onClick = { fetchData() },
@@ -340,7 +336,7 @@ class CreatePRDialog(
                 Spacer(modifier = Modifier.weight(1f))
                 TPActionCard(
                     title = "Cancel",
-                    icon = Icons.Rounded.Cancel,
+                    icon = AppIcons.painter("cancel"),
                     actionColor = TPTheme.colors.lightGray,
                     type = TPActionCardType.SMALL,
                     onClick = { close(Constants.DEFAULT_EXIT_CODE) },
@@ -348,7 +344,7 @@ class CreatePRDialog(
                 Spacer(modifier = Modifier.size(12.dp))
                 TPActionCard(
                     title = "Create PR",
-                    icon = Icons.Rounded.CheckCircle,
+                    icon = AppIcons.painter("check_circle"),
                     actionColor = TPTheme.colors.blue,
                     type = TPActionCardType.SMALL,
                     onClick = {
@@ -403,7 +399,12 @@ class CreatePRDialog(
             Spacer(modifier = Modifier.size(8.dp))
 
             val filtered = currentState.remoteBranches
-                .filter { currentState.baseBranchFilter.isBlank() || it.contains(currentState.baseBranchFilter, ignoreCase = true) }
+                .filter {
+                    currentState.baseBranchFilter.isBlank() || it.contains(
+                        currentState.baseBranchFilter,
+                        ignoreCase = true
+                    )
+                }
                 .sortedByDescending { it == currentState.selectedBaseBranch }
                 .take(10)
 
@@ -452,7 +453,7 @@ class CreatePRDialog(
             Spacer(modifier = Modifier.size(8.dp))
             TPActionCard(
                 title = "Retry",
-                icon = Icons.Rounded.Refresh,
+                icon = AppIcons.painter("refresh"),
                 actionColor = TPTheme.colors.red,
                 type = TPActionCardType.SMALL,
                 onClick = { fetchData() },
@@ -521,7 +522,7 @@ class CreatePRDialog(
                     } else {
                         TPActionCard(
                             title = "Add \"${filterValue.trim()}\"",
-                            icon = Icons.Rounded.Add,
+                            icon = AppIcons.painter("add"),
                             actionColor = TPTheme.colors.blue,
                             type = TPActionCardType.SMALL,
                             onClick = { onAdd(filterValue.trim()) },

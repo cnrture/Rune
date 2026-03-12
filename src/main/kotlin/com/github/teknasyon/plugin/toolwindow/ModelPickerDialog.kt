@@ -8,9 +8,9 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.github.teknasyon.plugin.common.AppIcons
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.theme.TPTheme
 import java.awt.Cursor
@@ -79,7 +80,7 @@ internal fun ModelPickerDialog(
                 ) {
                     if (isSelected) {
                         Icon(
-                            imageVector = Icons.Rounded.Check,
+                            painter = AppIcons.painter("check"),
                             contentDescription = null,
                             tint = TPTheme.colors.blue,
                             modifier = Modifier.size(18.dp),

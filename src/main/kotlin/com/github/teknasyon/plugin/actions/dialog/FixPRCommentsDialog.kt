@@ -10,12 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Surface
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.plugin.common.AppIcons
 import com.github.teknasyon.plugin.common.Constants
 import com.github.teknasyon.plugin.components.*
 import com.github.teknasyon.plugin.service.VcsPlatformService
@@ -217,7 +212,7 @@ class FixPRCommentsDialog(
                 Spacer(modifier = Modifier.size(12.dp))
                 TPActionCard(
                     title = "Fetch",
-                    icon = Icons.Rounded.Search,
+                    icon = AppIcons.painter("search"),
                     actionColor = TPTheme.colors.blue,
                     type = TPActionCardType.MEDIUM,
                     onClick = { fetchPRComments() },
@@ -323,7 +318,7 @@ class FixPRCommentsDialog(
             ) {
                 TPActionCard(
                     title = "Cancel",
-                    icon = Icons.Rounded.Cancel,
+                    icon = AppIcons.painter("cancel"),
                     actionColor = TPTheme.colors.lightGray,
                     type = TPActionCardType.MEDIUM,
                     onClick = { close(Constants.DEFAULT_EXIT_CODE) },
@@ -333,7 +328,7 @@ class FixPRCommentsDialog(
                     val count = currentState.selectedIds.size
                     TPActionCard(
                         title = "Fix $count Comment${if (count != 1) "s" else ""} with Claude",
-                        icon = Icons.Rounded.CheckCircle,
+                        icon = AppIcons.painter("check_circle"),
                         actionColor = if (count > 0) TPTheme.colors.blue else TPTheme.colors.gray,
                         type = TPActionCardType.MEDIUM,
                         onClick = { if (count > 0) fixWithClaude() },
@@ -417,7 +412,7 @@ class FixPRCommentsDialog(
             ) {
                 TPActionCard(
                     title = "Close",
-                    icon = Icons.Rounded.Cancel,
+                    icon = AppIcons.painter("cancel"),
                     actionColor = TPTheme.colors.lightGray,
                     type = TPActionCardType.MEDIUM,
                     onClick = { close(0) },
@@ -425,7 +420,7 @@ class FixPRCommentsDialog(
                 Spacer(modifier = Modifier.size(12.dp))
                 TPActionCard(
                     title = "Open Claude Terminal",
-                    icon = Icons.AutoMirrored.Rounded.OpenInNew,
+                    icon = AppIcons.painter("open_in_new"),
                     actionColor = TPTheme.colors.blue,
                     type = TPActionCardType.MEDIUM,
                     onClick = { openClaudeTerminal() },
@@ -571,7 +566,7 @@ class FixPRCommentsDialog(
             Spacer(modifier = Modifier.size(8.dp))
             TPActionCard(
                 title = "Retry",
-                icon = Icons.Rounded.Refresh,
+                icon = AppIcons.painter("refresh"),
                 actionColor = TPTheme.colors.red,
                 type = TPActionCardType.SMALL,
                 onClick = { fetchPRComments() },

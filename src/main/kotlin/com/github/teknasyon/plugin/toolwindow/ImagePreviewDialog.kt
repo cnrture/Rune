@@ -6,8 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -22,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.github.teknasyon.plugin.common.AppIcons
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.theme.TPTheme
 import java.io.File
@@ -59,7 +58,7 @@ internal fun ImagePreviewDialog(
                     modifier = Modifier.weight(1f),
                 )
                 Icon(
-                    imageVector = Icons.Rounded.Close,
+                    painter = AppIcons.painter("close"),
                     contentDescription = "Close",
                     tint = TPTheme.colors.lightGray,
                     modifier = Modifier

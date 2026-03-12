@@ -14,9 +14,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.*
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,12 +22,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.teknasyon.plugin.common.AppIcons
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.domain.model.Skill
 import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
@@ -49,75 +46,75 @@ internal data class PaletteItem(
     val category: PaletteCategory,
     val title: String,
     val description: String,
-    val icon: ImageVector,
+    val iconName: String,
     val filePath: String? = null,
     val terminalText: String,
     val autoRun: Boolean,
 )
 
-private data class ClaudeCommand(val command: String, val description: String, val icon: ImageVector)
+private data class ClaudeCommand(val command: String, val description: String, val iconName: String)
 
 private val claudeCommands = listOf(
-    ClaudeCommand("/clear", "Clear conversation", Icons.Rounded.DeleteSweep),
-    ClaudeCommand("/compact", "Compact conversation", Icons.Rounded.Compress),
-    ClaudeCommand("/config", "Settings (Config)", Icons.Rounded.Settings),
-    ClaudeCommand("/context", "Context usage", Icons.Rounded.GridOn),
-    ClaudeCommand("/copy", "Copy last response", Icons.Rounded.ContentCopy),
-    ClaudeCommand("/cost", "Token usage", Icons.Rounded.AttachMoney),
-    ClaudeCommand("/debug", "Debug session", Icons.Rounded.BugReport),
-    ClaudeCommand("/desktop", "Switch to desktop", Icons.Rounded.DesktopWindows),
-    ClaudeCommand("/doctor", "Health check", Icons.Rounded.HealthAndSafety),
-    ClaudeCommand("/exit", "Exit REPL", Icons.AutoMirrored.Rounded.ExitToApp),
-    ClaudeCommand("/export", "Export conversation", Icons.Rounded.FileDownload),
-    ClaudeCommand("/help", "Usage help", Icons.AutoMirrored.Rounded.Help),
-    ClaudeCommand("/init", "Init CLAUDE.md", Icons.AutoMirrored.Rounded.NoteAdd),
-    ClaudeCommand("/mcp", "MCP servers", Icons.Rounded.Hub),
-    ClaudeCommand("/memory", "Edit memory files", Icons.Rounded.Memory),
-    ClaudeCommand("/model", "Change model", Icons.Rounded.SmartToy),
-    ClaudeCommand("/permissions", "Permissions", Icons.Rounded.Security),
-    ClaudeCommand("/plan", "Plan mode", Icons.Rounded.Map),
-    ClaudeCommand("/rename", "Rename session", Icons.Rounded.DriveFileRenameOutline),
-    ClaudeCommand("/resume", "Resume session", Icons.Rounded.PlayArrow),
-    ClaudeCommand("/rewind", "Rewind conversation", Icons.AutoMirrored.Rounded.Undo),
-    ClaudeCommand("/stats", "Usage stats", Icons.Rounded.BarChart),
-    ClaudeCommand("/status", "Settings (Status)", Icons.Rounded.Info),
-    ClaudeCommand("/statusline", "Status line UI", Icons.Rounded.LinearScale),
-    ClaudeCommand("/tasks", "Background tasks", Icons.Rounded.Checklist),
-    ClaudeCommand("/teleport", "Remote session", Icons.Rounded.Cloud),
-    ClaudeCommand("/theme", "Color theme", Icons.Rounded.Palette),
-    ClaudeCommand("/todos", "TODO items", Icons.AutoMirrored.Rounded.FormatListBulleted),
-    ClaudeCommand("/usage", "Usage limits", Icons.Rounded.DataUsage),
+    ClaudeCommand("/clear", "Clear conversation", "delete_sweep"),
+    ClaudeCommand("/compact", "Compact conversation", "compress"),
+    ClaudeCommand("/config", "Settings (Config)", "settings"),
+    ClaudeCommand("/context", "Context usage", "grid_on"),
+    ClaudeCommand("/copy", "Copy last response", "content_copy"),
+    ClaudeCommand("/cost", "Token usage", "attach_money"),
+    ClaudeCommand("/debug", "Debug session", "bug_report"),
+    ClaudeCommand("/desktop", "Switch to desktop", "desktop_windows"),
+    ClaudeCommand("/doctor", "Health check", "health_and_safety"),
+    ClaudeCommand("/exit", "Exit REPL", "exit_to_app"),
+    ClaudeCommand("/export", "Export conversation", "file_download"),
+    ClaudeCommand("/help", "Usage help", "help"),
+    ClaudeCommand("/init", "Init CLAUDE.md", "note_add"),
+    ClaudeCommand("/mcp", "MCP servers", "hub"),
+    ClaudeCommand("/memory", "Edit memory files", "memory"),
+    ClaudeCommand("/model", "Change model", "smart_toy"),
+    ClaudeCommand("/permissions", "Permissions", "security"),
+    ClaudeCommand("/plan", "Plan mode", "map"),
+    ClaudeCommand("/rename", "Rename session", "drive_file_rename_outline"),
+    ClaudeCommand("/resume", "Resume session", "play_arrow"),
+    ClaudeCommand("/rewind", "Rewind conversation", "undo"),
+    ClaudeCommand("/stats", "Usage stats", "bar_chart"),
+    ClaudeCommand("/status", "Settings (Status)", "info"),
+    ClaudeCommand("/statusline", "Status line UI", "linear_scale"),
+    ClaudeCommand("/tasks", "Background tasks", "checklist"),
+    ClaudeCommand("/teleport", "Remote session", "cloud"),
+    ClaudeCommand("/theme", "Color theme", "palette"),
+    ClaudeCommand("/todos", "TODO items", "format_list_bulleted"),
+    ClaudeCommand("/usage", "Usage limits", "data_usage"),
 )
 
 private val scCommands = listOf(
-    ClaudeCommand("/sc:analyze", "Code analysis", Icons.Rounded.Analytics),
-    ClaudeCommand("/sc:brainstorm", "Requirements discovery", Icons.Rounded.Lightbulb),
-    ClaudeCommand("/sc:build", "Build & compile", Icons.Rounded.Build),
-    ClaudeCommand("/sc:business-panel", "Business panel analysis", Icons.Rounded.Business),
-    ClaudeCommand("/sc:cleanup", "Code cleanup", Icons.Rounded.CleaningServices),
-    ClaudeCommand("/sc:design", "System design", Icons.Rounded.Architecture),
-    ClaudeCommand("/sc:document", "Generate documentation", Icons.Rounded.Description),
-    ClaudeCommand("/sc:estimate", "Development estimates", Icons.Rounded.Timer),
-    ClaudeCommand("/sc:explain", "Code explanation", Icons.Rounded.School),
-    ClaudeCommand("/sc:git", "Git operations", Icons.Rounded.Hub),
-    ClaudeCommand("/sc:help", "SC help", Icons.AutoMirrored.Rounded.Help),
-    ClaudeCommand("/sc:implement", "Feature implementation", Icons.Rounded.Code),
-    ClaudeCommand("/sc:improve", "Code improvements", Icons.AutoMirrored.Rounded.TrendingUp),
-    ClaudeCommand("/sc:index", "Project indexing", Icons.Rounded.FindInPage),
-    ClaudeCommand("/sc:index:repo", "Project indexing with more details", Icons.Rounded.FindInPage),
-    ClaudeCommand("/sc:load", "Load session context", Icons.Rounded.Download),
-    ClaudeCommand("/sc:pm", "Project manager agent", Icons.Rounded.ManageAccounts),
-    ClaudeCommand("/sc:recommend", "Command recommendation", Icons.Rounded.Recommend),
-    ClaudeCommand("/sc:reflect", "Task reflection", Icons.Rounded.Psychology),
-    ClaudeCommand("/sc:research", "Deep web research", Icons.Rounded.Search),
-    ClaudeCommand("/sc:save", "Save session context", Icons.Rounded.Save),
-    ClaudeCommand("/sc:select-tool", "MCP tool selection", Icons.Rounded.Handyman),
-    ClaudeCommand("/sc:spawn", "Task orchestration", Icons.Rounded.AccountTree),
-    ClaudeCommand("/sc:spec-panel", "Spec review panel", Icons.Rounded.RateReview),
-    ClaudeCommand("/sc:task", "Task management", Icons.Rounded.Task),
-    ClaudeCommand("/sc:test", "Test execution", Icons.Rounded.Science),
-    ClaudeCommand("/sc:troubleshoot", "Issue diagnosis", Icons.Rounded.Troubleshoot),
-    ClaudeCommand("/sc:workflow", "Workflow generation", Icons.Rounded.Route),
+    ClaudeCommand("/sc:analyze", "Code analysis", "analytics"),
+    ClaudeCommand("/sc:brainstorm", "Requirements discovery", "lightbulb"),
+    ClaudeCommand("/sc:build", "Build & compile", "build"),
+    ClaudeCommand("/sc:business-panel", "Business panel analysis", "business"),
+    ClaudeCommand("/sc:cleanup", "Code cleanup", "cleaning_services"),
+    ClaudeCommand("/sc:design", "System design", "architecture"),
+    ClaudeCommand("/sc:document", "Generate documentation", "description"),
+    ClaudeCommand("/sc:estimate", "Development estimates", "timer"),
+    ClaudeCommand("/sc:explain", "Code explanation", "school"),
+    ClaudeCommand("/sc:git", "Git operations", "hub"),
+    ClaudeCommand("/sc:help", "SC help", "help"),
+    ClaudeCommand("/sc:implement", "Feature implementation", "code"),
+    ClaudeCommand("/sc:improve", "Code improvements", "trending_up"),
+    ClaudeCommand("/sc:index", "Project indexing", "find_in_page"),
+    ClaudeCommand("/sc:index:repo", "Project indexing with more details", "find_in_page"),
+    ClaudeCommand("/sc:load", "Load session context", "download"),
+    ClaudeCommand("/sc:pm", "Project manager agent", "manage_accounts"),
+    ClaudeCommand("/sc:recommend", "Command recommendation", "recommend"),
+    ClaudeCommand("/sc:reflect", "Task reflection", "psychology"),
+    ClaudeCommand("/sc:research", "Deep web research", "search"),
+    ClaudeCommand("/sc:save", "Save session context", "save"),
+    ClaudeCommand("/sc:select-tool", "MCP tool selection", "handyman"),
+    ClaudeCommand("/sc:spawn", "Task orchestration", "account_tree"),
+    ClaudeCommand("/sc:spec-panel", "Spec review panel", "rate_review"),
+    ClaudeCommand("/sc:task", "Task management", "task"),
+    ClaudeCommand("/sc:test", "Test execution", "science"),
+    ClaudeCommand("/sc:troubleshoot", "Issue diagnosis", "troubleshoot"),
+    ClaudeCommand("/sc:workflow", "Workflow generation", "route"),
 )
 
 @Composable
@@ -170,7 +167,7 @@ internal fun InlineCommandPanel(
                         category = PaletteCategory.SKILL,
                         title = skill.relativePath,
                         description = skill.description,
-                        icon = Icons.Rounded.AutoFixHigh,
+                        iconName = "auto_fix_high",
                         filePath = skill.filePath,
                         terminalText = skill.filePath,
                         autoRun = false,
@@ -183,7 +180,7 @@ internal fun InlineCommandPanel(
                         category = PaletteCategory.AGENT,
                         title = agent.relativePath,
                         description = agent.description,
-                        icon = Icons.Rounded.Psychology,
+                        iconName = "psychology",
                         filePath = agent.filePath,
                         terminalText = agent.filePath,
                         autoRun = false,
@@ -196,7 +193,7 @@ internal fun InlineCommandPanel(
                         category = PaletteCategory.COMMAND,
                         title = cmd.command,
                         description = cmd.description,
-                        icon = cmd.icon,
+                        iconName = cmd.iconName,
                         terminalText = cmd.command,
                         autoRun = true,
                     )
@@ -209,7 +206,7 @@ internal fun InlineCommandPanel(
                             category = PaletteCategory.SC_COMMAND,
                             title = cmd.command,
                             description = cmd.description,
-                            icon = cmd.icon,
+                            iconName = cmd.iconName,
                             terminalText = cmd.command,
                             autoRun = false,
                         )
@@ -255,24 +252,28 @@ internal fun InlineCommandPanel(
                             onDismiss()
                             true
                         }
+
                         Key.DirectionDown -> {
                             if (filteredItems.isNotEmpty()) {
                                 selectedIndex = (selectedIndex + 1).coerceAtMost(filteredItems.size - 1)
                             }
                             true
                         }
+
                         Key.DirectionUp -> {
                             if (filteredItems.isNotEmpty()) {
                                 selectedIndex = (selectedIndex - 1).coerceAtLeast(0)
                             }
                             true
                         }
+
                         Key.Enter -> {
                             if (selectedIndex in filteredItems.indices) {
                                 onItemSelected(filteredItems[selectedIndex])
                                 true
                             } else false
                         }
+
                         else -> false
                     }
                 } else false
@@ -296,7 +297,7 @@ internal fun InlineCommandPanel(
             decorationBox = { innerTextField ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Rounded.Search,
+                        painter = AppIcons.painter("search"),
                         contentDescription = null,
                         tint = TPTheme.colors.hintGray,
                         modifier = Modifier.size(16.dp),
@@ -366,7 +367,7 @@ internal fun InlineCommandPanel(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        imageVector = Icons.Rounded.SearchOff,
+                        painter = AppIcons.painter("search_off"),
                         contentDescription = null,
                         tint = TPTheme.colors.hintGray,
                         modifier = Modifier.size(32.dp),
@@ -446,7 +447,7 @@ internal fun InlineCommandPanel(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
-                                imageVector = paletteItem.icon,
+                                painter = AppIcons.painter(paletteItem.iconName),
                                 contentDescription = null,
                                 tint = accentColor,
                                 modifier = Modifier.size(14.dp),
@@ -473,7 +474,7 @@ internal fun InlineCommandPanel(
                             if (paletteItem.filePath != null) {
                                 @Suppress("DEPRECATION")
                                 Icon(
-                                    imageVector = Icons.Rounded.OpenInNew,
+                                    painter = AppIcons.painter("open_in_new"),
                                     contentDescription = "Open in editor",
                                     tint = TPTheme.colors.hintGray,
                                     modifier = Modifier
