@@ -101,7 +101,6 @@ fun ClaudeTerminalContent(project: Project) {
                             },
                         )
 
-                        // Terminal (always present, hidden when panel is active)
                         if (activePanel == ActivePanel.NONE && !showRCDialog && previewImagePath == null) {
                             SwingPanel(
                                 modifier = Modifier
