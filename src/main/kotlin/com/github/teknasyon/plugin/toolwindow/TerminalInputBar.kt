@@ -1,16 +1,12 @@
 package com.github.teknasyon.plugin.toolwindow
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -83,6 +79,7 @@ internal fun TerminalInputBar(
     ) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
         ) {
             TPActionCard(
                 title = "Model",
@@ -180,7 +177,10 @@ internal fun TerminalInputBar(
                                 }
                                 Spacer(modifier = Modifier.size(4.dp))
                                 val fileNameWithoutExtension = fileName.substringBefore(".")
-                                val shortedFileName = if (fileNameWithoutExtension.length > 8) fileNameWithoutExtension.take(3).plus("...").plus(fileNameWithoutExtension.takeLast(4)) else fileNameWithoutExtension
+                                val shortedFileName =
+                                    if (fileNameWithoutExtension.length > 8) fileNameWithoutExtension.take(3)
+                                        .plus("...")
+                                        .plus(fileNameWithoutExtension.takeLast(4)) else fileNameWithoutExtension
                                 TPText(
                                     text = shortedFileName,
                                     color = TPTheme.colors.blue,
