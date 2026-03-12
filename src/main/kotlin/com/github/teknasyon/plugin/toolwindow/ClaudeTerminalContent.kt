@@ -35,6 +35,7 @@ fun ClaudeTerminalContent(project: Project) {
     }
 
     var activePanel by remember { mutableStateOf(ActivePanel.NONE) }
+    var slashTriggered by remember { mutableStateOf(false) }
     var showRCDialog by remember { mutableStateOf(false) }
     var previewImagePath by remember { mutableStateOf<String?>(null) }
 
@@ -108,9 +109,12 @@ fun ClaudeTerminalContent(project: Project) {
                                     settingsService = settingsService,
                                     superClaudeInstalled = state.superClaudeInstalled == true,
                                     initialFilter = initialFilter,
-                                    onDismiss = { activePanel = ActivePanel.NONE },
+                                    onDismiss = {
+                                        activePanel = ActivePanel.NONE
+                                    },
                                     onItemSelected = { item ->
                                         activePanel = ActivePanel.NONE
+                                        slashTriggered = false
                                         service.setPendingInput(item.terminalText + "\n")
                                     },
                                     modifier = Modifier
@@ -118,6 +122,7 @@ fun ClaudeTerminalContent(project: Project) {
                                         .fillMaxWidth(),
                                 )
                             }
+
                             showRCDialog || previewImagePath != null -> {
                                 Box(
                                     modifier = Modifier
@@ -126,6 +131,7 @@ fun ClaudeTerminalContent(project: Project) {
                                         .background(TPTheme.colors.black),
                                 )
                             }
+
                             else -> {
                                 SwingPanel(
                                     modifier = Modifier
@@ -177,11 +183,19 @@ fun ClaudeTerminalContent(project: Project) {
                             onPendingInputConsumed = { service.consumePendingInput() },
                             onChangeModelClick = { sendToTerminal("/model", true) },
                             onSkillsClick = {
-                                activePanel = if (activePanel == ActivePanel.SKILLS) ActivePanel.NONE else ActivePanel.SKILLS
+                                activePanel =
+                                    if (activePanel == ActivePanel.SKILLS) ActivePanel.NONE else ActivePanel.SKILLS
                             },
                             onCommandsClick = {
-                                activePanel = if (activePanel == ActivePanel.COMMANDS) ActivePanel.NONE else ActivePanel.COMMANDS
+                                activePanel =
+                                    if (activePanel == ActivePanel.COMMANDS) ActivePanel.NONE else ActivePanel.COMMANDS
                             },
+                            onSlashTyped = {
+                                slashTriggered = true
+                                activePanel = ActivePanel.COMMANDS
+                            },
+                            shouldClearSlash = slashTriggered && activePanel == ActivePanel.NONE,
+                            onClearSlash = { slashTriggered = false },
                             isRemoteControlActive = state.remoteControlActive,
                             onRemoteControlStart = { showRCDialog = true },
                             onRemoteControlStop = { service.stopRemoteControl() },

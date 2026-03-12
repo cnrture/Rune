@@ -45,6 +45,9 @@ internal fun TerminalInputBar(
     onChangeModelClick: () -> Unit,
     onSkillsClick: () -> Unit,
     onCommandsClick: () -> Unit,
+    onSlashTyped: () -> Unit = {},
+    onClearSlash: () -> Unit = {},
+    shouldClearSlash: Boolean = false,
     isRemoteControlActive: Boolean = false,
     onRemoteControlStart: () -> Unit = {},
     onRemoteControlStop: () -> Unit = {},
@@ -53,9 +56,18 @@ internal fun TerminalInputBar(
     var inputValue by remember { mutableStateOf(TextFieldValue("")) }
     val focusRequester = remember { FocusRequester() }
 
+    LaunchedEffect(shouldClearSlash) {
+        if (shouldClearSlash && inputValue.text.trimStart() == "/") {
+            inputValue = TextFieldValue("")
+            onClearSlash()
+        }
+    }
+
     LaunchedEffect(pendingInput) {
         if (pendingInput != null) {
-            val newText = if (inputValue.text.isEmpty()) pendingInput else "${inputValue.text} $pendingInput"
+            // Clear slash prefix if input was just "/" (triggered by command palette)
+            val baseText = if (inputValue.text.trimStart() == "/") "" else inputValue.text
+            val newText = if (baseText.isEmpty()) pendingInput else "$baseText $pendingInput"
             inputValue = TextFieldValue(newText, TextRange(newText.length))
             onPendingInputConsumed()
             focusRequester.requestFocus()
@@ -91,9 +103,20 @@ internal fun TerminalInputBar(
             TPActionCard(
                 title = "Model",
                 icon = Icons.Rounded.SmartToy,
-                actionColor = TPTheme.colors.purple,
+                actionColor = TPTheme.colors.hintGray,
                 type = TPActionCardType.EXTRA_SMALL,
                 onClick = { onChangeModelClick() },
+            )
+            Spacer(modifier = Modifier.size(4.dp))
+            TPActionCard(
+                title = "Plan",
+                icon = Icons.Rounded.Map,
+                actionColor = TPTheme.colors.warning,
+                type = TPActionCardType.EXTRA_SMALL,
+                onClick = {
+                    onSend("/plan")
+                    focusRequester.requestFocus()
+                },
             )
             Spacer(modifier = Modifier.size(4.dp))
             TPActionCard(
@@ -111,8 +134,15 @@ internal fun TerminalInputBar(
                 type = TPActionCardType.EXTRA_SMALL,
                 onClick = { onCommandsClick() },
             )
-            Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.size(8.dp))
+            Box(
+                modifier = Modifier
+                    .height(20.dp)
+                    .width(1.dp)
+                    .background(TPTheme.colors.hintGray.copy(alpha = 0.4f))
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Spacer(modifier = Modifier.weight(1f))
             TPSwitch(
                 checked = isRemoteControlActive,
                 text = "Remote",
@@ -159,7 +189,7 @@ internal fun TerminalInputBar(
                                         contentDescription = null,
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier
-                                            .size(24.dp)
+                                            .size(32.dp)
                                             .clip(RoundedCornerShape(4.dp)),
                                     )
                                 } else {
@@ -167,17 +197,18 @@ internal fun TerminalInputBar(
                                         imageVector = Icons.Rounded.Image,
                                         contentDescription = null,
                                         tint = TPTheme.colors.blue,
-                                        modifier = Modifier.size(14.dp),
+                                        modifier = Modifier.size(18.dp),
                                     )
                                 }
                                 Spacer(modifier = Modifier.size(4.dp))
-                                val fileNameWithoutExtension = fileName.substringBefore(".")
-                                val shortedFileName =
-                                    if (fileNameWithoutExtension.length > 8) fileNameWithoutExtension.take(3)
+                                val nameWithoutExt = fileName.substringBeforeLast(".")
+                                val extension = if (fileName.contains(".")) ".${fileName.substringAfterLast(".")}" else ""
+                                val shortedName =
+                                    if (nameWithoutExt.length > 14) nameWithoutExt.take(5)
                                         .plus("...")
-                                        .plus(fileNameWithoutExtension.takeLast(4)) else fileNameWithoutExtension
+                                        .plus(nameWithoutExt.takeLast(5)) else nameWithoutExt
                                 TPText(
-                                    text = shortedFileName,
+                                    text = "$shortedName$extension",
                                     color = TPTheme.colors.blue,
                                     style = TextStyle(fontSize = 10.sp),
                                 )
@@ -201,6 +232,9 @@ internal fun TerminalInputBar(
                     value = inputValue,
                     onValueChange = { newValue ->
                         inputValue = newValue
+                        if (newValue.text.trimStart() == "/") {
+                            onSlashTyped()
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -233,44 +267,12 @@ internal fun TerminalInputBar(
                                 verticalAlignment = Alignment.Top,
                                 horizontalArrangement = Arrangement.Start,
                             ) {
-                                // Left side icons — horizontal row
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    // File inject button
-                                    Icon(
-                                        imageVector = Icons.Rounded.AlternateEmail,
-                                        contentDescription = "Add active file path",
-                                        tint = TPTheme.colors.lightGray,
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
-                                            .clickable {
-                                                val path = onInjectFile() ?: return@clickable
-                                                val newText =
-                                                    if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
-                                                inputValue = TextFieldValue(newText, TextRange(newText.length))
-                                            }
-                                    )
-                                    // Image picker button
-                                    Icon(
-                                        imageVector = Icons.Rounded.Image,
-                                        contentDescription = "Add image",
-                                        tint = if (selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
-                                            .clickable { onPickImage() }
-                                    )
-                                }
-                                Spacer(modifier = Modifier.size(8.dp))
                                 Box(
                                     modifier = Modifier.weight(1f),
                                 ) {
                                     if (inputValue.text.isEmpty()) {
                                         TPText(
-                                            text = "Write your message here...",
+                                            text = "Ask Claude or type / for commands...",
                                             color = TPTheme.colors.hintGray,
                                             style = TextStyle(fontSize = 14.sp),
                                         )
@@ -278,23 +280,46 @@ internal fun TerminalInputBar(
                                     innerTPTextField()
                                 }
                             }
-                            Spacer(modifier = Modifier.size(8.dp))
-                            // Plan Mode
-                            TPActionCard(
-                                modifier = Modifier
-                                    .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR))),
-                                title = "Plan Mode",
-                                icon = Icons.Rounded.Map,
-                                actionColor = TPTheme.colors.warning,
-                                type = TPActionCardType.EXTRA_SMALL,
-                                onClick = {
-                                    onSend("/plan")
-                                    focusRequester.requestFocus()
-                                },
-                            )
+                            Spacer(modifier = Modifier.size(6.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                // File inject button
+                                Icon(
+                                    imageVector = Icons.Rounded.AlternateEmail,
+                                    contentDescription = "Add active file path",
+                                    tint = TPTheme.colors.lightGray,
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+                                        .clickable {
+                                            val path = onInjectFile() ?: return@clickable
+                                            val newText =
+                                                if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
+                                            inputValue = TextFieldValue(newText, TextRange(newText.length))
+                                        }
+                                )
+                                // Image picker button
+                                Icon(
+                                    imageVector = Icons.Rounded.Image,
+                                    contentDescription = "Add image",
+                                    tint = if (selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+                                        .clickable { onPickImage() }
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                                TPText(
+                                    text = "Shift+Enter for new line",
+                                    color = TPTheme.colors.hintGray,
+                                    style = TextStyle(fontSize = 10.sp),
+                                )
+                            }
                         }
                     },
-                    minLines = 4,
+                    minLines = 2,
                 )
             }
 
@@ -305,8 +330,12 @@ internal fun TerminalInputBar(
                 tint = if (hasContent) TPTheme.colors.blue else TPTheme.colors.hintGray,
                 modifier = Modifier
                     .size(28.dp)
-                    .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
-                    .clickable { doSend() }
+                    .then(
+                        if (hasContent) Modifier
+                            .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+                            .clickable { doSend() }
+                        else Modifier
+                    )
             )
         }
     }

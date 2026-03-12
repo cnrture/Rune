@@ -3,8 +3,10 @@ package com.github.teknasyon.plugin.toolwindow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
@@ -14,6 +16,8 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,7 +26,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.domain.model.Skill
 import com.github.teknasyon.plugin.domain.usecase.ScanSkillsUseCase
@@ -96,6 +99,7 @@ private val scCommands = listOf(
     ClaudeCommand("/sc:implement", "Feature implementation", Icons.Rounded.Code),
     ClaudeCommand("/sc:improve", "Code improvements", Icons.AutoMirrored.Rounded.TrendingUp),
     ClaudeCommand("/sc:index", "Project indexing", Icons.Rounded.FindInPage),
+    ClaudeCommand("/sc:index:repo", "Project indexing with more details", Icons.Rounded.FindInPage),
     ClaudeCommand("/sc:load", "Load session context", Icons.Rounded.Download),
     ClaudeCommand("/sc:pm", "Project manager agent", Icons.Rounded.ManageAccounts),
     ClaudeCommand("/sc:recommend", "Command recommendation", Icons.Rounded.Recommend),
@@ -112,319 +116,6 @@ private val scCommands = listOf(
 )
 
 @Composable
-internal fun UnifiedCommandPalette(
-    project: Project,
-    scanSkillsUseCase: ScanSkillsUseCase,
-    settingsService: PluginSettingsService,
-    superClaudeInstalled: Boolean,
-    onDismiss: () -> Unit,
-    onItemSelected: (PaletteItem) -> Unit,
-) {
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf(PaletteFilter.ALL) }
-    var skills by remember { mutableStateOf<List<Skill>>(emptyList()) }
-    var agents by remember { mutableStateOf<List<Skill>>(emptyList()) }
-
-    LaunchedEffect(Unit) {
-        ApplicationManager.getApplication().executeOnPooledThread {
-            val skillsRoot = settingsService.getSkillsRootPath()
-            scanSkillsUseCase(skillsRoot, true).onSuccess { folders ->
-                val all = folders.flatMap { it.getAllSkills() }
-                ApplicationManager.getApplication().invokeLater { skills = all }
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        ApplicationManager.getApplication().executeOnPooledThread {
-            val agentsRoot = settingsService.getAgentsRootPath()
-            scanSkillsUseCase(agentsRoot, false).onSuccess { folders ->
-                val all = folders.flatMap { it.getAllSkills() }
-                ApplicationManager.getApplication().invokeLater { agents = all }
-            }
-        }
-    }
-
-    val allItems = remember(skills, agents, superClaudeInstalled) {
-        buildList {
-            skills.forEach { skill ->
-                add(
-                    PaletteItem(
-                        category = PaletteCategory.SKILL,
-                        title = skill.relativePath,
-                        description = skill.description,
-                        icon = Icons.Rounded.AutoFixHigh,
-                        filePath = skill.filePath,
-                        terminalText = skill.filePath,
-                        autoRun = false,
-                    )
-                )
-            }
-            agents.forEach { agent ->
-                add(
-                    PaletteItem(
-                        category = PaletteCategory.AGENT,
-                        title = agent.relativePath,
-                        description = agent.description,
-                        icon = Icons.Rounded.Psychology,
-                        filePath = agent.filePath,
-                        terminalText = agent.filePath,
-                        autoRun = false,
-                    )
-                )
-            }
-            claudeCommands.forEach { cmd ->
-                add(
-                    PaletteItem(
-                        category = PaletteCategory.COMMAND,
-                        title = cmd.command,
-                        description = cmd.description,
-                        icon = cmd.icon,
-                        terminalText = cmd.command,
-                        autoRun = true,
-                    )
-                )
-            }
-            if (superClaudeInstalled) {
-                scCommands.forEach { cmd ->
-                    add(
-                        PaletteItem(
-                            category = PaletteCategory.SC_COMMAND,
-                            title = cmd.command,
-                            description = cmd.description,
-                            icon = cmd.icon,
-                            terminalText = cmd.command,
-                            autoRun = false,
-                        )
-                    )
-                }
-            }
-        }
-    }
-
-    val filteredItems = remember(allItems, searchQuery, selectedFilter) {
-        allItems.filter { item ->
-            val matchesFilter = when (selectedFilter) {
-                PaletteFilter.ALL -> true
-                PaletteFilter.SKILLS -> item.category == PaletteCategory.SKILL
-                PaletteFilter.AGENTS -> item.category == PaletteCategory.AGENT
-                PaletteFilter.COMMANDS -> item.category == PaletteCategory.COMMAND
-                PaletteFilter.SC_COMMANDS -> item.category == PaletteCategory.SC_COMMAND
-            }
-            val matchesSearch = searchQuery.isBlank() ||
-                item.title.contains(searchQuery, ignoreCase = true) ||
-                item.description.contains(searchQuery, ignoreCase = true)
-            matchesFilter && matchesSearch
-        }
-    }
-
-    val groupedItems = remember(filteredItems) {
-        filteredItems.groupBy { it.category }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .zIndex(10f)
-            .background(TPTheme.colors.black.copy(alpha = 0.6f))
-            .clickable { onDismiss() },
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Column(
-            modifier = Modifier
-                .clickable(enabled = false) {}
-                .padding(horizontal = 8.dp)
-                .padding(bottom = 8.dp)
-                .fillMaxWidth()
-                .heightIn(max = 400.dp)
-                .background(TPTheme.colors.gray, RoundedCornerShape(12.dp))
-                .padding(12.dp)
-                .onPreviewKeyEvent { event ->
-                    if (event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
-                        onDismiss()
-                        true
-                    } else false
-                }
-        ) {
-            // Search field
-            BasicTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = TPTheme.colors.black,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                textStyle = TextStyle(color = TPTheme.colors.white, fontSize = 14.sp),
-                cursorBrush = SolidColor(TPTheme.colors.white),
-                singleLine = true,
-                decorationBox = { innerTextField ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Rounded.Search,
-                            contentDescription = null,
-                            tint = TPTheme.colors.hintGray,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Box(Modifier.weight(1f)) {
-                            if (searchQuery.isEmpty()) {
-                                TPText(
-                                    text = "Search commands, skills, agents...",
-                                    color = TPTheme.colors.hintGray,
-                                    fontSize = 14.sp,
-                                )
-                            }
-                            innerTextField()
-                        }
-                    }
-                },
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            // Category tabs
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                PaletteFilter.entries.forEach { filter ->
-                    if (filter == PaletteFilter.SC_COMMANDS && !superClaudeInstalled) return@forEach
-                    val label = when (filter) {
-                        PaletteFilter.ALL -> "All"
-                        PaletteFilter.SKILLS -> "Skills"
-                        PaletteFilter.AGENTS -> "Agents"
-                        PaletteFilter.COMMANDS -> "Commands"
-                        PaletteFilter.SC_COMMANDS -> "SC"
-                    }
-                    val isSelected = selectedFilter == filter
-                    TPText(
-                        text = label,
-                        modifier = Modifier
-                            .background(
-                                color = if (isSelected) TPTheme.colors.primaryContainer else Color.Transparent,
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .clickable { selectedFilter = filter }
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                        color = if (isSelected) TPTheme.colors.white else TPTheme.colors.lightGray,
-                        fontSize = 12.sp,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Items list
-            if (filteredItems.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(80.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    TPText(text = "No results found", color = TPTheme.colors.lightGray, fontSize = 13.sp)
-                }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    PaletteCategory.entries.forEach { category ->
-                        val items = groupedItems[category] ?: return@forEach
-                        if (items.isEmpty()) return@forEach
-
-                        item(key = "header-$category") {
-                            val headerText = when (category) {
-                                PaletteCategory.SKILL -> "SKILLS"
-                                PaletteCategory.AGENT -> "AGENTS"
-                                PaletteCategory.COMMAND -> "COMMANDS"
-                                PaletteCategory.SC_COMMAND -> "SC COMMANDS"
-                            }
-                            val headerColor = when (category) {
-                                PaletteCategory.SKILL -> TPTheme.colors.blue
-                                PaletteCategory.AGENT -> TPTheme.colors.blue
-                                PaletteCategory.COMMAND -> TPTheme.colors.purple
-                                PaletteCategory.SC_COMMAND -> TPTheme.colors.blue
-                            }
-                            TPText(
-                                text = headerText,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp, horizontal = 4.dp),
-                                color = headerColor.copy(alpha = 0.7f),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp,
-                            )
-                        }
-
-                        items(items, key = { "${it.category}-${it.title}" }) { paletteItem ->
-                            val accentColor = when (paletteItem.category) {
-                                PaletteCategory.SKILL -> TPTheme.colors.blue
-                                PaletteCategory.AGENT -> TPTheme.colors.blue
-                                PaletteCategory.COMMAND -> TPTheme.colors.purple
-                                PaletteCategory.SC_COMMAND -> TPTheme.colors.blue
-                            }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onItemSelected(paletteItem) }
-                                    .padding(horizontal = 4.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    imageVector = paletteItem.icon,
-                                    contentDescription = null,
-                                    tint = accentColor,
-                                    modifier = Modifier.size(16.dp),
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    TPText(
-                                        text = paletteItem.title,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = TPTheme.colors.white,
-                                        fontSize = 12.sp,
-                                        maxLines = 1,
-                                    )
-                                    if (paletteItem.description.isNotBlank()) {
-                                        TPText(
-                                            text = paletteItem.description,
-                                            color = TPTheme.colors.hintGray,
-                                            fontSize = 10.sp,
-                                            maxLines = 1,
-                                        )
-                                    }
-                                }
-                                if (paletteItem.filePath != null) {
-                                    @Suppress("DEPRECATION")
-                                    Icon(
-                                        imageVector = Icons.Rounded.OpenInNew,
-                                        contentDescription = "Open in editor",
-                                        tint = TPTheme.colors.hintGray,
-                                        modifier = Modifier
-                                            .size(16.dp)
-                                            .clickable {
-                                                val vf = LocalFileSystem.getInstance()
-                                                    .findFileByPath(paletteItem.filePath)
-                                                if (vf != null) {
-                                                    ApplicationManager.getApplication().invokeLater {
-                                                        FileEditorManager.getInstance(project)
-                                                            .openFile(vf, true)
-                                                    }
-                                                }
-                                            }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 internal fun InlineCommandPanel(
     project: Project,
     scanSkillsUseCase: ScanSkillsUseCase,
@@ -437,8 +128,13 @@ internal fun InlineCommandPanel(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(initialFilter) }
+    val searchFocusRequester = remember { FocusRequester() }
     var skills by remember { mutableStateOf<List<Skill>>(emptyList()) }
     var agents by remember { mutableStateOf<List<Skill>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        searchFocusRequester.requestFocus()
+    }
 
     LaunchedEffect(Unit) {
         ApplicationManager.getApplication().executeOnPooledThread {
@@ -558,7 +254,8 @@ internal fun InlineCommandPanel(
                     color = TPTheme.colors.gray,
                     shape = RoundedCornerShape(8.dp)
                 )
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .focusRequester(searchFocusRequester),
             textStyle = TextStyle(color = TPTheme.colors.white, fontSize = 14.sp),
             cursorBrush = SolidColor(TPTheme.colors.white),
             singleLine = true,
@@ -627,7 +324,7 @@ internal fun InlineCommandPanel(
 
         Spacer(Modifier.height(8.dp))
 
-        // Items list
+        // Items grid
         if (filteredItems.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxWidth().weight(1f),
@@ -636,12 +333,17 @@ internal fun InlineCommandPanel(
                 TPText(text = "No results found", color = TPTheme.colors.lightGray, fontSize = 13.sp)
             }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 PaletteCategory.entries.forEach { category ->
-                    val items = groupedItems[category] ?: return@forEach
-                    if (items.isEmpty()) return@forEach
+                    val categoryItems = groupedItems[category] ?: return@forEach
+                    if (categoryItems.isEmpty()) return@forEach
 
-                    item(key = "inline-header-$category") {
+                    item(key = "inline-header-$category", span = { GridItemSpan(2) }) {
                         val headerText = when (category) {
                             PaletteCategory.SKILL -> "SKILLS"
                             PaletteCategory.AGENT -> "AGENTS"
@@ -666,7 +368,7 @@ internal fun InlineCommandPanel(
                         )
                     }
 
-                    items(items, key = { "inline-${it.category}-${it.title}" }) { paletteItem ->
+                    items(categoryItems, key = { "inline-${it.category}-${it.title}" }) { paletteItem ->
                         val accentColor = when (paletteItem.category) {
                             PaletteCategory.SKILL -> TPTheme.colors.blue
                             PaletteCategory.AGENT -> TPTheme.colors.blue
@@ -676,30 +378,35 @@ internal fun InlineCommandPanel(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .background(
+                                    color = TPTheme.colors.gray.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(6.dp),
+                                )
                                 .clickable { onItemSelected(paletteItem) }
-                                .padding(horizontal = 4.dp, vertical = 8.dp),
+                                .padding(horizontal = 6.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 imageVector = paletteItem.icon,
                                 contentDescription = null,
                                 tint = accentColor,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(14.dp),
                             )
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(6.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 TPText(
                                     text = paletteItem.title,
                                     fontWeight = FontWeight.SemiBold,
                                     color = TPTheme.colors.white,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     maxLines = 1,
                                 )
                                 if (paletteItem.description.isNotBlank()) {
+                                    Spacer(Modifier.height(2.dp))
                                     TPText(
                                         text = paletteItem.description,
                                         color = TPTheme.colors.hintGray,
-                                        fontSize = 10.sp,
+                                        fontSize = 9.sp,
                                         maxLines = 1,
                                     )
                                 }
@@ -711,7 +418,7 @@ internal fun InlineCommandPanel(
                                     contentDescription = "Open in editor",
                                     tint = TPTheme.colors.hintGray,
                                     modifier = Modifier
-                                        .size(16.dp)
+                                        .size(14.dp)
                                         .clickable {
                                             val vf = LocalFileSystem.getInstance()
                                                 .findFileByPath(paletteItem.filePath)

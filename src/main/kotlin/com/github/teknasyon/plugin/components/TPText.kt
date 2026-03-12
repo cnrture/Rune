@@ -32,5 +32,6 @@ fun TPText(
         fontSize = fontSize,
         fontWeight = fontWeight,
         letterSpacing = letterSpacing,
+        lineHeight = fontSize,
     )
 }
