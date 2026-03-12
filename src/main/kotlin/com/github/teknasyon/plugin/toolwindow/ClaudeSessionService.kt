@@ -41,9 +41,6 @@ data class ClaudeModel(
             ClaudeModel("claude-sonnet-4-6", "sonnet", "Sonnet 4.6"),
             ClaudeModel("claude-haiku-4-5-20251001", "haiku", "Haiku 4.5"),
         )
-
-        val DEFAULT = AVAILABLE.first() // Opus 4.6
-        fun findById(id: String): ClaudeModel? = AVAILABLE.find { it.id == id }
     }
 }
 
@@ -308,7 +305,6 @@ private fun createClaudeTerminalPanel(
         onWidgetReady(widget)
 
         val keyDispatcher = KeyEventDispatcher { e ->
-            if (e.id != KeyEvent.KEY_PRESSED) return@KeyEventDispatcher false
             val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
             if (focusOwner == null || !SwingUtilities.isDescendingFrom(
                     focusOwner,
@@ -317,29 +313,40 @@ private fun createClaudeTerminalPanel(
             ) return@KeyEventDispatcher false
 
             val isMeta = e.isMetaDown // Cmd on macOS
-            when {
-                e.keyCode == KeyEvent.VK_ESCAPE -> {
-                    @Suppress("DEPRECATION")
-                    widget.terminalStarter?.sendString("\u001B", true)
-                    e.consume()
-                    true
-                }
-                // Cmd+C → copy selected text from terminal
-                isMeta && e.keyCode == KeyEvent.VK_C -> {
-                    try {
-                        val selected = widget.selectedText
-                        if (!selected.isNullOrEmpty()) {
-                            val clipboard = Toolkit.getDefaultToolkit().systemClipboard
-                            clipboard.setContents(StringSelection(selected), null)
+            // Allow Cmd+C (copy), Cmd+A (select all) — block everything else
+            if (e.id == KeyEvent.KEY_PRESSED) {
+                when {
+                    // Cmd+C → copy selected text from terminal
+                    isMeta && e.keyCode == KeyEvent.VK_C -> {
+                        try {
+                            val selected = widget.selectedText
+                            if (!selected.isNullOrEmpty()) {
+                                val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+                                clipboard.setContents(StringSelection(selected), null)
+                            }
+                        } catch (_: Exception) {
                         }
-                    } catch (_: Exception) {
+                        e.consume()
+                        return@KeyEventDispatcher true
                     }
-                    e.consume()
-                    true
+                    // Cmd+A → select all terminal text
+                    isMeta && e.keyCode == KeyEvent.VK_A -> {
+                        return@KeyEventDispatcher false
+                    }
+                    // ESC → send escape to terminal (interrupt/cancel)
+                    e.keyCode == KeyEvent.VK_ESCAPE -> {
+                        @Suppress("DEPRECATION")
+                        widget.terminalStarter?.sendString("\u001B", true)
+                        e.consume()
+                        return@KeyEventDispatcher true
+                    }
                 }
-
-                else -> false
             }
+
+            // Block all other keyboard input (KEY_PRESSED, KEY_TYPED, KEY_RELEASED)
+            // so users can only interact via the input bar
+            e.consume()
+            true
         }
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyDispatcher)
         Disposer.register(disposable) {
