@@ -1,5 +1,8 @@
 package com.github.teknasyon.plugin.toolwindow
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -98,53 +101,67 @@ fun ClaudeTerminalContent(project: Project) {
                             },
                         )
 
-                        when {
-                            activePanel != ActivePanel.NONE -> {
-                                val initialFilter = when (activePanel) {
-                                    ActivePanel.SKILLS -> PaletteFilter.SKILLS
-                                    ActivePanel.COMMANDS -> PaletteFilter.COMMANDS
-                                    else -> PaletteFilter.ALL
-                                }
-                                InlineCommandPanel(
-                                    project = project,
-                                    scanSkillsUseCase = scanSkillsUseCase,
-                                    settingsService = settingsService,
-                                    superClaudeInstalled = state.superClaudeInstalled == true,
-                                    initialFilter = initialFilter,
-                                    onDismiss = {
-                                        activePanel = ActivePanel.NONE
-                                        inputFocusRequester.requestFocus()
-                                    },
-                                    onItemSelected = { item ->
-                                        activePanel = ActivePanel.NONE
-                                        slashTriggered = false
-                                        service.setPendingInput(item.terminalText + "\n")
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth(),
-                                )
-                            }
+                        // Terminal (always present, hidden when panel is active)
+                        if (activePanel == ActivePanel.NONE && !showRCDialog && previewImagePath == null) {
+                            SwingPanel(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 1.dp),
+                                factory = { service.sessionManager.parentPanel },
+                                update = {},
+                            )
+                        } else if (activePanel != ActivePanel.NONE) {
+                            SwingPanel(
+                                modifier = Modifier
+                                    .weight(0.4f)
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 1.dp),
+                                factory = { service.sessionManager.parentPanel },
+                                update = {},
+                            )
+                        } else if (activePanel == ActivePanel.NONE) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                                    .background(TPTheme.colors.black),
+                            )
+                        }
 
-                            showRCDialog || previewImagePath != null -> {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth()
-                                        .background(TPTheme.colors.black),
-                                )
+                        // Inline command panel with slide animation
+                        AnimatedVisibility(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(0.6f),
+                            visible = activePanel != ActivePanel.NONE,
+                            enter = slideInVertically(initialOffsetY = { it }),
+                            exit = slideOutVertically(targetOffsetY = { it }),
+                        ) {
+                            val initialFilter = when (activePanel) {
+                                ActivePanel.SKILLS -> PaletteFilter.SKILLS
+                                ActivePanel.COMMANDS -> PaletteFilter.COMMANDS
+                                else -> PaletteFilter.ALL
                             }
-
-                            else -> {
-                                SwingPanel(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 1.dp),
-                                    factory = { service.sessionManager.parentPanel },
-                                    update = {},
-                                )
-                            }
+                            InlineCommandPanel(
+                                project = project,
+                                scanSkillsUseCase = scanSkillsUseCase,
+                                settingsService = settingsService,
+                                superClaudeInstalled = state.superClaudeInstalled == true,
+                                initialFilter = initialFilter,
+                                onDismiss = {
+                                    activePanel = ActivePanel.NONE
+                                    inputFocusRequester.requestFocus()
+                                },
+                                onItemSelected = { item ->
+                                    activePanel = ActivePanel.NONE
+                                    slashTriggered = false
+                                    service.setPendingInput(item.terminalText + "\n")
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                            )
                         }
 
                         val pendingInput by service.pendingInput.collectAsState()
