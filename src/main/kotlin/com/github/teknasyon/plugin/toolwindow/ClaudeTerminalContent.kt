@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.github.teknasyon.plugin.actions.dialog.CreateSkillDialog
 import com.github.teknasyon.plugin.components.TPText
@@ -38,6 +39,7 @@ fun ClaudeTerminalContent(project: Project) {
     var slashTriggered by remember { mutableStateOf(false) }
     var showRCDialog by remember { mutableStateOf(false) }
     var previewImagePath by remember { mutableStateOf<String?>(null) }
+    val inputFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         service.checkClaudeInstalled()
@@ -111,6 +113,7 @@ fun ClaudeTerminalContent(project: Project) {
                                     initialFilter = initialFilter,
                                     onDismiss = {
                                         activePanel = ActivePanel.NONE
+                                        inputFocusRequester.requestFocus()
                                     },
                                     onItemSelected = { item ->
                                         activePanel = ActivePanel.NONE
@@ -200,6 +203,7 @@ fun ClaudeTerminalContent(project: Project) {
                             onRemoteControlStart = { showRCDialog = true },
                             onRemoteControlStop = { service.stopRemoteControl() },
                             onClickPreviewImage = { previewImagePath = it },
+                            inputFocusRequester = inputFocusRequester,
                         )
                     }
                 }

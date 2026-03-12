@@ -56,10 +56,11 @@ internal fun TerminalInputBar(
     onRemoteControlStart: () -> Unit = {},
     onRemoteControlStop: () -> Unit = {},
     onClickPreviewImage: (String) -> Unit = {},
+    inputFocusRequester: FocusRequester = remember { FocusRequester() },
 ) {
     var inputValue by remember { mutableStateOf(TextFieldValue("")) }
     var isFocused by remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
+    val focusRequester = inputFocusRequester
 
     LaunchedEffect(shouldClearSlash) {
         if (shouldClearSlash && inputValue.text.trimStart() == "/") {
@@ -371,6 +372,7 @@ internal fun TerminalInputBar(
                         }
                     },
                     minLines = 2,
+                    maxLines = 8,
                 )
             }
 
