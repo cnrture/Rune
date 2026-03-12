@@ -99,7 +99,6 @@ internal fun TerminalInputBar(
 ) {
     var inputValue by remember { mutableStateOf(TextFieldValue("")) }
     var isFocused by remember { mutableStateOf(false) }
-    val focusRequester = inputFocusRequester
 
     LaunchedEffect(shouldClearSlash) {
         if (shouldClearSlash && inputValue.text.trimStart() == "/") {
@@ -110,12 +109,11 @@ internal fun TerminalInputBar(
 
     LaunchedEffect(pendingInput) {
         if (pendingInput != null) {
-            // Clear slash prefix if input was just "/" (triggered by command palette)
             val baseText = if (inputValue.text.trimStart() == "/") "" else inputValue.text
             val newText = if (baseText.isEmpty()) pendingInput else "$baseText $pendingInput"
             inputValue = TextFieldValue(newText, TextRange(newText.length))
             onPendingInputConsumed()
-            focusRequester.requestFocus()
+            inputFocusRequester.requestFocus()
         }
     }
 
@@ -144,7 +142,7 @@ internal fun TerminalInputBar(
             .background(TPTheme.colors.gray)
             .border(
                 width = 1.dp,
-                color = TPTheme.colors.outline.copy(alpha = 0.3f),
+                color = TPTheme.colors.outline,
                 shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
             )
             .padding(8.dp),
@@ -179,7 +177,7 @@ internal fun TerminalInputBar(
                 isBorderless = true,
                 onClick = {
                     onSend("/plan")
-                    focusRequester.requestFocus()
+                    inputFocusRequester.requestFocus()
                 },
             )
             Spacer(modifier = Modifier.size(4.dp))
@@ -304,7 +302,7 @@ internal fun TerminalInputBar(
                         .clip(RoundedCornerShape(8.dp))
                         .background(TPTheme.colors.black)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .focusRequester(focusRequester)
+                        .focusRequester(inputFocusRequester)
                         .onFocusChanged { isFocused = it.isFocused }
                         .onPreviewKeyEvent { event ->
                             if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {

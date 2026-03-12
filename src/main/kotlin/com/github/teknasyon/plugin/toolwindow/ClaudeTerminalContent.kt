@@ -107,8 +107,7 @@ fun ClaudeTerminalContent(project: Project) {
                             SwingPanel(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 1.dp),
+                                    .fillMaxWidth(),
                                 factory = { service.sessionManager.parentPanel },
                                 update = {},
                             )
@@ -116,8 +115,7 @@ fun ClaudeTerminalContent(project: Project) {
                             SwingPanel(
                                 modifier = Modifier
                                     .weight(0.4f)
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 1.dp),
+                                    .fillMaxWidth(),
                                 factory = { service.sessionManager.parentPanel },
                                 update = {},
                             )
