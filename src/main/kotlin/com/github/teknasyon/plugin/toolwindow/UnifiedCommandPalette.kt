@@ -1,6 +1,7 @@
 package com.github.teknasyon.plugin.toolwindow
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -135,6 +136,7 @@ internal fun InlineCommandPanel(
     val searchFocusRequester = remember { FocusRequester() }
     var skills by remember { mutableStateOf<List<Skill>>(emptyList()) }
     var agents by remember { mutableStateOf<List<Skill>>(emptyList()) }
+    var selectedIndex by remember { mutableStateOf(-1) }
 
     LaunchedEffect(Unit) {
         searchFocusRequester.requestFocus()
@@ -217,6 +219,11 @@ internal fun InlineCommandPanel(
         }
     }
 
+    // Reset selection when search or filter changes
+    LaunchedEffect(searchQuery, selectedFilter) {
+        selectedIndex = -1
+    }
+
     val filteredItems = remember(allItems, searchQuery, selectedFilter) {
         allItems.filter { item ->
             val matchesFilter = when (selectedFilter) {
@@ -242,9 +249,32 @@ internal fun InlineCommandPanel(
             .background(TPTheme.colors.black)
             .padding(8.dp)
             .onPreviewKeyEvent { event ->
-                if (event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
-                    onDismiss()
-                    true
+                if (event.type == KeyEventType.KeyDown) {
+                    when (event.key) {
+                        Key.Escape -> {
+                            onDismiss()
+                            true
+                        }
+                        Key.DirectionDown -> {
+                            if (filteredItems.isNotEmpty()) {
+                                selectedIndex = (selectedIndex + 1).coerceAtMost(filteredItems.size - 1)
+                            }
+                            true
+                        }
+                        Key.DirectionUp -> {
+                            if (filteredItems.isNotEmpty()) {
+                                selectedIndex = (selectedIndex - 1).coerceAtLeast(0)
+                            }
+                            true
+                        }
+                        Key.Enter -> {
+                            if (selectedIndex in filteredItems.indices) {
+                                onItemSelected(filteredItems[selectedIndex])
+                                true
+                            } else false
+                        }
+                        else -> false
+                    }
                 } else false
             }
     ) {
@@ -382,6 +412,8 @@ internal fun InlineCommandPanel(
                     }
 
                     items(categoryItems, key = { "inline-${it.category}-${it.title}" }) { paletteItem ->
+                        val flatIndex = filteredItems.indexOf(paletteItem)
+                        val isSelected = flatIndex == selectedIndex
                         val accentColor = when (paletteItem.category) {
                             PaletteCategory.SKILL -> TPTheme.colors.blue
                             PaletteCategory.AGENT -> TPTheme.colors.blue
@@ -395,8 +427,18 @@ internal fun InlineCommandPanel(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(
-                                    color = if (isItemHovered) accentColor.copy(alpha = 0.15f)
-                                        else TPTheme.colors.gray.copy(alpha = 0.5f),
+                                    color = when {
+                                        isSelected -> accentColor.copy(alpha = 0.25f)
+                                        isItemHovered -> accentColor.copy(alpha = 0.15f)
+                                        else -> TPTheme.colors.gray.copy(alpha = 0.5f)
+                                    },
+                                )
+                                .then(
+                                    if (isSelected) Modifier.border(
+                                        width = 1.dp,
+                                        color = accentColor.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(6.dp),
+                                    ) else Modifier
                                 )
                                 .hoverable(itemHover)
                                 .clickable { onItemSelected(paletteItem) }

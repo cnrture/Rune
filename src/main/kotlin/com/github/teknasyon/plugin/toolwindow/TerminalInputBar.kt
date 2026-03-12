@@ -22,9 +22,15 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,6 +41,27 @@ import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.theme.TPTheme
 import java.awt.Cursor
 import javax.swing.SwingUtilities
+
+private val urlRegex = Regex("""https?://\S+""")
+
+private class UrlHighlightTransformation(private val urlColor: androidx.compose.ui.graphics.Color) : VisualTransformation {
+    override fun filter(text: androidx.compose.ui.text.AnnotatedString): TransformedText {
+        val annotated = buildAnnotatedString {
+            append(text)
+            urlRegex.findAll(text.text).forEach { match ->
+                addStyle(
+                    SpanStyle(
+                        color = urlColor,
+                        textDecoration = TextDecoration.Underline,
+                    ),
+                    match.range.first,
+                    match.range.last + 1,
+                )
+            }
+        }
+        return TransformedText(annotated, OffsetMapping.Identity)
+    }
+}
 
 @Composable
 internal fun TerminalInputBar(
@@ -80,6 +107,8 @@ internal fun TerminalInputBar(
         }
     }
 
+    val urlColor = TPTheme.colors.blue
+    val urlTransformation = remember(urlColor) { UrlHighlightTransformation(urlColor) }
     val hasContent = inputValue.text.isNotBlank() || selectedImagePaths.isNotEmpty()
 
     fun doSend() {
@@ -371,6 +400,7 @@ internal fun TerminalInputBar(
                             }
                         }
                     },
+                    visualTransformation = urlTransformation,
                     minLines = 2,
                     maxLines = 8,
                 )
