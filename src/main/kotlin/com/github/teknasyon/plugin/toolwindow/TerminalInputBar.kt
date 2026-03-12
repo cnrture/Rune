@@ -16,6 +16,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -27,6 +29,7 @@ import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.components.TPSwitch
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.theme.TPTheme
+import java.awt.Cursor
 import javax.swing.SwingUtilities
 
 @Composable
@@ -145,6 +148,7 @@ internal fun TerminalInputBar(
                                         color = TPTheme.colors.blue.copy(alpha = 0.15f),
                                         shape = RoundedCornerShape(6.dp)
                                     )
+                                    .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
                                     .clickable { onClickPreviewImage(path) }
                                     .padding(horizontal = 6.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -184,6 +188,7 @@ internal fun TerminalInputBar(
                                     tint = TPTheme.colors.blue,
                                     modifier = Modifier
                                         .size(14.dp)
+                                        .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
                                         .clickable { onRemoveImage(path) },
                                 )
                             }
@@ -223,52 +228,70 @@ internal fun TerminalInputBar(
                     ),
                     cursorBrush = SolidColor(TPTheme.colors.white),
                     decorationBox = { innerTPTextField ->
-                        Row(
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.Start,
-                        ) {
-                            // Left side icons — horizontal row
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
+                        Column {
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.Start,
                             ) {
-                                // File inject button
-                                Icon(
-                                    imageVector = Icons.Rounded.AlternateEmail,
-                                    contentDescription = "Add active file path",
-                                    tint = TPTheme.colors.lightGray,
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                        .clickable {
-                                            val path = onInjectFile() ?: return@clickable
-                                            val newText =
-                                                if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
-                                            inputValue = TextFieldValue(newText, TextRange(newText.length))
-                                        }
-                                )
-                                // Image picker button
-                                Icon(
-                                    imageVector = Icons.Rounded.Image,
-                                    contentDescription = "Add image",
-                                    tint = if (selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                        .clickable { onPickImage() }
-                                )
-                            }
-                            Spacer(modifier = Modifier.size(8.dp))
-                            Box(
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                if (inputValue.text.isEmpty()) {
-                                    TPText(
-                                        text = "Write your message here...",
-                                        color = TPTheme.colors.hintGray,
-                                        style = TextStyle(fontSize = 14.sp),
+                                // Left side icons — horizontal row
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    // File inject button
+                                    Icon(
+                                        imageVector = Icons.Rounded.AlternateEmail,
+                                        contentDescription = "Add active file path",
+                                        tint = TPTheme.colors.lightGray,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+                                            .clickable {
+                                                val path = onInjectFile() ?: return@clickable
+                                                val newText =
+                                                    if (inputValue.text.isEmpty()) path else "${inputValue.text} $path"
+                                                inputValue = TextFieldValue(newText, TextRange(newText.length))
+                                            }
+                                    )
+                                    // Image picker button
+                                    Icon(
+                                        imageVector = Icons.Rounded.Image,
+                                        contentDescription = "Add image",
+                                        tint = if (selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
+                                            .clickable { onPickImage() }
                                     )
                                 }
-                                innerTPTextField()
+                                Spacer(modifier = Modifier.size(8.dp))
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    if (inputValue.text.isEmpty()) {
+                                        TPText(
+                                            text = "Write your message here...",
+                                            color = TPTheme.colors.hintGray,
+                                            style = TextStyle(fontSize = 14.sp),
+                                        )
+                                    }
+                                    innerTPTextField()
+                                }
                             }
+                            Spacer(modifier = Modifier.size(8.dp))
+                            // Plan Mode
+                            TPActionCard(
+                                modifier = Modifier
+                                    .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR))),
+                                title = "Plan Mode",
+                                icon = Icons.Rounded.Map,
+                                actionColor = TPTheme.colors.warning,
+                                type = TPActionCardType.EXTRA_SMALL,
+                                onClick = {
+                                    onSend("/plan")
+                                    focusRequester.requestFocus()
+                                },
+                            )
                         }
                     },
                     minLines = 4,
@@ -282,6 +305,7 @@ internal fun TerminalInputBar(
                 tint = if (hasContent) TPTheme.colors.blue else TPTheme.colors.hintGray,
                 modifier = Modifier
                     .size(28.dp)
+                    .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
                     .clickable { doSend() }
             )
         }
