@@ -7,14 +7,13 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
-import androidx.compose.material.icons.rounded.AlternateEmail
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Image
-import androidx.compose.material.icons.rounded.SmartToy
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.ContentScale
@@ -40,20 +39,23 @@ internal fun TerminalInputBar(
     onClearImages: () -> Unit,
     pendingInput: String?,
     onPendingInputConsumed: () -> Unit,
-    onSlashClick: () -> Unit,
     onChangeModelClick: () -> Unit,
+    onSkillsClick: () -> Unit,
+    onCommandsClick: () -> Unit,
     isRemoteControlActive: Boolean = false,
     onRemoteControlStart: () -> Unit = {},
     onRemoteControlStop: () -> Unit = {},
     onClickPreviewImage: (String) -> Unit = {},
 ) {
     var inputValue by remember { mutableStateOf(TextFieldValue("")) }
+    val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(pendingInput) {
         if (pendingInput != null) {
             val newText = if (inputValue.text.isEmpty()) pendingInput else "${inputValue.text} $pendingInput"
             inputValue = TextFieldValue(newText, TextRange(newText.length))
             onPendingInputConsumed()
+            focusRequester.requestFocus()
         }
     }
 
@@ -89,6 +91,22 @@ internal fun TerminalInputBar(
                 actionColor = TPTheme.colors.purple,
                 type = TPActionCardType.EXTRA_SMALL,
                 onClick = { onChangeModelClick() },
+            )
+            Spacer(modifier = Modifier.size(4.dp))
+            TPActionCard(
+                title = "Skills",
+                icon = Icons.Rounded.AutoFixHigh,
+                actionColor = TPTheme.colors.blue,
+                type = TPActionCardType.EXTRA_SMALL,
+                onClick = { onSkillsClick() },
+            )
+            Spacer(modifier = Modifier.size(4.dp))
+            TPActionCard(
+                title = "Commands",
+                icon = Icons.Rounded.PlayArrow,
+                actionColor = TPTheme.colors.purple,
+                type = TPActionCardType.EXTRA_SMALL,
+                onClick = { onCommandsClick() },
             )
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.size(8.dp))
@@ -177,17 +195,14 @@ internal fun TerminalInputBar(
                 BasicTextField(
                     value = inputValue,
                     onValueChange = { newValue ->
-                        val wasEmpty = inputValue.text.isEmpty()
                         inputValue = newValue
-                        if (wasEmpty && newValue.text == "/") {
-                            onSlashClick()
-                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
                         .background(TPTheme.colors.black)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .focusRequester(focusRequester)
                         .onPreviewKeyEvent { event ->
                             if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
                                 if (event.isShiftPressed) {

@@ -21,6 +21,8 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 
+internal enum class ActivePanel { NONE, SKILLS, COMMANDS }
+
 @Composable
 fun ClaudeTerminalContent(project: Project) {
     val service = remember { ClaudeSessionService.getInstance(project) }
@@ -32,7 +34,7 @@ fun ClaudeTerminalContent(project: Project) {
         ScanSkillsUseCase(repository)
     }
 
-    var showCommandPalette by remember { mutableStateOf(false) }
+    var activePanel by remember { mutableStateOf(ActivePanel.NONE) }
     var showRCDialog by remember { mutableStateOf(false) }
     var previewImagePath by remember { mutableStateOf<String?>(null) }
 
@@ -93,22 +95,47 @@ fun ClaudeTerminalContent(project: Project) {
                             },
                         )
 
-                        if (showCommandPalette || showRCDialog || previewImagePath != null) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                                    .background(TPTheme.colors.black),
-                            )
-                        } else {
-                            SwingPanel(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 1.dp),
-                                factory = { service.sessionManager.parentPanel },
-                                update = {},
-                            )
+                        when {
+                            activePanel != ActivePanel.NONE -> {
+                                val initialFilter = when (activePanel) {
+                                    ActivePanel.SKILLS -> PaletteFilter.SKILLS
+                                    ActivePanel.COMMANDS -> PaletteFilter.COMMANDS
+                                    else -> PaletteFilter.ALL
+                                }
+                                InlineCommandPanel(
+                                    project = project,
+                                    scanSkillsUseCase = scanSkillsUseCase,
+                                    settingsService = settingsService,
+                                    superClaudeInstalled = state.superClaudeInstalled == true,
+                                    initialFilter = initialFilter,
+                                    onDismiss = { activePanel = ActivePanel.NONE },
+                                    onItemSelected = { item ->
+                                        activePanel = ActivePanel.NONE
+                                        service.setPendingInput(item.terminalText + "\n")
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxWidth(),
+                                )
+                            }
+                            showRCDialog || previewImagePath != null -> {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxWidth()
+                                        .background(TPTheme.colors.black),
+                                )
+                            }
+                            else -> {
+                                SwingPanel(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 1.dp),
+                                    factory = { service.sessionManager.parentPanel },
+                                    update = {},
+                                )
+                            }
                         }
 
                         val pendingInput by service.pendingInput.collectAsState()
@@ -148,8 +175,13 @@ fun ClaudeTerminalContent(project: Project) {
                             onClearImages = { selectedImagePaths = emptyList() },
                             pendingInput = pendingInput,
                             onPendingInputConsumed = { service.consumePendingInput() },
-                            onSlashClick = { showCommandPalette = !showCommandPalette },
                             onChangeModelClick = { sendToTerminal("/model", true) },
+                            onSkillsClick = {
+                                activePanel = if (activePanel == ActivePanel.SKILLS) ActivePanel.NONE else ActivePanel.SKILLS
+                            },
+                            onCommandsClick = {
+                                activePanel = if (activePanel == ActivePanel.COMMANDS) ActivePanel.NONE else ActivePanel.COMMANDS
+                            },
                             isRemoteControlActive = state.remoteControlActive,
                             onRemoteControlStart = { showRCDialog = true },
                             onRemoteControlStop = { service.stopRemoteControl() },
@@ -158,20 +190,6 @@ fun ClaudeTerminalContent(project: Project) {
                     }
                 }
             }
-        }
-
-        if (showCommandPalette) {
-            UnifiedCommandPalette(
-                project = project,
-                scanSkillsUseCase = scanSkillsUseCase,
-                settingsService = settingsService,
-                superClaudeInstalled = state.superClaudeInstalled == true,
-                onDismiss = { showCommandPalette = false },
-                onItemSelected = { item ->
-                    showCommandPalette = false
-                    sendToTerminal(item.terminalText, item.autoRun)
-                },
-            )
         }
 
         if (showRCDialog) {
