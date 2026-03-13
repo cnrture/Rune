@@ -11,7 +11,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.github.teknasyon.plugin.components.TPButton
+import com.github.teknasyon.plugin.components.TPActionCard
+import com.github.teknasyon.plugin.components.TPActionCardType
 import com.github.teknasyon.plugin.components.TPCheckbox
 import com.github.teknasyon.plugin.components.TPText
 import com.github.teknasyon.plugin.theme.TPTheme
@@ -80,16 +81,20 @@ internal fun RemoteControlDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                TPButton(
-                    text = "Cancel",
-                    backgroundColor = TPTheme.colors.black,
+                TPActionCard(
+                    title = "Cancel",
+                    actionColor = TPTheme.colors.lightGray,
+                    type = TPActionCardType.MEDIUM,
                     onClick = onDismiss,
+                    isBorderless = true,
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                TPButton(
-                    text = "Start",
-                    backgroundColor = TPTheme.colors.blue,
+                TPActionCard(
+                    title = "Start",
+                    actionColor = TPTheme.colors.blue,
+                    type = TPActionCardType.MEDIUM,
                     onClick = { onConfirm(preventSleep) },
+                    isBorderless = true,
                 )
             }
         }

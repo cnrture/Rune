@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.teknasyon.plugin.theme.TPTheme
 
-enum class TPActionCardType { EXTRA_SMALL, SMALL, MEDIUM, LARGE }
+enum class TPActionCardType { EXTRA_SMALL, SMALL, MEDIUM }
 
 @Composable
 fun TPActionCard(
@@ -27,7 +27,7 @@ fun TPActionCard(
     icon: Painter? = null,
     actionColor: Color,
     isTextVisible: Boolean = true,
-    type: TPActionCardType = TPActionCardType.LARGE,
+    type: TPActionCardType = TPActionCardType.MEDIUM,
     isEnabled: Boolean = true,
     isBorderless: Boolean = false,
     onClick: () -> Unit,
@@ -36,31 +36,21 @@ fun TPActionCard(
         TPActionCardType.EXTRA_SMALL -> 12.sp
         TPActionCardType.SMALL -> 14.sp
         TPActionCardType.MEDIUM -> 16.sp
-        TPActionCardType.LARGE -> 20.sp
-    }
-    val iconBoxSize = when (type) {
-        TPActionCardType.EXTRA_SMALL -> 20.dp
-        TPActionCardType.SMALL -> 24.dp
-        TPActionCardType.MEDIUM -> 28.dp
-        TPActionCardType.LARGE -> 32.dp
     }
     val iconSize = when (type) {
         TPActionCardType.EXTRA_SMALL -> 14.dp
         TPActionCardType.SMALL -> 16.dp
         TPActionCardType.MEDIUM -> 20.dp
-        TPActionCardType.LARGE -> 24.dp
     }
     val borderSize = when (type) {
         TPActionCardType.EXTRA_SMALL -> 1.dp
         TPActionCardType.SMALL -> 2.dp
         TPActionCardType.MEDIUM -> 2.dp
-        TPActionCardType.LARGE -> 3.dp
     }
     val padding = when (type) {
         TPActionCardType.EXTRA_SMALL -> 6.dp
         TPActionCardType.SMALL -> 8.dp
         TPActionCardType.MEDIUM -> 12.dp
-        TPActionCardType.LARGE -> 16.dp
     }
     Row(
         modifier = modifier
@@ -89,29 +79,12 @@ fun TPActionCard(
         horizontalArrangement = Arrangement.Center,
     ) {
         icon?.let {
-            if (type == TPActionCardType.LARGE) {
-                Box(
-                    modifier = Modifier
-                        .size(iconBoxSize)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(actionColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = icon,
-                        contentDescription = null,
-                        tint = TPTheme.colors.white,
-                        modifier = Modifier.size(iconSize)
-                    )
-                }
-            } else {
-                Icon(
-                    painter = icon,
-                    contentDescription = null,
-                    tint = actionColor,
-                    modifier = Modifier.size(iconSize)
-                )
-            }
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = actionColor,
+                modifier = Modifier.size(iconSize)
+            )
         }
 
         if (icon != null && title != null && isTextVisible) {
