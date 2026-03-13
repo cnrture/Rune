@@ -152,21 +152,16 @@ internal fun TerminalInputBar(
             verticalArrangement = Arrangement.Center,
         ) {
             TPActionCard(
-                title = "Skills",
-                icon = AppIcons.painter("auto_fix_high"),
-                actionColor = TPTheme.colors.blue,
+                title = when {
+                    modelLoading -> "Loading..."
+                    activeModel != null -> formatModelName(activeModel)
+                    else -> "Model"
+                },
+                icon = AppIcons.painter("smart_toy"),
+                actionColor = if (activeModel != null) TPTheme.colors.blue else TPTheme.colors.hintGray,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
-                onClick = { onSkillsClick() },
-            )
-            Spacer(modifier = Modifier.size(4.dp))
-            TPActionCard(
-                title = "Commands",
-                icon = AppIcons.painter("play_arrow"),
-                actionColor = TPTheme.colors.purple,
-                type = TPActionCardType.EXTRA_SMALL,
-                isBorderless = true,
-                onClick = { onCommandsClick() },
+                onClick = { onChangeModelClick() },
             )
             Spacer(modifier = Modifier.size(4.dp))
             TPActionCard(
@@ -182,16 +177,21 @@ internal fun TerminalInputBar(
             )
             Spacer(modifier = Modifier.size(4.dp))
             TPActionCard(
-                title = when {
-                    modelLoading -> "Loading..."
-                    activeModel != null -> formatModelName(activeModel)
-                    else -> "Model"
-                },
-                icon = AppIcons.painter("smart_toy"),
-                actionColor = if (activeModel != null) TPTheme.colors.blue else TPTheme.colors.hintGray,
+                title = "Skills",
+                icon = AppIcons.painter("auto_fix_high"),
+                actionColor = TPTheme.colors.blue,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
-                onClick = { onChangeModelClick() },
+                onClick = { onSkillsClick() },
+            )
+            Spacer(modifier = Modifier.size(4.dp))
+            TPActionCard(
+                title = "Commands",
+                icon = AppIcons.painter("play_arrow"),
+                actionColor = TPTheme.colors.purple,
+                type = TPActionCardType.EXTRA_SMALL,
+                isBorderless = true,
+                onClick = { onCommandsClick() },
             )
             Spacer(modifier = Modifier.weight(1f))
             TPSwitch(
