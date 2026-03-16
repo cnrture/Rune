@@ -349,6 +349,13 @@ private fun createClaudeTerminalPanel(
                     e.keyCode == KeyEvent.VK_ENTER -> {
                         return@KeyEventDispatcher false
                     }
+                    // Arrow keys → allow navigation (e.g. selecting options in Claude prompts)
+                    e.keyCode == KeyEvent.VK_UP ||
+                    e.keyCode == KeyEvent.VK_DOWN ||
+                    e.keyCode == KeyEvent.VK_LEFT ||
+                    e.keyCode == KeyEvent.VK_RIGHT -> {
+                        return@KeyEventDispatcher false
+                    }
                 }
             }
 
