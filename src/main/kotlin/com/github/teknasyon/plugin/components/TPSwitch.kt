@@ -42,7 +42,7 @@ fun TPSwitch(
                 color = if (checked) TPTheme.colors.blue.copy(alpha = 0.3f) else TPTheme.colors.blue.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(12.dp)
             )
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TPText(
@@ -53,12 +53,12 @@ fun TPSwitch(
                 fontWeight = FontWeight.SemiBold,
             ),
         )
-        Spacer(modifier = Modifier.size(4.dp))
+        Spacer(modifier = Modifier.size(2.dp))
         CompositionLocalProvider(
             LocalMinimumInteractiveComponentEnforcement provides false,
         ) {
             Switch(
-                modifier = Modifier.scale(0.80f),
+                modifier = Modifier.scale(0.70f),
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(

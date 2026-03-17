@@ -41,10 +41,10 @@ internal fun SessionTabBar(
             .background(TPTheme.colors.black)
             .padding(horizontal = 8.dp, vertical = 6.dp),
     ) {
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
         ) {
             TPActionCard(
                 title = "Create Skill",
@@ -71,6 +71,7 @@ internal fun SessionTabBar(
                 onClick = { onSettingsClick() },
             )
         }
+        Spacer(modifier = Modifier.size(4.dp))
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(4.dp),

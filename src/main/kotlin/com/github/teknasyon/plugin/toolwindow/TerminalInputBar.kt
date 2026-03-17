@@ -149,7 +149,8 @@ internal fun TerminalInputBar(
     ) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             TPActionCard(
                 title = when {
@@ -163,7 +164,6 @@ internal fun TerminalInputBar(
                 isBorderless = true,
                 onClick = { onChangeModelClick() },
             )
-            Spacer(modifier = Modifier.size(4.dp))
             TPActionCard(
                 title = "Plan",
                 icon = AppIcons.painter("map"),
@@ -175,7 +175,6 @@ internal fun TerminalInputBar(
                     inputFocusRequester.requestFocus()
                 },
             )
-            Spacer(modifier = Modifier.size(4.dp))
             TPActionCard(
                 title = "Skills",
                 icon = AppIcons.painter("auto_fix_high"),
@@ -184,7 +183,6 @@ internal fun TerminalInputBar(
                 isBorderless = true,
                 onClick = { onSkillsClick() },
             )
-            Spacer(modifier = Modifier.size(4.dp))
             TPActionCard(
                 title = "Commands",
                 icon = AppIcons.painter("play_arrow"),
