@@ -1,9 +1,12 @@
 package com.github.teknasyon.plugin.common
 
+import com.intellij.openapi.diagnostic.Logger
 import java.io.File
 import java.util.concurrent.TimeUnit
 
 object CliUtils {
+
+    private val logger = Logger.getInstance(CliUtils::class.java)
 
     private val cachedLoginShellPath: String? by lazy { resolveLoginShellPath() }
 
@@ -41,7 +44,8 @@ object CliUtils {
             if (!finished || process.exitValue() != 0) return null
             val path = process.inputStream.bufferedReader().readText().trim()
             if (path.isNotBlank()) path else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn("Failed to resolve login shell PATH", e)
             null
         }
     }
@@ -61,7 +65,8 @@ object CliUtils {
             if (!finished || process.exitValue() != 0) return null
             val path = process.inputStream.bufferedReader().readText().trim()
             if (path.isNotBlank() && File(path).exists()) path else null
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn("Failed to resolve CLI tool '$command' via shell", e)
             null
         }
     }
@@ -87,7 +92,8 @@ object CliUtils {
             )
             if (output.isBlank()) return null
             modelUsageRegex.find(output)?.groupValues?.get(1)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn("Failed to query Claude model", e)
             null
         }
     }
@@ -121,7 +127,8 @@ object CliUtils {
             }
             readerThread.join(5000)
             output
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn("Failed to run process with stdin: ${cmd.firstOrNull()}", e)
             ""
         }
     }
@@ -151,7 +158,8 @@ object CliUtils {
             }
             readerThread.join(5000)
             output
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn("Failed to run process: ${cmd.firstOrNull()}", e)
             ""
         }
     }

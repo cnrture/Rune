@@ -87,23 +87,32 @@ class FixPRCommentsDialog(
         state.value = state.value.copy(isLoading = true, errorMessage = null, threads = emptyList())
 
         kotlin.concurrent.thread {
-            try {
-                val prTitle = platformService.fetchPrTitle(prIdentifier).getOrThrow()
-
-                val threads = platformService.fetchUnresolvedComments(prIdentifier).getOrThrow()
-
-                state.value = state.value.copy(
-                    isLoading = false,
-                    prTitle = prTitle,
-                    threads = threads,
-                    selectedIds = threads.map { it.id }.toSet(),
-                )
-            } catch (e: Exception) {
-                state.value = state.value.copy(
-                    isLoading = false,
-                    errorMessage = "Failed to fetch PR comments: ${e.message}",
-                )
-            }
+            platformService.fetchPrTitle(prIdentifier).fold(
+                onSuccess = { prTitle ->
+                    platformService.fetchUnresolvedComments(prIdentifier).fold(
+                        onSuccess = { threads ->
+                            state.value = state.value.copy(
+                                isLoading = false,
+                                prTitle = prTitle,
+                                threads = threads,
+                                selectedIds = threads.map { it.id }.toSet(),
+                            )
+                        },
+                        onFailure = { e ->
+                            state.value = state.value.copy(
+                                isLoading = false,
+                                errorMessage = "Failed to fetch PR comments: ${e.message}",
+                            )
+                        }
+                    )
+                },
+                onFailure = { e ->
+                    state.value = state.value.copy(
+                        isLoading = false,
+                        errorMessage = "Failed to fetch PR title: ${e.message}",
+                    )
+                }
+            )
         }
     }
 
