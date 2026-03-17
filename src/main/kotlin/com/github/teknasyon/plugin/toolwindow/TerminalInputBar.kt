@@ -183,14 +183,6 @@ internal fun TerminalInputBar(
                 isBorderless = true,
                 onClick = { onSkillsClick() },
             )
-            TPActionCard(
-                title = "Commands",
-                icon = AppIcons.painter("play_arrow"),
-                actionColor = TPTheme.colors.purple,
-                type = TPActionCardType.EXTRA_SMALL,
-                isBorderless = true,
-                onClick = { onCommandsClick() },
-            )
             Spacer(modifier = Modifier.weight(1f))
             TPSwitch(
                 checked = isRemoteControlActive,
