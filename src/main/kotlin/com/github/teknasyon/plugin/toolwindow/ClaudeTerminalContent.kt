@@ -24,6 +24,11 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
+import java.awt.AWTEvent
+import java.awt.Component
+import java.awt.Toolkit
+import java.awt.event.AWTEventListener
+import java.awt.event.MouseEvent
 
 internal enum class ActivePanel { NONE, SKILLS, COMMANDS }
 
@@ -89,6 +94,30 @@ fun ClaudeTerminalContent(project: Project) {
                     }
 
                     if (state.sessions.isNotEmpty()) {
+                        // Close skills/commands panel when terminal area is clicked
+                        DisposableEffect(Unit) {
+                            val panel = service.sessionManager.parentPanel
+                            val awtListener = AWTEventListener { event ->
+                                if (event is MouseEvent && event.id == MouseEvent.MOUSE_PRESSED) {
+                                    val source = event.source
+                                    if (source is Component) {
+                                        var comp: Component? = source
+                                        while (comp != null) {
+                                            if (comp === panel) {
+                                                activePanel = ActivePanel.NONE
+                                                break
+                                            }
+                                            comp = comp.parent
+                                        }
+                                    }
+                                }
+                            }
+                            Toolkit.getDefaultToolkit().addAWTEventListener(awtListener, AWTEvent.MOUSE_EVENT_MASK)
+                            onDispose {
+                                Toolkit.getDefaultToolkit().removeAWTEventListener(awtListener)
+                            }
+                        }
+
                         SessionTabBar(
                             sessions = state.sessions,
                             activeSessionId = state.activeSessionId,
