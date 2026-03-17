@@ -193,6 +193,7 @@ fun ClaudeTerminalContent(project: Project) {
                         }
 
                         val pendingInput by service.pendingInput.collectAsState()
+                        val draftInput by service.draftInput.collectAsState()
                         var selectedImagePaths by remember { mutableStateOf<List<String>>(emptyList()) }
 
                         TerminalInputBar(
@@ -251,6 +252,8 @@ fun ClaudeTerminalContent(project: Project) {
                             onRemoteControlStop = { service.stopRemoteControl() },
                             onClickPreviewImage = { previewImagePath = it },
                             inputFocusRequester = inputFocusRequester,
+                            initialInput = draftInput,
+                            onInputChanged = { service.setDraftInput(it) },
                         )
                     }
                 }

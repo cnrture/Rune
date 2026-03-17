@@ -63,6 +63,13 @@ class ClaudeSessionService(private val project: Project) : Disposable {
     private val _pendingInput = MutableStateFlow<String?>(null)
     val pendingInput: StateFlow<String?> = _pendingInput.asStateFlow()
 
+    private val _draftInput = MutableStateFlow("")
+    val draftInput: StateFlow<String> = _draftInput.asStateFlow()
+
+    fun setDraftInput(text: String) {
+        _draftInput.value = text
+    }
+
     fun setPendingInput(text: String) {
         _pendingInput.value = text
     }

@@ -96,13 +96,16 @@ internal fun TerminalInputBar(
     onRemoteControlStop: () -> Unit = {},
     onClickPreviewImage: (String) -> Unit = {},
     inputFocusRequester: FocusRequester = remember { FocusRequester() },
+    initialInput: String = "",
+    onInputChanged: (String) -> Unit = {},
 ) {
-    var inputValue by remember { mutableStateOf(TextFieldValue("")) }
+    var inputValue by remember { mutableStateOf(TextFieldValue(initialInput, TextRange(initialInput.length))) }
     var isFocused by remember { mutableStateOf(false) }
 
     LaunchedEffect(shouldClearSlash) {
         if (shouldClearSlash && inputValue.text.trimStart() == "/") {
             inputValue = TextFieldValue("")
+            onInputChanged("")
             onClearSlash()
         }
     }
@@ -131,6 +134,7 @@ internal fun TerminalInputBar(
             }
         }
         inputValue = TextFieldValue("")
+        onInputChanged("")
         onSend(message)
         SwingUtilities.invokeLater { onClearImages() }
     }
@@ -277,6 +281,7 @@ internal fun TerminalInputBar(
                     value = inputValue,
                     onValueChange = { newValue ->
                         inputValue = newValue
+                        onInputChanged(newValue.text)
                         if (newValue.text.trimStart() == "/") {
                             onSlashTyped()
                         }
