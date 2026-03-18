@@ -6,7 +6,7 @@
 -->
 <plugins>
   <plugin
-      id="com.github.teknasyon.plugin"
+      id="com.github.cnrture.rune"
       url="https://raw.githubusercontent.com/Teknasyon/IntelliJ-AI-Plugin/gh-pages/plugin.zip"
       version="0.0.7">
     <name>Teknasyon AI</name>

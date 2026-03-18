@@ -1,6 +1,6 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.github.teknasyon.plugin</id>
+    <id>com.github.cnrture.rune</id>
     <name>TPDevTools</name>
     <vendor>Teknasyon</vendor>
 
@@ -11,7 +11,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="TeknasyonIntelliJPlugin" displayType="BALLOON" isLogByDefault="false"/>
         <toolWindow
-                factoryClass="com.github.teknasyon.plugin.toolwindow.ClaudeToolWindowFactory"
+                factoryClass="com.github.cnrture.rune.toolwindow.ClaudeToolWindowFactory"
                 id="Claude"
                 anchor="right"
                 icon="/icons/pluginIcon.svg"/>
@@ -19,7 +19,7 @@
         <!-- Settings Configurable -->
         <projectConfigurable
                 parentId="tools"
-                instance="com.github.teknasyon.plugin.service.PluginConfigurable"
+                instance="com.github.cnrture.rune.service.PluginConfigurable"
                 id="com.github.teknasyon.ai.settings"
                 displayName="Teknasyon Plugin"/>
     </extensions>
@@ -27,7 +27,7 @@
     <actions>
         <action
                 id="TeknasyonAndroidStudioPlugin.GenerateCommitMessage"
-                class="com.github.teknasyon.plugin.actions.GenerateCommitMessageAction"
+                class="com.github.cnrture.rune.actions.GenerateCommitMessageAction"
                 text="Generate Commit Message with Claude"
                 description="Generate a conventional commit message from staged changes using Claude AI"
                 icon="AllIcons.Actions.Lightning">
@@ -35,7 +35,7 @@
         </action>
         <action
                 id="TeknasyonAndroidStudioPlugin.CreateReviewPR"
-                class="com.github.teknasyon.plugin.actions.CreateReviewPRAction"
+                class="com.github.cnrture.rune.actions.CreateReviewPRAction"
                 text="Create Review PR"
                 description="Create review branch from base, push current branch, and open a PR"
                 icon="AllIcons.Vcs.Branch">
@@ -44,7 +44,7 @@
         </action>
         <action
                 id="TeknasyonAndroidStudioPlugin.FixPRComments"
-                class="com.github.teknasyon.plugin.actions.FixPRCommentsAction"
+                class="com.github.cnrture.rune.actions.FixPRCommentsAction"
                 text="Fix PR Comments"
                 description="Fetch unresolved PR comments and fix them with Claude"
                 icon="AllIcons.Actions.PreviewDetails">
@@ -53,7 +53,7 @@
         </action>
         <action
                 id="TeknasyonAndroidStudioPlugin.AskClaude"
-                class="com.github.teknasyon.plugin.actions.AskClaudeAction"
+                class="com.github.cnrture.rune.actions.AskClaudeAction"
                 text="Ask Claude"
                 description="Send selected code to Claude terminal"
                 icon="/icons/pluginIcon.svg">
@@ -62,7 +62,7 @@
         </action>
         <action
                 id="TeknasyonAndroidStudioPlugin.CheckSkillBestPractices"
-                class="com.github.teknasyon.plugin.actions.CheckSkillBestPracticesAction"
+                class="com.github.cnrture.rune.actions.CheckSkillBestPracticesAction"
                 text="Check Skill with Claude"
                 description="Review SKILL.md against Claude platform best practices"
                 icon="/icons/pluginIcon.svg">
