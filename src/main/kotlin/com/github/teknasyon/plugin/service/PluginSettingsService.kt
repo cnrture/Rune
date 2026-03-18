@@ -36,13 +36,15 @@ class PluginSettingsService :
         state.rootPath = path
     }
 
-    fun getSkillsRootPath(): String = state.rootPath
+    fun getSkillsRootPath(): String =
+        state.rootPath.ifBlank { DEFAULT_SKILLS_PATH }
 
     fun setAgentsRootPath(path: String) {
         state.agentsRootPath = path
     }
 
-    fun getAgentsRootPath(): String = state.agentsRootPath
+    fun getAgentsRootPath(): String =
+        state.agentsRootPath.ifBlank { DEFAULT_AGENTS_PATH }
 
     fun getCommitMessagePrompt(): String = state.commitMessagePrompt
 
@@ -79,6 +81,9 @@ class PluginSettingsService :
     }
 
     companion object {
+
+        const val DEFAULT_SKILLS_PATH = ".claude/skills"
+        const val DEFAULT_AGENTS_PATH = ".claude/agents"
 
         const val DEFAULT_COMMIT_PROMPT =
             "Based on the following git diff, write a single conventional commit message " +

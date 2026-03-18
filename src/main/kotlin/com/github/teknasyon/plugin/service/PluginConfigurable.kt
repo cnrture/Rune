@@ -41,7 +41,7 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Tekn
                             project
                         ) { it.path }.component
                         skillsPathField.text = settingsService.getSkillsRootPath()
-                        rowComment("Directory containing your SKILLS.md files")
+                        rowComment("Directory containing your SKILLS.md files (default: .claude/skills)")
                     },
                     column2 = {
                         agentsPathField = textFieldWithBrowseButton(
@@ -50,7 +50,7 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Tekn
                             project
                         ) { it.path }.component
                         agentsPathField.text = settingsService.getAgentsRootPath()
-                        rowComment("Directory containing your agent files")
+                        rowComment("Directory containing your agent files (default: .claude/agents)")
                     },
                 )
             }
