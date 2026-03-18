@@ -4,6 +4,31 @@
 
 ## [Unreleased]
 
+## [0.0.7] - 2026-03-18
+
+### ✨ New Features
+- **Model Selection and Caching** — Added the ability to select and cache the model used in Claude terminal sessions for a more personalized experience.
+- **Slash Command Support** — Terminal input bar now supports slash commands for quick access to plugin features.
+- **URL Highlighting** — URLs in the input bar and command palette are now automatically highlighted for better visibility.
+- **Character Counter** — Added a character counter to the input bar when the input is nearing its limit to help users manage their input length.
+- **Draft Input Management** — Improved handling of draft inputs in the terminal input bar for a smoother user experience.
+- **Skills/Commands Panel Auto-Close** — The skills/commands panel now automatically closes when clicking outside of it, providing a more intuitive interaction.
+- **Base Branch Selection** — Added the ability to select the target branch when creating a PR, giving users more control over their PR creation process.
+
+### 🔧 Improvements
+- **Enhanced Terminal Panel** — Improved the terminal panel with animated visibility and better layout behavior for a more polished user experience.
+- **Hover Effects** — Added improved hover effects and tooltips to icons and UI components for better interactivity.
+- **Input Focus Management** — Improved focus behavior of the input bar and terminal interactions for a more seamless workflow.
+- **Settings Layout** — Refactored the settings layout for skills and agents directories into a two-column format for better organization.
+- **CLI Resolution** — Improved CLI tool resolution with path resolution through the login shell, making it more reliable across different environments.
+- **UI Consistency** — Made layout and spacing improvements across SessionTabBar, TerminalInputBar, and TPSwitch components for a more consistent UI.
+- **Borderless Action Cards** — Updated action cards to be borderless for a cleaner and more modern look.
+- **SVG Icons** — Updated icon usage in dialogs to use SVGs for better scalability and visual quality.
+
+### 🐛 Bug Fixes
+- Improved error handling in CLI helper functions and PR comment dialogs to prevent crashes and provide better feedback to users.
+- Cleaned up unused color definitions from TPDialogWrapper for a more maintainable codebase.
+  - Fixed delayed Enter key handling in terminal input processing to improve stability and responsiveness.
 
 ## [0.0.5] - 2026-03-03
 
