@@ -7,10 +7,10 @@
 <plugins>
   <plugin
       id="com.github.cnrture.rune"
-      url="https://raw.githubusercontent.com/Teknasyon/IntelliJ-AI-Plugin/gh-pages/plugin.zip"
+      url="https://raw.githubusercontent.com/cnrture/Rune/gh-pages/plugin.zip"
       version="0.0.7">
-    <name>Teknasyon AI</name>
-    <description>Internal Teknasyon AI</description>
+    <name>Rune</name>
+    <description>Rune - AI Plugin for IntelliJ</description>
     <idea-version since-build="241" until-build="253.*"/>
   </plugin>
 </plugins>

@@ -29,8 +29,8 @@ object Constants {
 
     // Messages
     const val GITHUB_TOKEN_MISSING_MESSAGE =
-        "GitHub token not configured. Go to Settings > Tools > Teknasyon Plugin Settings."
+        "GitHub token not configured. Go to Settings > Tools > Rune Settings."
     const val BITBUCKET_CREDENTIALS_MISSING_MESSAGE =
-        "Bitbucket credentials not configured. Go to Settings > Tools > Teknasyon Plugin Settings."
+        "Bitbucket credentials not configured. Go to Settings > Tools > Rune Settings."
     fun jiraBrowseUrl(ticketId: String): String = "$JIRA_BASE_URL/browse/$ticketId"
 }

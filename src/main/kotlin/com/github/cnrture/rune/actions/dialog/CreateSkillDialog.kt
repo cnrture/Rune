@@ -299,7 +299,7 @@ class CreateSkillDialog(
                             .padding(12.dp),
                     ) {
                         TPText(
-                            text = "Skills root path not configured. Configure in Settings > Tools > Teknasyon Plugin Settings",
+                            text = "Skills root path not configured. Configure in Settings > Tools > Rune Settings",
                             color = TPTheme.colors.warning,
                             style = TextStyle(fontSize = 12.sp),
                         )

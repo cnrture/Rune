@@ -1,4 +1,4 @@
-# Project Index: TPDevTools (Teknasyon AI)
+# Project Index: Rune (Rune)
 
 Generated: 2026-03-13
 
@@ -7,7 +7,7 @@ Generated: 2026-03-13
 ## Project Structure
 
 ```
-src/main/kotlin/com/github/teknasyon/plugin/
+src/main/kotlin/com/github/cnrture/rune/
 ├── actions/
 │   ├── AskClaudeAction.kt                  ← Editor right-click → Claude'a gönder
 │   ├── CheckSkillBestPracticesAction.kt     ← SKILL.md validasyonu
@@ -147,7 +147,7 @@ TP prefix: `TPButton`, `TPCheckbox`, `TPTextField`, `TPText`, `TPSwitch`, `TPAct
 
 | Dosya | Amaç |
 |-------|------|
-| `gradle.properties` | `pluginGroup=com.github.teknasyon.plugin`, `platformType=IC`, `platformVersion=2024.3.1`, `pluginVersion=0.0.6` |
+| `gradle.properties` | `pluginGroup=com.github.cnrture.rune`, `platformType=IC`, `platformVersion=2024.3.1`, `pluginVersion=0.0.6` |
 | `build.gradle.kts` | Compose Desktop, IntelliJ Platform, cross-OS Skiko natives |
 | `gradle/libs.versions.toml` | Kotlin 2.3.10, IntelliJ Platform 2.11.0, Compose 1.10.1 |
 | `plugin.xml` | 1 toolWindow (Claude), 5 action, 1 configurable, terminal bağımlılığı |

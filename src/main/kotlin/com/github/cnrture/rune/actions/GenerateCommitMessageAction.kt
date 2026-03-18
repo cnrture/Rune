@@ -36,7 +36,7 @@ class GenerateCommitMessageAction : AnAction() {
                 if (diff.isBlank()) {
                     ApplicationManager.getApplication().invokeLater {
                         NotificationGroupManager.getInstance()
-                            .getNotificationGroup("TeknasyonIntelliJPlugin")
+                            .getNotificationGroup("RunePlugin")
                             .createNotification("No changes found in the repository.", NotificationType.WARNING)
                             .notify(project)
                     }
@@ -153,7 +153,7 @@ class GenerateCommitMessageAction : AnAction() {
     private fun notify(project: Project, message: String, type: NotificationType) {
         ApplicationManager.getApplication().invokeLater {
             NotificationGroupManager.getInstance()
-                .getNotificationGroup("TeknasyonIntelliJPlugin")
+                .getNotificationGroup("RunePlugin")
                 .createNotification(message, type)
                 .notify(project)
         }

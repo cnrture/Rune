@@ -75,7 +75,7 @@ class FixPRCommentsAction : AnAction() {
     private fun notify(project: Project, message: String) {
         ApplicationManager.getApplication().invokeLater {
             NotificationGroupManager.getInstance()
-                .getNotificationGroup("TeknasyonIntelliJPlugin")
+                .getNotificationGroup("RunePlugin")
                 .createNotification(message, NotificationType.ERROR)
                 .notify(project)
         }

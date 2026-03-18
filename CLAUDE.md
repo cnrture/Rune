@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew check
 
 # Run a single test class
-./gradlew test --tests "com.github.teknasyon.plugin.SomeTest"
+./gradlew test --tests "com.github.cnrture.rune.SomeTest"
 
 # Build distribution ZIP
 ./gradlew buildPlugin
@@ -37,7 +37,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-IntelliJ Platform plugin ("TPDevTools") built with Kotlin and Jetpack Compose Desktop for UI. No DI framework — all dependencies are wired manually.
+IntelliJ Platform plugin ("Rune") built with Kotlin and Jetpack Compose Desktop for UI. No DI framework — all dependencies are wired manually.
 
 **Single tool window** registered in `plugin.xml`:
 - **`ClaudeToolWindowFactory`** → "Claude" panel (right sidebar): Claude CLI terminal integration with session management, skill/agent pickers, command palette
@@ -79,7 +79,7 @@ VcsCacheService.getInstance()                // app-scoped
 
 ### Settings persistence
 
-- **`PluginSettingsService`** (project-scoped, `teknasyonintellijplugin.xml`) – skills/agents root paths, commit message prompt, Jira/VCS settings. Configured via IDE Settings > Tools > Teknasyon Plugin Settings (`PluginConfigurable`)
+- **`PluginSettingsService`** (project-scoped, `runeplugin.xml`) – skills/agents root paths, commit message prompt, Jira/VCS settings. Configured via IDE Settings > Tools > Rune Settings (`PluginConfigurable`)
 - **`VcsCacheService`** (app-scoped, `githubCache.xml`) – cached collaborators, labels, user details per repo
 
 ### VCS platform abstraction

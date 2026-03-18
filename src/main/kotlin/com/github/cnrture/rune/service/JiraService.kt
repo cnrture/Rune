@@ -18,7 +18,7 @@ object JiraService {
     private val JIRA_BASE_URL = Constants.JIRA_BASE_URL
 
     private val credentialAttributes = CredentialAttributes(
-        generateServiceName("TPDevTools", "JiraCredentials")
+        generateServiceName("Rune", "JiraCredentials")
     )
 
     fun getEmail(): String? {

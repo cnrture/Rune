@@ -1,15 +1,15 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.cnrture.rune</id>
-    <name>TPDevTools</name>
-    <vendor>Teknasyon</vendor>
+    <name>Rune</name>
+    <vendor>cnrture</vendor>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="TeknasyonIntelliJPlugin" displayType="BALLOON" isLogByDefault="false"/>
+        <notificationGroup id="RunePlugin" displayType="BALLOON" isLogByDefault="false"/>
         <toolWindow
                 factoryClass="com.github.cnrture.rune.toolwindow.ClaudeToolWindowFactory"
                 id="Claude"
@@ -20,13 +20,13 @@
         <projectConfigurable
                 parentId="tools"
                 instance="com.github.cnrture.rune.service.PluginConfigurable"
-                id="com.github.teknasyon.ai.settings"
-                displayName="Teknasyon Plugin"/>
+                id="com.github.cnrture.rune.settings"
+                displayName="Rune"/>
     </extensions>
 
     <actions>
         <action
-                id="TeknasyonAndroidStudioPlugin.GenerateCommitMessage"
+                id="Rune.GenerateCommitMessage"
                 class="com.github.cnrture.rune.actions.GenerateCommitMessageAction"
                 text="Generate Commit Message with Claude"
                 description="Generate a conventional commit message from staged changes using Claude AI"
@@ -34,25 +34,25 @@
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </action>
         <action
-                id="TeknasyonAndroidStudioPlugin.CreateReviewPR"
+                id="Rune.CreateReviewPR"
                 class="com.github.cnrture.rune.actions.CreateReviewPRAction"
                 text="Create Review PR"
                 description="Create review branch from base, push current branch, and open a PR"
                 icon="AllIcons.Vcs.Branch">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="after"
-                          relative-to-action="TeknasyonAndroidStudioPlugin.GenerateCommitMessage"/>
+                          relative-to-action="Rune.GenerateCommitMessage"/>
         </action>
         <action
-                id="TeknasyonAndroidStudioPlugin.FixPRComments"
+                id="Rune.FixPRComments"
                 class="com.github.cnrture.rune.actions.FixPRCommentsAction"
                 text="Fix PR Comments"
                 description="Fetch unresolved PR comments and fix them with Claude"
                 icon="AllIcons.Actions.PreviewDetails">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="after"
-                          relative-to-action="TeknasyonAndroidStudioPlugin.CreateReviewPR"/>
+                          relative-to-action="Rune.CreateReviewPR"/>
         </action>
         <action
-                id="TeknasyonAndroidStudioPlugin.AskClaude"
+                id="Rune.AskClaude"
                 class="com.github.cnrture.rune.actions.AskClaudeAction"
                 text="Ask Claude"
                 description="Send selected code to Claude terminal"
@@ -61,7 +61,7 @@
             <add-to-group group-id="ConsoleEditorPopupMenu" anchor="last"/>
         </action>
         <action
-                id="TeknasyonAndroidStudioPlugin.CheckSkillBestPractices"
+                id="Rune.CheckSkillBestPractices"
                 class="com.github.cnrture.rune.actions.CheckSkillBestPracticesAction"
                 text="Check Skill with Claude"
                 description="Review SKILL.md against Claude platform best practices"

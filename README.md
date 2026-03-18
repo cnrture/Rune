@@ -1,6 +1,6 @@
-# 🤖 Teknasyon AI
+# 🤖 Rune
 
-![Build](https://github.com/Teknasyon/IntelliJ-AI-Plugin/workflows/Build/badge.svg)
+![Build](https://github.com/cnrture/Rune/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
@@ -115,7 +115,7 @@ Opens by typing `/` in the terminal input field or clicking the button. Lists se
 
 ## ⚙️ Settings
 
-Configured via **Settings > Tools > Teknasyon Plugin Settings**.
+Configured via **Settings > Tools > Rune Settings**.
 
 | Setting | Description |
 |---|---|
@@ -133,9 +133,9 @@ Configured via **Settings > Tools > Teknasyon Plugin Settings**.
 1. In your IDE, go to <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Manage Plugin Repositories...</kbd>
 2. Add the following URL:
    ```
-   https://raw.githubusercontent.com/Teknasyon/intellij-ai-plugin-releases/main/updatePlugins.xml
+   https://raw.githubusercontent.com/cnrture/rune-releases/main/updatePlugins.xml
    ```
-3. In the <kbd>Marketplace</kbd> tab, search for `"Teknasyon AI"` and click <kbd>Install</kbd>
+3. In the <kbd>Marketplace</kbd> tab, search for `"Rune"` and click <kbd>Install</kbd>
 
 ## 📋 Requirements
 

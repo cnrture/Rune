@@ -8,7 +8,7 @@ import com.intellij.ide.passwordSafe.PasswordSafe
 object GitHubCredentialService {
 
     private val credentialAttributes = CredentialAttributes(
-        generateServiceName("TPDevTools", "GitHubCredentials")
+        generateServiceName("Rune", "GitHubCredentials")
     )
 
     fun getToken(): String? {

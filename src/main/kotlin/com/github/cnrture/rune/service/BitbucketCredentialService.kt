@@ -8,7 +8,7 @@ import com.intellij.ide.passwordSafe.PasswordSafe
 object BitbucketCredentialService {
 
     private val credentialAttributes = CredentialAttributes(
-        generateServiceName("TPDevTools", "BitbucketCredentials")
+        generateServiceName("Rune", "BitbucketCredentials")
     )
 
     fun getUsername(): String? {

@@ -95,7 +95,7 @@ jobs:
         run: |
           SINCE_BUILD=$(grep -oP 'pluginSinceBuild=\K.*' gradle.properties)
           UNTIL_BUILD=$(grep -oP 'pluginUntilBuild=\K.*' gradle.properties)
-          DIST_REPO="Teknasyon/intellij-ai-plugin-releases"
+          DIST_REPO="cnrture/rune-releases"
           RELEASE_TAG="v${VERSION}"
 
           # Clone the distribution repo (shallow)
@@ -117,7 +117,7 @@ jobs:
             "${GITHUB_WORKSPACE}/build/distributions/${ZIP_NAME}#plugin.zip" \
             --repo "${DIST_REPO}" \
             --title "Plugin ${VERSION}" \
-            --notes "Automated release of Teknasyon AI Plugin v${VERSION}"
+            --notes "Automated release of Rune Plugin v${VERSION}"
 
           # Build the download URL pointing to the release asset
           DOWNLOAD_URL="https://github.com/${DIST_REPO}/releases/download/${RELEASE_TAG}/${ZIP_NAME}"
@@ -127,11 +127,11 @@ jobs:
           <?xml version="1.0" encoding="UTF-8"?>
           <plugins>
             <plugin
-                id="com.github.teknasyon.plugin"
+                id="com.github.cnrture.rune"
                 url="${DOWNLOAD_URL}"
                 version="${VERSION}">
-              <name>Teknasyon AI</name>
-              <description>Internal Teknasyon AI</description>
+              <name>Rune</name>
+              <description>Rune - AI Plugin for IntelliJ</description>
               <idea-version since-build="${SINCE_BUILD}" until-build="${UNTIL_BUILD}"/>
             </plugin>
           </plugins>

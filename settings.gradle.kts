@@ -1,4 +1,4 @@
-rootProject.name = "Teknasyon-IntelliJ-Plugin"
+rootProject.name = "Rune"
 
 pluginManagement {
     plugins {

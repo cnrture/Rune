@@ -11,7 +11,7 @@ import com.intellij.ui.layout.ComponentPredicate
 import java.awt.Color
 import javax.swing.*
 
-class PluginConfigurable(private val project: Project) : BoundConfigurable("Teknasyon Plugin Settings") {
+class PluginConfigurable(private val project: Project) : BoundConfigurable("Rune Settings") {
 
     private val settingsService = PluginSettingsService.getInstance(project)
     private lateinit var skillsPathField: TextFieldWithBrowseButton
