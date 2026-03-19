@@ -44,7 +44,7 @@ internal fun ImagePreviewDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
-                .background(TPTheme.colors.gray, RoundedCornerShape(12.dp))
+                .background(TPTheme.colors.surface, RoundedCornerShape(12.dp))
                 .padding(16.dp),
         ) {
             Row(
@@ -53,14 +53,14 @@ internal fun ImagePreviewDialog(
             ) {
                 TPText(
                     text = fileName,
-                    color = TPTheme.colors.white,
+                    color = TPTheme.colors.textPrimary,
                     style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold),
                     modifier = Modifier.weight(1f),
                 )
                 Icon(
                     painter = AppIcons.painter("close"),
                     contentDescription = "Close",
-                    tint = TPTheme.colors.lightGray,
+                    tint = TPTheme.colors.textSecondary,
                     modifier = Modifier
                         .size(24.dp)
                         .clickable { onDismiss() },
@@ -75,7 +75,7 @@ internal fun ImagePreviewDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(TPTheme.colors.black),
+                        .background(TPTheme.colors.background),
                 )
             } else {
                 Box(
@@ -83,12 +83,12 @@ internal fun ImagePreviewDialog(
                         .fillMaxWidth()
                         .height(200.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(TPTheme.colors.black),
+                        .background(TPTheme.colors.background),
                     contentAlignment = Alignment.Center,
                 ) {
                     TPText(
                         text = "Image could not be loaded",
-                        color = TPTheme.colors.hintGray,
+                        color = TPTheme.colors.textSecondary,
                     )
                 }
             }

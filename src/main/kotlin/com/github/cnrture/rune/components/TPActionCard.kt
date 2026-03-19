@@ -57,9 +57,9 @@ fun TPActionCard(
             .clip(RoundedCornerShape(12.dp))
             .background(
                 color = if (isBorderless) {
-                    if (isEnabled) actionColor.copy(alpha = 0.12f) else TPTheme.colors.lightGray.copy(alpha = 0.05f)
+                    if (isEnabled) actionColor.copy(alpha = 0.12f) else TPTheme.colors.textSecondary.copy(alpha = 0.05f)
                 } else {
-                    if (isEnabled) TPTheme.colors.gray else TPTheme.colors.lightGray.copy(alpha = 0.1f)
+                    if (isEnabled) TPTheme.colors.surface else TPTheme.colors.textSecondary.copy(alpha = 0.1f)
                 },
                 shape = RoundedCornerShape(12.dp),
             )
@@ -98,7 +98,7 @@ fun TPActionCard(
                     style = TextStyle(
                         fontWeight = FontWeight.Medium,
                         fontSize = fontSize,
-                        color = TPTheme.colors.white,
+                        color = TPTheme.colors.textPrimary,
                     ),
                 )
             }

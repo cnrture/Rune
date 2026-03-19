@@ -38,7 +38,7 @@ internal fun SessionTabBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TPTheme.colors.black)
+            .background(TPTheme.colors.background)
             .padding(horizontal = 8.dp, vertical = 6.dp),
     ) {
         FlowRow(
@@ -49,7 +49,7 @@ internal fun SessionTabBar(
             TPActionCard(
                 title = "Create Skill",
                 icon = AppIcons.painter("auto_fix_high"),
-                actionColor = TPTheme.colors.blue,
+                actionColor = TPTheme.colors.accent,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
                 onClick = { onCreateSkillClick() },
@@ -57,7 +57,7 @@ internal fun SessionTabBar(
             TPActionCard(
                 title = "Usage",
                 icon = AppIcons.painter("data_usage"),
-                actionColor = TPTheme.colors.blue,
+                actionColor = TPTheme.colors.accent,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
                 onClick = { onUsageClick() },
@@ -65,7 +65,7 @@ internal fun SessionTabBar(
             TPActionCard(
                 title = "Settings",
                 icon = AppIcons.painter("settings"),
-                actionColor = TPTheme.colors.purple,
+                actionColor = TPTheme.colors.accent,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
                 onClick = { onSettingsClick() },
@@ -83,11 +83,11 @@ internal fun SessionTabBar(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
                         .background(
-                            color = if (isActive) TPTheme.colors.gray else TPTheme.colors.black,
+                            color = if (isActive) TPTheme.colors.surface else TPTheme.colors.background,
                         )
                         .border(
                             width = if (isActive) 1.dp else 0.dp,
-                            color = if (isActive) TPTheme.colors.blue else Color.Transparent,
+                            color = if (isActive) TPTheme.colors.accent else Color.Transparent,
                             shape = RoundedCornerShape(6.dp),
                         )
                         .clickable { onSelectSession(session.id) }
@@ -96,7 +96,7 @@ internal fun SessionTabBar(
                 ) {
                     TPText(
                         text = session.title,
-                        color = if (isActive) TPTheme.colors.white else TPTheme.colors.lightGray,
+                        color = if (isActive) TPTheme.colors.textPrimary else TPTheme.colors.textSecondary,
                         style = TextStyle(
                             fontSize = 12.sp,
                             fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
@@ -108,9 +108,9 @@ internal fun SessionTabBar(
                     Icon(
                         painter = AppIcons.painter("close"),
                         contentDescription = "Close session",
-                        tint = if (isCloseHovered) TPTheme.colors.red
-                        else if (isActive) TPTheme.colors.lightGray
-                        else TPTheme.colors.hintGray,
+                        tint = if (isCloseHovered) TPTheme.colors.error
+                        else if (isActive) TPTheme.colors.textSecondary
+                        else TPTheme.colors.textSecondary,
                         modifier = Modifier
                             .size(14.dp)
                             .hoverable(closeHover)
@@ -123,12 +123,12 @@ internal fun SessionTabBar(
                 tooltip = {
                     Box(
                         modifier = Modifier
-                            .background(TPTheme.colors.gray, RoundedCornerShape(4.dp))
+                            .background(TPTheme.colors.surface, RoundedCornerShape(4.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         TPText(
                             text = "New session",
-                            color = TPTheme.colors.white,
+                            color = TPTheme.colors.textPrimary,
                             fontSize = 11.sp,
                         )
                     }
@@ -140,7 +140,7 @@ internal fun SessionTabBar(
                 Icon(
                     painter = AppIcons.painter("add"),
                     contentDescription = "New session",
-                    tint = if (isAddHovered) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                    tint = if (isAddHovered) TPTheme.colors.accent else TPTheme.colors.textSecondary,
                     modifier = Modifier
                         .size(24.dp)
                         .hoverable(addHover)

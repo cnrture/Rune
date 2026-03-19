@@ -39,7 +39,7 @@ fun TPSwitch(
                 onClick = { onCheckedChange(checked.not()) }
             )
             .background(
-                color = if (checked) TPTheme.colors.blue.copy(alpha = 0.3f) else TPTheme.colors.blue.copy(alpha = 0.1f),
+                color = if (checked) TPTheme.colors.accent.copy(alpha = 0.3f) else TPTheme.colors.accent.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
@@ -47,7 +47,7 @@ fun TPSwitch(
     ) {
         TPText(
             text = text,
-            color = TPTheme.colors.white,
+            color = TPTheme.colors.textPrimary,
             style = TextStyle(
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -62,8 +62,8 @@ fun TPSwitch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = TPTheme.colors.blue,
-                    checkedTrackColor = TPTheme.colors.blue.copy(alpha = 0.5f),
+                    checkedThumbColor = TPTheme.colors.accent,
+                    checkedTrackColor = TPTheme.colors.accent.copy(alpha = 0.5f),
                 )
             )
         }

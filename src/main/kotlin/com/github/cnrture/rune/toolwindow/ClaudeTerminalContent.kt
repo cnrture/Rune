@@ -61,12 +61,12 @@ fun ClaudeTerminalContent(project: Project) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TPTheme.colors.black),
+            .background(TPTheme.colors.background),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TPTheme.colors.black)
+                .background(TPTheme.colors.background)
         ) {
             when (state.claudeInstalled) {
                 null -> {
@@ -76,7 +76,7 @@ fun ClaudeTerminalContent(project: Project) {
                     ) {
                         TPText(
                             text = "Checking Claude CLI...",
-                            color = TPTheme.colors.lightGray
+                            color = TPTheme.colors.textSecondary
                         )
                     }
                 }
@@ -153,7 +153,7 @@ fun ClaudeTerminalContent(project: Project) {
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxWidth()
-                                    .background(TPTheme.colors.black),
+                                    .background(TPTheme.colors.background),
                             )
                         }
 

@@ -177,7 +177,7 @@ class FixPRCommentsDialog(
 
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = TPTheme.colors.black,
+            color = TPTheme.colors.background,
         ) {
             when (currentState.phase) {
                 Phase.INPUT -> InputPhase(currentState)
@@ -198,7 +198,7 @@ class FixPRCommentsDialog(
                 modifier = Modifier.fillMaxWidth(),
                 text = "Fix PR Comments",
                 style = TextStyle(
-                    color = TPTheme.colors.blue,
+                    color = TPTheme.colors.accent,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -222,7 +222,7 @@ class FixPRCommentsDialog(
                 TPActionCard(
                     title = "Fetch",
                     icon = AppIcons.painter("search"),
-                    actionColor = TPTheme.colors.blue,
+                    actionColor = TPTheme.colors.accent,
                     type = TPActionCardType.MEDIUM,
                     onClick = { fetchPRComments() },
                 )
@@ -245,11 +245,11 @@ class FixPRCommentsDialog(
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(color = TPTheme.colors.blue)
+                        CircularProgressIndicator(color = TPTheme.colors.accent)
                         Spacer(modifier = Modifier.size(16.dp))
                         TPText(
                             text = "Fetching PR comments...",
-                            color = TPTheme.colors.lightGray,
+                            color = TPTheme.colors.textSecondary,
                             style = TextStyle(fontSize = 14.sp),
                         )
                     }
@@ -259,7 +259,7 @@ class FixPRCommentsDialog(
                 if (currentState.prTitle.isNotBlank()) {
                     TPText(
                         text = currentState.prTitle,
-                        color = TPTheme.colors.white,
+                        color = TPTheme.colors.textPrimary,
                         style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
                     )
                     Spacer(modifier = Modifier.size(8.dp))
@@ -285,7 +285,7 @@ class FixPRCommentsDialog(
                     Spacer(modifier = Modifier.weight(1f))
                     TPText(
                         text = "${currentState.selectedIds.size} selected",
-                        color = TPTheme.colors.hintGray,
+                        color = TPTheme.colors.textSecondary,
                         style = TextStyle(fontSize = 12.sp),
                     )
                 }
@@ -328,7 +328,7 @@ class FixPRCommentsDialog(
                 TPActionCard(
                     title = "Cancel",
                     icon = AppIcons.painter("cancel"),
-                    actionColor = TPTheme.colors.lightGray,
+                    actionColor = TPTheme.colors.textSecondary,
                     type = TPActionCardType.MEDIUM,
                     onClick = { close(Constants.DEFAULT_EXIT_CODE) },
                 )
@@ -338,7 +338,7 @@ class FixPRCommentsDialog(
                     TPActionCard(
                         title = "Fix $count Comment${if (count != 1) "s" else ""} with Claude",
                         icon = AppIcons.painter("check_circle"),
-                        actionColor = if (count > 0) TPTheme.colors.blue else TPTheme.colors.gray,
+                        actionColor = if (count > 0) TPTheme.colors.accent else TPTheme.colors.surface,
                         type = TPActionCardType.MEDIUM,
                         onClick = { if (count > 0) fixWithClaude() },
                     )
@@ -362,7 +362,7 @@ class FixPRCommentsDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        color = TPTheme.colors.green.copy(alpha = 0.15f),
+                        color = TPTheme.colors.success.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(12.dp),
                     )
                     .padding(24.dp),
@@ -370,21 +370,21 @@ class FixPRCommentsDialog(
             ) {
                 TPText(
                     text = "Sent to Claude!",
-                    color = TPTheme.colors.green,
+                    color = TPTheme.colors.success,
                     style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
                 )
                 Spacer(modifier = Modifier.size(12.dp))
                 if (currentState.prTitle.isNotBlank()) {
                     TPText(
                         text = currentState.prTitle,
-                        color = TPTheme.colors.white,
+                        color = TPTheme.colors.textPrimary,
                         style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
                     )
                     Spacer(modifier = Modifier.size(4.dp))
                 }
                 TPText(
                     text = currentState.prUrl,
-                    color = TPTheme.colors.hintGray,
+                    color = TPTheme.colors.textSecondary,
                     style = TextStyle(fontSize = 12.sp),
                 )
                 Spacer(modifier = Modifier.size(12.dp))
@@ -392,7 +392,7 @@ class FixPRCommentsDialog(
                 val selectedCount = currentState.selectedIds.size
                 TPText(
                     text = "$selectedCount comment${if (selectedCount != 1) "s" else ""} sent for fixing",
-                    color = TPTheme.colors.lightGray,
+                    color = TPTheme.colors.textSecondary,
                     style = TextStyle(fontSize = 13.sp),
                 )
 
@@ -404,7 +404,7 @@ class FixPRCommentsDialog(
                     TPText(
                         modifier = Modifier.fillMaxWidth(),
                         text = "${thread.path}${if (thread.line != null) ":${thread.line}" else ""} - @${thread.reviewer}",
-                        color = TPTheme.colors.hintGray,
+                        color = TPTheme.colors.textSecondary,
                         style = TextStyle(fontSize = 11.sp),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -422,7 +422,7 @@ class FixPRCommentsDialog(
                 TPActionCard(
                     title = "Close",
                     icon = AppIcons.painter("cancel"),
-                    actionColor = TPTheme.colors.lightGray,
+                    actionColor = TPTheme.colors.textSecondary,
                     type = TPActionCardType.MEDIUM,
                     onClick = { close(0) },
                 )
@@ -430,7 +430,7 @@ class FixPRCommentsDialog(
                 TPActionCard(
                     title = "Open Claude Terminal",
                     icon = AppIcons.painter("open_in_new"),
-                    actionColor = TPTheme.colors.blue,
+                    actionColor = TPTheme.colors.accent,
                     type = TPActionCardType.MEDIUM,
                     onClick = { openClaudeTerminal() },
                 )
@@ -451,12 +451,12 @@ class FixPRCommentsDialog(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    color = if (isSelected) TPTheme.colors.blue.copy(alpha = 0.5f) else TPTheme.colors.gray,
+                    color = if (isSelected) TPTheme.colors.accent.copy(alpha = 0.5f) else TPTheme.colors.surface,
                     shape = RoundedCornerShape(8.dp),
                 )
                 .clip(RoundedCornerShape(8.dp))
                 .background(
-                    if (isSelected) TPTheme.colors.blue.copy(alpha = 0.05f) else TPTheme.colors.black,
+                    if (isSelected) TPTheme.colors.accent.copy(alpha = 0.05f) else TPTheme.colors.background,
                 )
                 .padding(12.dp),
         ) {
@@ -473,7 +473,7 @@ class FixPRCommentsDialog(
                 TPText(
                     modifier = Modifier.weight(1f),
                     text = "${thread.path}${if (thread.line != null) ":${thread.line}" else ""}",
-                    color = TPTheme.colors.blue,
+                    color = TPTheme.colors.accent,
                     style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -481,7 +481,7 @@ class FixPRCommentsDialog(
                 Spacer(modifier = Modifier.size(8.dp))
                 TPText(
                     text = "@${thread.reviewer}",
-                    color = TPTheme.colors.hintGray,
+                    color = TPTheme.colors.textSecondary,
                     style = TextStyle(fontSize = 11.sp),
                 )
             }
@@ -492,7 +492,7 @@ class FixPRCommentsDialog(
             TPText(
                 modifier = Modifier.fillMaxWidth().padding(start = 36.dp),
                 text = thread.body,
-                color = TPTheme.colors.white,
+                color = TPTheme.colors.textPrimary,
                 style = TextStyle(fontSize = 12.sp),
                 maxLines = if (expanded) Int.MAX_VALUE else 3,
                 overflow = TextOverflow.Ellipsis,
@@ -507,12 +507,12 @@ class FixPRCommentsDialog(
                     ) {
                         TPText(
                             text = "@${reply.user}: ",
-                            color = TPTheme.colors.hintGray,
+                            color = TPTheme.colors.textSecondary,
                             style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
                         )
                         TPText(
                             text = reply.body,
-                            color = TPTheme.colors.lightGray,
+                            color = TPTheme.colors.textSecondary,
                             style = TextStyle(fontSize = 11.sp),
                             maxLines = if (expanded) Int.MAX_VALUE else 2,
                             overflow = TextOverflow.Ellipsis,
@@ -532,7 +532,7 @@ class FixPRCommentsDialog(
                 ) {
                     TPText(
                         text = if (expanded) "Hide code context" else "Show code context",
-                        color = TPTheme.colors.hintGray,
+                        color = TPTheme.colors.textSecondary,
                         style = TextStyle(fontSize = 11.sp),
                     )
                 }
@@ -543,12 +543,12 @@ class FixPRCommentsDialog(
                             .fillMaxWidth()
                             .padding(start = 36.dp, top = 4.dp)
                             .background(
-                                color = TPTheme.colors.gray.copy(alpha = 0.3f),
+                                color = TPTheme.colors.surface.copy(alpha = 0.3f),
                                 shape = RoundedCornerShape(4.dp),
                             )
                             .padding(8.dp),
                         text = thread.diffHunk,
-                        color = TPTheme.colors.lightGray,
+                        color = TPTheme.colors.textSecondary,
                         style = TextStyle(fontSize = 11.sp, fontFamily = FontFamily.Monospace),
                     )
                 }
@@ -562,21 +562,21 @@ class FixPRCommentsDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = TPTheme.colors.red.copy(alpha = 0.15f),
+                    color = TPTheme.colors.error.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(8.dp),
                 )
                 .padding(12.dp),
         ) {
             TPText(
                 text = error,
-                color = TPTheme.colors.red,
+                color = TPTheme.colors.error,
                 style = TextStyle(fontSize = 12.sp),
             )
             Spacer(modifier = Modifier.size(8.dp))
             TPActionCard(
                 title = "Retry",
                 icon = AppIcons.painter("refresh"),
-                actionColor = TPTheme.colors.red,
+                actionColor = TPTheme.colors.error,
                 type = TPActionCardType.SMALL,
                 onClick = { fetchPRComments() },
             )

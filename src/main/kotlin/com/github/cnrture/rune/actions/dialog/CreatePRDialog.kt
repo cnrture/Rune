@@ -198,7 +198,7 @@ class CreatePRDialog(
 
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = TPTheme.colors.black,
+            color = TPTheme.colors.background,
         ) {
             Column(
                 modifier = Modifier
@@ -209,7 +209,7 @@ class CreatePRDialog(
                     modifier = Modifier.fillMaxWidth(),
                     text = "Create Review PR",
                     style = TextStyle(
-                        color = TPTheme.colors.blue,
+                        color = TPTheme.colors.accent,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -233,11 +233,11 @@ class CreatePRDialog(
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(color = TPTheme.colors.blue)
+                CircularProgressIndicator(color = TPTheme.colors.accent)
                 Spacer(modifier = Modifier.size(16.dp))
                 TPText(
                     text = "Fetching data...",
-                    color = TPTheme.colors.lightGray,
+                    color = TPTheme.colors.textSecondary,
                     style = TextStyle(fontSize = 14.sp),
                 )
             }
@@ -268,7 +268,7 @@ class CreatePRDialog(
                         .clip(RoundedCornerShape(8.dp))
                         .border(
                             width = 1.dp,
-                            color = TPTheme.colors.gray,
+                            color = TPTheme.colors.surface,
                             shape = RoundedCornerShape(8.dp),
                         )
                         .padding(12.dp),
@@ -295,7 +295,7 @@ class CreatePRDialog(
                             .clip(RoundedCornerShape(8.dp))
                             .border(
                                 width = 1.dp,
-                                color = TPTheme.colors.gray,
+                                color = TPTheme.colors.surface,
                                 shape = RoundedCornerShape(8.dp),
                             )
                             .padding(12.dp),
@@ -329,7 +329,7 @@ class CreatePRDialog(
                 TPActionCard(
                     title = "Refresh",
                     icon = AppIcons.painter("refresh"),
-                    actionColor = TPTheme.colors.hintGray,
+                    actionColor = TPTheme.colors.textSecondary,
                     type = TPActionCardType.SMALL,
                     onClick = { fetchData() },
                 )
@@ -337,7 +337,7 @@ class CreatePRDialog(
                 TPActionCard(
                     title = "Cancel",
                     icon = AppIcons.painter("cancel"),
-                    actionColor = TPTheme.colors.lightGray,
+                    actionColor = TPTheme.colors.textSecondary,
                     type = TPActionCardType.SMALL,
                     onClick = { close(Constants.DEFAULT_EXIT_CODE) },
                 )
@@ -345,7 +345,7 @@ class CreatePRDialog(
                 TPActionCard(
                     title = "Create PR",
                     icon = AppIcons.painter("check_circle"),
-                    actionColor = TPTheme.colors.blue,
+                    actionColor = TPTheme.colors.accent,
                     type = TPActionCardType.SMALL,
                     onClick = {
                         val selectedUserNames = state.value.selectedReviewers
@@ -371,7 +371,7 @@ class CreatePRDialog(
                 .clip(RoundedCornerShape(8.dp))
                 .border(
                     width = 1.dp,
-                    color = TPTheme.colors.gray,
+                    color = TPTheme.colors.surface,
                     shape = RoundedCornerShape(8.dp),
                 )
                 .padding(12.dp),
@@ -383,7 +383,7 @@ class CreatePRDialog(
             }
             TPText(
                 text = targetLabel,
-                color = TPTheme.colors.white,
+                color = TPTheme.colors.textPrimary,
                 style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
             )
 
@@ -426,7 +426,7 @@ class CreatePRDialog(
                 if (filtered.isEmpty()) {
                     TPText(
                         text = "No matching branches",
-                        color = TPTheme.colors.hintGray,
+                        color = TPTheme.colors.textSecondary,
                         style = TextStyle(fontSize = 12.sp),
                     )
                 }
@@ -440,21 +440,21 @@ class CreatePRDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = TPTheme.colors.red.copy(alpha = 0.15f),
+                    color = TPTheme.colors.error.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(8.dp),
                 )
                 .padding(12.dp),
         ) {
             TPText(
                 text = error,
-                color = TPTheme.colors.red,
+                color = TPTheme.colors.error,
                 style = TextStyle(fontSize = 12.sp),
             )
             Spacer(modifier = Modifier.size(8.dp))
             TPActionCard(
                 title = "Retry",
                 icon = AppIcons.painter("refresh"),
-                actionColor = TPTheme.colors.red,
+                actionColor = TPTheme.colors.error,
                 type = TPActionCardType.SMALL,
                 onClick = { fetchData() },
             )
@@ -479,7 +479,7 @@ class CreatePRDialog(
         ) {
             TPText(
                 text = title,
-                color = TPTheme.colors.white,
+                color = TPTheme.colors.textPrimary,
                 style = TextStyle(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -510,20 +510,20 @@ class CreatePRDialog(
                     if (isAdding) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
-                            color = TPTheme.colors.blue,
+                            color = TPTheme.colors.accent,
                             strokeWidth = 2.dp,
                         )
                         Spacer(modifier = Modifier.size(8.dp))
                         TPText(
                             text = "Creating...",
-                            color = TPTheme.colors.hintGray,
+                            color = TPTheme.colors.textSecondary,
                             style = TextStyle(fontSize = 12.sp),
                         )
                     } else {
                         TPActionCard(
                             title = "Add \"${filterValue.trim()}\"",
                             icon = AppIcons.painter("add"),
-                            actionColor = TPTheme.colors.blue,
+                            actionColor = TPTheme.colors.accent,
                             type = TPActionCardType.SMALL,
                             onClick = { onAdd(filterValue.trim()) },
                         )
@@ -535,7 +535,7 @@ class CreatePRDialog(
             if (filtered.isEmpty()) {
                 TPText(
                     text = if (items.isEmpty()) "No items found" else "No matches",
-                    color = TPTheme.colors.hintGray,
+                    color = TPTheme.colors.textSecondary,
                     style = TextStyle(fontSize = 12.sp),
                 )
             } else {

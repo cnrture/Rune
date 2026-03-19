@@ -33,13 +33,13 @@ internal fun ClaudeInstallGuide(onRetry: () -> Unit) {
         Icon(
             painter = AppIcons.painter("terminal"),
             contentDescription = null,
-            tint = TPTheme.colors.purple,
+            tint = TPTheme.colors.accent,
             modifier = Modifier.size(48.dp)
         )
         Spacer(modifier = Modifier.size(16.dp))
         TPText(
             text = "Claude CLI Not Found",
-            color = TPTheme.colors.white,
+            color = TPTheme.colors.textPrimary,
             style = TextStyle(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
@@ -48,7 +48,7 @@ internal fun ClaudeInstallGuide(onRetry: () -> Unit) {
         Spacer(modifier = Modifier.size(8.dp))
         TPText(
             text = "Claude CLI is not installed. Run the following command to install:",
-            color = TPTheme.colors.lightGray,
+            color = TPTheme.colors.textSecondary,
             style = TextStyle(fontSize = 14.sp)
         )
         Spacer(modifier = Modifier.size(16.dp))
@@ -56,20 +56,20 @@ internal fun ClaudeInstallGuide(onRetry: () -> Unit) {
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(color = TPTheme.colors.gray)
+                .background(color = TPTheme.colors.surface)
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TPText(
                 text = installCommand,
-                color = TPTheme.colors.purple,
+                color = TPTheme.colors.accent,
                 style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium)
             )
             Spacer(modifier = Modifier.size(12.dp))
             Icon(
                 painter = AppIcons.painter("content_copy"),
                 contentDescription = "Copy",
-                tint = TPTheme.colors.lightGray,
+                tint = TPTheme.colors.textSecondary,
                 modifier = Modifier
                     .size(18.dp)
                     .clickable {
@@ -82,11 +82,11 @@ internal fun ClaudeInstallGuide(onRetry: () -> Unit) {
         Spacer(modifier = Modifier.size(24.dp))
         TPText(
             text = "Try Again",
-            color = TPTheme.colors.blue,
+            color = TPTheme.colors.accent,
             style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(color = TPTheme.colors.blue.copy(alpha = 0.15f))
+                .background(color = TPTheme.colors.accent.copy(alpha = 0.15f))
                 .clickable { onRetry() }
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         )

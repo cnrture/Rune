@@ -33,7 +33,7 @@ fun TPCheckbox(
     checked: Boolean,
     label: String? = null,
     isBackgroundEnable: Boolean = false,
-    color: Color = TPTheme.colors.blue,
+    color: Color = TPTheme.colors.accent,
     onCheckedChange: (Boolean) -> Unit = {},
 ) {
     Row(
@@ -67,15 +67,15 @@ fun TPCheckbox(
                 interactionSource = NoRippleInteractionSource(),
                 colors = CheckboxDefaults.colors(
                     checkedColor = if (isBackgroundEnable && checked) {
-                        TPTheme.colors.white
+                        TPTheme.colors.textPrimary
                     } else {
                         color
                     },
-                    uncheckedColor = TPTheme.colors.white,
+                    uncheckedColor = TPTheme.colors.textPrimary,
                     checkmarkColor = if (isBackgroundEnable && checked) {
                         color
                     } else {
-                        TPTheme.colors.white
+                        TPTheme.colors.textPrimary
                     },
                 )
             )
@@ -84,7 +84,7 @@ fun TPCheckbox(
             Spacer(modifier = Modifier.size(6.dp))
             TPText(
                 text = label,
-                color = TPTheme.colors.white,
+                color = TPTheme.colors.textPrimary,
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,

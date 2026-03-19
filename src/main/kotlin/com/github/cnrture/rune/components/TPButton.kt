@@ -19,14 +19,14 @@ fun TPButton(
         modifier = modifier,
         colors = ButtonDefaults.buttonColors(
             backgroundColor = backgroundColor,
-            contentColor = TPTheme.colors.white,
+            contentColor = TPTheme.colors.textPrimary,
         ),
         interactionSource = NoRippleInteractionSource(),
         onClick = onClick,
         content = {
             TPText(
                 text = text,
-                color = TPTheme.colors.white,
+                color = TPTheme.colors.textPrimary,
             )
         },
     )

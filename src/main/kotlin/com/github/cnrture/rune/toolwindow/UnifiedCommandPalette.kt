@@ -243,7 +243,7 @@ internal fun InlineCommandPanel(
 
     Column(
         modifier = modifier
-            .background(TPTheme.colors.black)
+            .background(TPTheme.colors.background)
             .padding(8.dp)
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyDown) {
@@ -286,20 +286,20 @@ internal fun InlineCommandPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = TPTheme.colors.gray,
+                    color = TPTheme.colors.surface,
                     shape = RoundedCornerShape(8.dp)
                 )
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .focusRequester(searchFocusRequester),
-            textStyle = TextStyle(color = TPTheme.colors.white, fontSize = 14.sp),
-            cursorBrush = SolidColor(TPTheme.colors.white),
+            textStyle = TextStyle(color = TPTheme.colors.textPrimary, fontSize = 14.sp),
+            cursorBrush = SolidColor(TPTheme.colors.textPrimary),
             singleLine = true,
             decorationBox = { innerTextField ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painter = AppIcons.painter("search"),
                         contentDescription = null,
-                        tint = TPTheme.colors.hintGray,
+                        tint = TPTheme.colors.textSecondary,
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.width(8.dp))
@@ -307,7 +307,7 @@ internal fun InlineCommandPanel(
                         if (searchQuery.isEmpty()) {
                             TPText(
                                 text = "Search...",
-                                color = TPTheme.colors.hintGray,
+                                color = TPTheme.colors.textSecondary,
                                 fontSize = 14.sp,
                             )
                         }
@@ -346,11 +346,11 @@ internal fun InlineCommandPanel(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
                         .background(
-                            color = if (isSelected) TPTheme.colors.primaryContainer else Color.Transparent,
+                            color = if (isSelected) TPTheme.colors.accentContainer else Color.Transparent,
                         )
                         .clickable { selectedFilter = filter }
                         .padding(horizontal = 10.dp, vertical = 4.dp),
-                    color = if (isSelected) TPTheme.colors.white else TPTheme.colors.lightGray,
+                    color = if (isSelected) TPTheme.colors.textPrimary else TPTheme.colors.textSecondary,
                     fontSize = 12.sp,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                 )
@@ -369,11 +369,11 @@ internal fun InlineCommandPanel(
                     Icon(
                         painter = AppIcons.painter("search_off"),
                         contentDescription = null,
-                        tint = TPTheme.colors.hintGray,
+                        tint = TPTheme.colors.textSecondary,
                         modifier = Modifier.size(32.dp),
                     )
                     Spacer(Modifier.height(8.dp))
-                    TPText(text = "No results found", color = TPTheme.colors.lightGray, fontSize = 13.sp)
+                    TPText(text = "No results found", color = TPTheme.colors.textSecondary, fontSize = 13.sp)
                 }
             }
         } else {
@@ -395,10 +395,10 @@ internal fun InlineCommandPanel(
                             PaletteCategory.SC_COMMAND -> "SC COMMANDS"
                         }
                         val headerColor = when (category) {
-                            PaletteCategory.SKILL -> TPTheme.colors.blue
-                            PaletteCategory.AGENT -> TPTheme.colors.blue
-                            PaletteCategory.COMMAND -> TPTheme.colors.purple
-                            PaletteCategory.SC_COMMAND -> TPTheme.colors.blue
+                            PaletteCategory.SKILL -> TPTheme.colors.accent
+                            PaletteCategory.AGENT -> TPTheme.colors.accent
+                            PaletteCategory.COMMAND -> TPTheme.colors.accent
+                            PaletteCategory.SC_COMMAND -> TPTheme.colors.accent
                         }
                         TPText(
                             text = headerText,
@@ -416,10 +416,10 @@ internal fun InlineCommandPanel(
                         val flatIndex = filteredItems.indexOf(paletteItem)
                         val isSelected = flatIndex == selectedIndex
                         val accentColor = when (paletteItem.category) {
-                            PaletteCategory.SKILL -> TPTheme.colors.blue
-                            PaletteCategory.AGENT -> TPTheme.colors.blue
-                            PaletteCategory.COMMAND -> TPTheme.colors.purple
-                            PaletteCategory.SC_COMMAND -> TPTheme.colors.blue
+                            PaletteCategory.SKILL -> TPTheme.colors.accent
+                            PaletteCategory.AGENT -> TPTheme.colors.accent
+                            PaletteCategory.COMMAND -> TPTheme.colors.accent
+                            PaletteCategory.SC_COMMAND -> TPTheme.colors.accent
                         }
                         val itemHover = remember { MutableInteractionSource() }
                         val isItemHovered by itemHover.collectIsHoveredAsState()
@@ -431,7 +431,7 @@ internal fun InlineCommandPanel(
                                     color = when {
                                         isSelected -> accentColor.copy(alpha = 0.25f)
                                         isItemHovered -> accentColor.copy(alpha = 0.15f)
-                                        else -> TPTheme.colors.gray.copy(alpha = 0.5f)
+                                        else -> TPTheme.colors.surface.copy(alpha = 0.5f)
                                     },
                                 )
                                 .then(
@@ -457,7 +457,7 @@ internal fun InlineCommandPanel(
                                 TPText(
                                     text = paletteItem.title,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = TPTheme.colors.white,
+                                    color = TPTheme.colors.textPrimary,
                                     fontSize = 11.sp,
                                     maxLines = 1,
                                 )
@@ -465,7 +465,7 @@ internal fun InlineCommandPanel(
                                     Spacer(Modifier.height(2.dp))
                                     TPText(
                                         text = paletteItem.description,
-                                        color = TPTheme.colors.hintGray,
+                                        color = TPTheme.colors.textSecondary,
                                         fontSize = 9.sp,
                                         maxLines = 1,
                                     )
@@ -476,7 +476,7 @@ internal fun InlineCommandPanel(
                                 Icon(
                                     painter = AppIcons.painter("open_in_new"),
                                     contentDescription = "Open in editor",
-                                    tint = TPTheme.colors.hintGray,
+                                    tint = TPTheme.colors.textSecondary,
                                     modifier = Modifier
                                         .size(14.dp)
                                         .clickable {

@@ -259,7 +259,7 @@ class CreateSkillDialog(
 
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = TPTheme.colors.black,
+            color = TPTheme.colors.background,
         ) {
             Column(
                 modifier = Modifier
@@ -273,14 +273,14 @@ class CreateSkillDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                color = TPTheme.colors.red.copy(alpha = 0.15f),
+                                color = TPTheme.colors.error.copy(alpha = 0.15f),
                                 shape = RoundedCornerShape(8.dp),
                             )
                             .padding(12.dp),
                     ) {
                         TPText(
                             text = error,
-                            color = TPTheme.colors.red,
+                            color = TPTheme.colors.error,
                             style = TextStyle(fontSize = 12.sp),
                         )
                     }
@@ -317,7 +317,7 @@ class CreateSkillDialog(
                         // Name field
                         TPText(
                             text = "Skill Name *",
-                            color = TPTheme.colors.blue,
+                            color = TPTheme.colors.accent,
                             style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
                         )
                         Spacer(modifier = Modifier.size(6.dp))
@@ -347,7 +347,7 @@ class CreateSkillDialog(
                         // Save location
                         TPText(
                             text = "Save Location",
-                            color = TPTheme.colors.blue,
+                            color = TPTheme.colors.accent,
                             style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
                         )
                         Spacer(modifier = Modifier.size(6.dp))
@@ -358,14 +358,14 @@ class CreateSkillDialog(
                             TPText(
                                 modifier = Modifier.weight(1f),
                                 text = currentState.savePath,
-                                color = TPTheme.colors.white.copy(alpha = 0.5f),
+                                color = TPTheme.colors.textPrimary.copy(alpha = 0.5f),
                                 style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium),
                             )
                             Spacer(modifier = Modifier.size(8.dp))
                             Icon(
                                 painter = AppIcons.painter("folder_open"),
                                 contentDescription = "Select directory",
-                                tint = TPTheme.colors.lightGray,
+                                tint = TPTheme.colors.textSecondary,
                                 modifier = Modifier
                                     .size(28.dp)
                                     .clip(RoundedCornerShape(6.dp))
@@ -387,7 +387,7 @@ class CreateSkillDialog(
                 // Description field
                 TPText(
                     text = "Description *",
-                    color = TPTheme.colors.blue,
+                    color = TPTheme.colors.accent,
                     style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
                 )
                 Spacer(modifier = Modifier.size(6.dp))
@@ -419,7 +419,7 @@ class CreateSkillDialog(
                     }
                     TPText(
                         text = "(${currentState.description.length}/1024)",
-                        color = TPTheme.colors.blue,
+                        color = TPTheme.colors.accent,
                         style = TextStyle(fontSize = 11.sp),
                     )
                 }
@@ -429,7 +429,7 @@ class CreateSkillDialog(
                 // Optional sections
                 TPText(
                     text = "Optional Sections",
-                    color = TPTheme.colors.blue,
+                    color = TPTheme.colors.accent,
                     style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
                 )
                 Spacer(modifier = Modifier.size(6.dp))
@@ -458,7 +458,7 @@ class CreateSkillDialog(
                 // Preview
                 TPText(
                     text = "Preview",
-                    color = TPTheme.colors.blue,
+                    color = TPTheme.colors.accent,
                     style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
                 )
                 Spacer(modifier = Modifier.size(6.dp))
@@ -466,7 +466,7 @@ class CreateSkillDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            color = TPTheme.colors.gray,
+                            color = TPTheme.colors.surface,
                             shape = RoundedCornerShape(8.dp),
                         )
                         .padding(12.dp),
@@ -474,7 +474,7 @@ class CreateSkillDialog(
                     SelectionContainer {
                         Text(
                             text = generatePreview(),
-                            color = TPTheme.colors.lightGray,
+                            color = TPTheme.colors.textSecondary,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 12.sp,
                         )
@@ -491,7 +491,7 @@ class CreateSkillDialog(
                     TPActionCard(
                         title = "Cancel",
                         icon = AppIcons.painter("cancel"),
-                        actionColor = TPTheme.colors.lightGray,
+                        actionColor = TPTheme.colors.textSecondary,
                         type = TPActionCardType.SMALL,
                         onClick = { close(Constants.DEFAULT_EXIT_CODE) },
                     )
@@ -499,7 +499,7 @@ class CreateSkillDialog(
                     TPActionCard(
                         title = "Create & Open",
                         icon = AppIcons.painter("check_circle"),
-                        actionColor = TPTheme.colors.blue,
+                        actionColor = TPTheme.colors.accent,
                         type = TPActionCardType.SMALL,
                         isEnabled = isValid(),
                         onClick = { createAndOpen() },
@@ -519,7 +519,7 @@ class CreateSkillDialog(
             errors.forEach { msg ->
                 TPText(
                     text = "✗ $msg",
-                    color = TPTheme.colors.red,
+                    color = TPTheme.colors.error,
                     style = TextStyle(fontSize = 11.sp),
                 )
             }
@@ -533,7 +533,7 @@ class CreateSkillDialog(
             hints.forEach { msg ->
                 TPText(
                     text = "💡 $msg",
-                    color = TPTheme.colors.hintGray,
+                    color = TPTheme.colors.textSecondary,
                     style = TextStyle(fontSize = 11.sp),
                 )
             }

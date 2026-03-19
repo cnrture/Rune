@@ -120,7 +120,7 @@ internal fun TerminalInputBar(
         }
     }
 
-    val urlColor = TPTheme.colors.blue
+    val urlColor = TPTheme.colors.accent
     val urlTransformation = remember(urlColor) { UrlHighlightTransformation(urlColor) }
     val hasContent = inputValue.text.isNotBlank() || selectedImagePaths.isNotEmpty()
 
@@ -143,7 +143,7 @@ internal fun TerminalInputBar(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-            .background(TPTheme.colors.gray)
+            .background(TPTheme.colors.surface)
             .border(
                 width = 1.dp,
                 color = TPTheme.colors.outline,
@@ -163,7 +163,7 @@ internal fun TerminalInputBar(
                     else -> "Model"
                 },
                 icon = AppIcons.painter("smart_toy"),
-                actionColor = if (activeModel != null) TPTheme.colors.blue else TPTheme.colors.hintGray,
+                actionColor = if (activeModel != null) TPTheme.colors.accent else TPTheme.colors.textSecondary,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
                 onClick = { onChangeModelClick() },
@@ -182,7 +182,7 @@ internal fun TerminalInputBar(
             TPActionCard(
                 title = "Skills",
                 icon = AppIcons.painter("auto_fix_high"),
-                actionColor = TPTheme.colors.blue,
+                actionColor = TPTheme.colors.accent,
                 type = TPActionCardType.EXTRA_SMALL,
                 isBorderless = true,
                 onClick = { onSkillsClick() },
@@ -220,7 +220,7 @@ internal fun TerminalInputBar(
                             Row(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(color = TPTheme.colors.blue.copy(alpha = 0.15f))
+                                    .background(color = TPTheme.colors.accent.copy(alpha = 0.15f))
                                     .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
                                     .clickable { onClickPreviewImage(path) }
                                     .padding(horizontal = 6.dp, vertical = 4.dp),
@@ -239,7 +239,7 @@ internal fun TerminalInputBar(
                                     Icon(
                                         painter = AppIcons.painter("image"),
                                         contentDescription = null,
-                                        tint = TPTheme.colors.blue,
+                                        tint = TPTheme.colors.accent,
                                         modifier = Modifier.size(18.dp),
                                     )
                                 }
@@ -253,7 +253,7 @@ internal fun TerminalInputBar(
                                         .plus(nameWithoutExt.takeLast(5)) else nameWithoutExt
                                 TPText(
                                     text = "$shortedName$extension",
-                                    color = TPTheme.colors.blue,
+                                    color = TPTheme.colors.accent,
                                     style = TextStyle(fontSize = 10.sp),
                                 )
                                 Spacer(modifier = Modifier.size(6.dp))
@@ -267,7 +267,7 @@ internal fun TerminalInputBar(
                                     Icon(
                                         painter = AppIcons.painter("close"),
                                         contentDescription = "Remove image",
-                                        tint = TPTheme.colors.blue,
+                                        tint = TPTheme.colors.accent,
                                         modifier = Modifier.size(14.dp),
                                     )
                                 }
@@ -290,12 +290,12 @@ internal fun TerminalInputBar(
                         .fillMaxWidth()
                         .border(
                             width = 1.dp,
-                            color = if (isFocused) TPTheme.colors.blue.copy(alpha = 0.5f)
+                            color = if (isFocused) TPTheme.colors.accent.copy(alpha = 0.5f)
                             else TPTheme.colors.outline.copy(alpha = 0.3f),
                             shape = RoundedCornerShape(8.dp),
                         )
                         .clip(RoundedCornerShape(8.dp))
-                        .background(TPTheme.colors.black)
+                        .background(TPTheme.colors.background)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                         .focusRequester(inputFocusRequester)
                         .onFocusChanged { isFocused = it.isFocused }
@@ -314,10 +314,10 @@ internal fun TerminalInputBar(
                             } else false
                         },
                     textStyle = TextStyle(
-                        color = TPTheme.colors.white,
+                        color = TPTheme.colors.textPrimary,
                         fontSize = 14.sp,
                     ),
-                    cursorBrush = SolidColor(TPTheme.colors.white),
+                    cursorBrush = SolidColor(TPTheme.colors.textPrimary),
                     decorationBox = { innerTPTextField ->
                         Column {
                             Row(
@@ -330,7 +330,7 @@ internal fun TerminalInputBar(
                                     if (inputValue.text.isEmpty()) {
                                         TPText(
                                             text = "Ask Claude or type / for commands...",
-                                            color = TPTheme.colors.hintGray,
+                                            color = TPTheme.colors.textSecondary,
                                             style = TextStyle(fontSize = 14.sp),
                                         )
                                     }
@@ -350,12 +350,12 @@ internal fun TerminalInputBar(
                                     tooltip = {
                                         Box(
                                             modifier = Modifier
-                                                .background(TPTheme.colors.gray, RoundedCornerShape(4.dp))
+                                                .background(TPTheme.colors.surface, RoundedCornerShape(4.dp))
                                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                                         ) {
                                             TPText(
                                                 text = "Add active file",
-                                                color = TPTheme.colors.white,
+                                                color = TPTheme.colors.textPrimary,
                                                 fontSize = 11.sp
                                             )
                                         }
@@ -365,7 +365,7 @@ internal fun TerminalInputBar(
                                     Icon(
                                         painter = AppIcons.painter("alternate_email"),
                                         contentDescription = "Add active file path",
-                                        tint = if (isFileHovered) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                                        tint = if (isFileHovered) TPTheme.colors.accent else TPTheme.colors.textSecondary,
                                         modifier = Modifier
                                             .size(18.dp)
                                             .hoverable(fileHover)
@@ -386,10 +386,10 @@ internal fun TerminalInputBar(
                                     tooltip = {
                                         Box(
                                             modifier = Modifier
-                                                .background(TPTheme.colors.gray, RoundedCornerShape(4.dp))
+                                                .background(TPTheme.colors.surface, RoundedCornerShape(4.dp))
                                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                                         ) {
-                                            TPText(text = "Add image", color = TPTheme.colors.white, fontSize = 11.sp)
+                                            TPText(text = "Add image", color = TPTheme.colors.textPrimary, fontSize = 11.sp)
                                         }
                                     },
                                     tooltipPlacement = TooltipPlacement.CursorPoint(offset = DpOffset(0.dp, 16.dp)),
@@ -397,7 +397,7 @@ internal fun TerminalInputBar(
                                     Icon(
                                         painter = AppIcons.painter("image"),
                                         contentDescription = "Add image",
-                                        tint = if (isImageHovered || selectedImagePaths.isNotEmpty()) TPTheme.colors.blue else TPTheme.colors.lightGray,
+                                        tint = if (isImageHovered || selectedImagePaths.isNotEmpty()) TPTheme.colors.accent else TPTheme.colors.textSecondary,
                                         modifier = Modifier
                                             .size(18.dp)
                                             .hoverable(imageHover)
@@ -409,13 +409,13 @@ internal fun TerminalInputBar(
                                 if (inputValue.text.isNotEmpty()) {
                                     TPText(
                                         text = "${inputValue.text.length} characters",
-                                        color = TPTheme.colors.hintGray.copy(alpha = 0.6f),
+                                        color = TPTheme.colors.textSecondary.copy(alpha = 0.6f),
                                         style = TextStyle(fontSize = 10.sp),
                                     )
                                 }
                                 TPText(
                                     text = "Shift+Enter for new line",
-                                    color = TPTheme.colors.hintGray,
+                                    color = TPTheme.colors.textSecondary,
                                     style = TextStyle(fontSize = 10.sp),
                                 )
                             }
@@ -433,7 +433,7 @@ internal fun TerminalInputBar(
                     .size(36.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(
-                        color = if (hasContent) TPTheme.colors.blue
+                        color = if (hasContent) TPTheme.colors.accent
                         else TPTheme.colors.outline.copy(alpha = 0.3f),
                     )
                     .then(
@@ -447,7 +447,7 @@ internal fun TerminalInputBar(
                 Icon(
                     painter = AppIcons.painter("send"),
                     contentDescription = "Send",
-                    tint = if (hasContent) TPTheme.colors.white else TPTheme.colors.hintGray,
+                    tint = if (hasContent) TPTheme.colors.textPrimary else TPTheme.colors.textSecondary,
                     modifier = Modifier.size(18.dp),
                 )
             }

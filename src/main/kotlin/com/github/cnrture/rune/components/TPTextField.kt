@@ -23,7 +23,7 @@ fun TPTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String? = null,
-    color: Color = TPTheme.colors.white,
+    color: Color = TPTheme.colors.textPrimary,
     textStyle: TextStyle = TextStyle.Default,
     isSingleLine: Boolean = true,
 ) {
@@ -39,7 +39,7 @@ fun TPTextField(
         value = value,
         onValueChange = onValueChange,
         textStyle = textStyle.copy(
-            color = TPTheme.colors.white,
+            color = TPTheme.colors.textPrimary,
             fontSize = 14.sp,
         ),
         singleLine = isSingleLine,
@@ -52,7 +52,7 @@ fun TPTextField(
                 if (value.isEmpty() && placeholder != null) {
                     TPText(
                         text = placeholder,
-                        color = TPTheme.colors.hintGray,
+                        color = TPTheme.colors.textSecondary,
                         style = textStyle.copy(
                             fontSize = 14.sp,
                         ),

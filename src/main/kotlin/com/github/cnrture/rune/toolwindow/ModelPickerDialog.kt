@@ -44,12 +44,12 @@ internal fun ModelPickerDialog(
         Column(
             modifier = Modifier
                 .width(280.dp)
-                .background(TPTheme.colors.gray, RoundedCornerShape(12.dp))
+                .background(TPTheme.colors.surface, RoundedCornerShape(12.dp))
                 .padding(vertical = 12.dp),
         ) {
             TPText(
                 text = "Select Model",
-                color = TPTheme.colors.white,
+                color = TPTheme.colors.textPrimary,
                 style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
@@ -66,9 +66,9 @@ internal fun ModelPickerDialog(
                         .clip(RoundedCornerShape(6.dp))
                         .background(
                             when {
-                                isSelected -> TPTheme.colors.blue.copy(alpha = 0.15f)
+                                isSelected -> TPTheme.colors.accent.copy(alpha = 0.15f)
                                 isHovered -> TPTheme.colors.outline.copy(alpha = 0.15f)
-                                else -> TPTheme.colors.gray
+                                else -> TPTheme.colors.surface
                             }
                         )
                         .clickable {
@@ -82,7 +82,7 @@ internal fun ModelPickerDialog(
                         Icon(
                             painter = AppIcons.painter("check"),
                             contentDescription = null,
-                            tint = TPTheme.colors.blue,
+                            tint = TPTheme.colors.accent,
                             modifier = Modifier.size(18.dp),
                         )
                     } else {
@@ -90,7 +90,7 @@ internal fun ModelPickerDialog(
                     }
                     TPText(
                         text = model.displayName,
-                        color = if (isSelected) TPTheme.colors.blue else TPTheme.colors.white,
+                        color = if (isSelected) TPTheme.colors.accent else TPTheme.colors.textPrimary,
                         style = TextStyle(fontSize = 14.sp),
                     )
                 }
