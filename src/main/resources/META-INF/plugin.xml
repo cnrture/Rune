@@ -4,6 +4,28 @@
     <name>Rune</name>
     <vendor>cnrture</vendor>
 
+    <description><![CDATA[
+    <h2>Rune — Claude CLI Integration for JetBrains IDEs</h2>
+    <p>Seamlessly integrate <b>Claude CLI</b> into your JetBrains IDE with a powerful terminal-based workflow.</p>
+
+    <h3>Features</h3>
+    <ul>
+        <li><b>Claude Terminal</b> — Embedded Claude CLI sessions with multi-tab support</li>
+        <li><b>Commit Message Generation</b> — AI-powered conventional commit messages from staged diffs</li>
+        <li><b>PR Creation &amp; Review</b> — Create review branches and PRs (GitHub &amp; Bitbucket)</li>
+        <li><b>Fix PR Comments</b> — Auto-fix unresolved PR review comments with Claude</li>
+        <li><b>Ask Claude</b> — Right-click any code selection to send it to Claude</li>
+        <li><b>Skills &amp; Agents</b> — Browse and execute custom skills and agents</li>
+        <li><b>Command Palette</b> — Quick access to all Claude commands</li>
+        <li><b>Skill Best Practices</b> — Validate SKILL.md files against Claude platform guidelines</li>
+    </ul>
+
+    <h3>Requirements</h3>
+    <ul>
+        <li><a href="https://docs.anthropic.com/en/docs/claude-cli">Claude CLI</a> installed and authenticated</li>
+    </ul>
+    ]]></description>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
