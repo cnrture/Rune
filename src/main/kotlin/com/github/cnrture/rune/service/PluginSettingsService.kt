@@ -22,6 +22,7 @@ class PluginSettingsService :
         var useReviewBranch: Boolean = false,
         var vcsProviderOverride: String = "",
         var cachedClaudeModel: String = "",
+        var jiraBaseUrl: String = DEFAULT_JIRA_BASE_URL,
     )
 
     private var state = State()
@@ -64,6 +65,15 @@ class PluginSettingsService :
         state.useReviewBranch = use
     }
 
+    fun getJiraBaseUrl(): String =
+        state.jiraBaseUrl.ifBlank { DEFAULT_JIRA_BASE_URL }
+
+    fun setJiraBaseUrl(url: String) {
+        state.jiraBaseUrl = url
+    }
+
+    fun jiraBrowseUrl(ticketId: String): String = "${getJiraBaseUrl()}/browse/$ticketId"
+
     fun getCachedClaudeModel(): String? = state.cachedClaudeModel.takeIf { it.isNotBlank() }
 
     fun setCachedClaudeModel(model: String?) {
@@ -84,6 +94,8 @@ class PluginSettingsService :
 
         const val DEFAULT_SKILLS_PATH = ".claude/skills"
         const val DEFAULT_AGENTS_PATH = ".claude/agents"
+
+        const val DEFAULT_JIRA_BASE_URL = ""
 
         const val DEFAULT_COMMIT_PROMPT =
             "Based on the following git diff, write a single conventional commit message " +

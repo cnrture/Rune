@@ -88,6 +88,7 @@ class CreateReviewPRAction : AnAction() {
                         remoteBranches = localBranches,
                         suggestedBaseBranch = suggestedBase,
                         useReviewBranch = useReviewBranch,
+                        jiraBaseUrl = settings.getJiraBaseUrl(),
                         onConfirm = { reviewers, labels, baseBranch ->
                             val targetBranch = if (useReviewBranch) {
                                 createReviewBranch(project, dir, currentBranch, baseBranch) ?: return@CreatePRDialog
@@ -99,7 +100,7 @@ class CreateReviewPRAction : AnAction() {
                                 platformService = platformService,
                                 currentBranch = currentBranch,
                                 targetBranch = targetBranch,
-                                jiraUrl = getJiraTicketUrl(dir),
+                                jiraUrl = getJiraTicketUrl(project, dir),
                                 reviewers = reviewers,
                                 labels = labels,
                             )
@@ -219,10 +220,10 @@ class CreateReviewPRAction : AnAction() {
             .filter { it.isNotBlank() }
     }
 
-    private fun getJiraTicketUrl(dir: File): String? {
+    private fun getJiraTicketUrl(project: Project, dir: File): String? {
         val branch = CliUtils.runGit(dir, "rev-parse", "--abbrev-ref", "HEAD")
         val ticketId = Constants.JIRA_TICKET_REGEX.find(branch)?.value?.uppercase() ?: return null
-        return Constants.jiraBrowseUrl(ticketId)
+        return PluginSettingsService.getInstance(project).jiraBrowseUrl(ticketId)
     }
 
     private fun runGit(dir: File, vararg args: String): String = CliUtils.runGit(dir, *args)

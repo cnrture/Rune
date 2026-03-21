@@ -25,7 +25,7 @@ object BitbucketCredentialService {
 
     fun hasCredentials(): Boolean {
         val credentials = PasswordSafe.instance.get(credentialAttributes) ?: return false
-        // Token yeterli (Bearer auth), username opsiyonel (Basic auth için)
+        // Token is required (Bearer auth), username is optional (for Basic auth)
         return !credentials.getPasswordAsString().isNullOrBlank()
     }
 }

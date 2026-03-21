@@ -15,8 +15,6 @@ import java.util.Base64
 
 object JiraService {
 
-    private val JIRA_BASE_URL = Constants.JIRA_BASE_URL
-
     private val credentialAttributes = CredentialAttributes(
         generateServiceName("Rune", "JiraCredentials")
     )
@@ -34,12 +32,13 @@ object JiraService {
         return !credentials.userName.isNullOrBlank() && !credentials.getPasswordAsString().isNullOrBlank()
     }
 
-    fun fetchFixVersions(ticketId: String): List<String> {
+    fun fetchFixVersions(ticketId: String, jiraBaseUrl: String): List<String> {
+        if (jiraBaseUrl.isBlank()) return emptyList()
         val credentials = PasswordSafe.instance.get(credentialAttributes) ?: return emptyList()
         val email = credentials.userName ?: return emptyList()
         val token = credentials.getPasswordAsString() ?: return emptyList()
 
-        val url = URI("$JIRA_BASE_URL/rest/api/3/issue/$ticketId?fields=fixVersions").toURL()
+        val url = URI("$jiraBaseUrl/rest/api/3/issue/$ticketId?fields=fixVersions").toURL()
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
         connection.setRequestProperty("Accept", "application/json")
