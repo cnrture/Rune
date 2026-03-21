@@ -44,7 +44,7 @@ class GenerateCommitMessageAction : AnAction() {
                 }
 
                 val jiraUrl = if (PluginSettingsService.getInstance(project).isIncludeJiraUrlInCommit()) {
-                    getJiraTicketUrl(projectDir)
+                    getJiraTicketUrl(project, projectDir)
                 } else {
                     null
                 }
@@ -159,10 +159,10 @@ class GenerateCommitMessageAction : AnAction() {
         }
     }
 
-    private fun getJiraTicketUrl(projectDir: String): String? {
+    private fun getJiraTicketUrl(project: com.intellij.openapi.project.Project, projectDir: String): String? {
         val branch = CliUtils.runGit(File(projectDir), "rev-parse", "--abbrev-ref", "HEAD")
         val ticketId = Constants.JIRA_TICKET_REGEX.find(branch)?.value?.uppercase() ?: return null
-        return Constants.jiraBrowseUrl(ticketId)
+        return PluginSettingsService.getInstance(project).jiraBrowseUrl(ticketId)
     }
 
     private fun generateFallbackMessage(diff: String, jiraUrl: String? = null): String {

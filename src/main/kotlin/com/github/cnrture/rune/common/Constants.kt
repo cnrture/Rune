@@ -6,7 +6,6 @@ object Constants {
     const val DEFAULT_EXIT_CODE = 2
 
     // URLs
-    const val JIRA_BASE_URL = "https://pozitim.atlassian.net"
     const val CLAUDE_SKILL_BEST_PRACTICES_URL =
         "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices.md"
 
@@ -32,5 +31,4 @@ object Constants {
         "GitHub token not configured. Go to Settings > Tools > Rune Settings."
     const val BITBUCKET_CREDENTIALS_MISSING_MESSAGE =
         "Bitbucket credentials not configured. Go to Settings > Tools > Rune Settings."
-    fun jiraBrowseUrl(ticketId: String): String = "$JIRA_BASE_URL/browse/$ticketId"
 }

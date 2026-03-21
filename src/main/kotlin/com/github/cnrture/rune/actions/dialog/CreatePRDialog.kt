@@ -52,6 +52,7 @@ class CreatePRDialog(
     remoteBranches: List<String> = emptyList(),
     suggestedBaseBranch: String = "main",
     private val useReviewBranch: Boolean = false,
+    private val jiraBaseUrl: String = "",
     private val onConfirm: (reviewers: List<VcsUser>, labels: List<String>, baseBranch: String) -> Unit,
 ) : TPDialogWrapper(
     width = 700,
@@ -93,27 +94,10 @@ class CreatePRDialog(
     private fun autoSelectLabels(labels: List<String>) {
         if (ticketId == null || !platformService.supportsLabels) return
 
-        // Team label mapping: ticket prefix -> label name
-        val teamLabelMap = mapOf(
-            "GR" to "revenue",
-            "COM" to "spam-protection",
-        )
-
-        val prefix = ticketId.substringBefore("-")
-        val teamLabel = teamLabelMap[prefix.uppercase()]
-        if (teamLabel != null) {
-            val match = labels.firstOrNull { it.equals(teamLabel, ignoreCase = true) }
-            if (match != null) {
-                state.value = state.value.copy(
-                    selectedLabels = state.value.selectedLabels + match,
-                )
-            }
-        }
-
         // Fix version from Jira
         if (!JiraService.hasCredentials()) return
         kotlin.concurrent.thread {
-            val fixVersions = JiraService.fetchFixVersions(ticketId)
+            val fixVersions = JiraService.fetchFixVersions(ticketId, jiraBaseUrl)
             if (fixVersions.isNotEmpty()) {
                 val matchingLabels = labels.filter { label ->
                     fixVersions.any { it.contains(label, ignoreCase = true) }

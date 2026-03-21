@@ -1,150 +1,134 @@
-# 🤖 Rune
+# Rune
 
 ![Build](https://github.com/cnrture/Rune/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
-🌐 **[Türkçe](README.tr.md)** | English
+**[Turkce](README.tr.md)** | English
 
 <!-- Plugin description -->
-AI-powered development assistant for JetBrains IDEs. Claude CLI integration, automatic commit message generation, PR management, skill/agent system and more. Works with IntelliJ IDEA, Android Studio, WebStorm, PyCharm and all other JetBrains IDEs.
+Seamlessly integrate **Claude CLI** into your JetBrains IDE with a powerful terminal-based workflow. Rune brings AI-powered commit messages, PR management, code queries, and an extensible skill/agent system — all from a single tool window.
 <!-- Plugin description end -->
 
-## ✨ Features
+## Features
 
-### 🖥️ Claude Terminal Integration
+### Claude Terminal
 
-The plugin adds a **Claude** tool window to the IDE's right sidebar. Claude CLI runs directly inside this panel.
+Embedded Claude CLI sessions in the IDE's right sidebar.
 
-- 📑 **Multi-session support** — Open multiple Claude terminals and switch between them
-- 🎯 **Command palette** — Access skills, agents, Claude commands and SuperClaude commands by typing `/` or clicking the button
-- 📎 **File injection** — Append the current file's path to your message with the `@` button
-- 🖼️ **Image attachment** — Select and send images along with your message
-- 🌐 **Remote control** — Start a remote Claude session with optional `caffeinate` sleep prevention (macOS)
-
-> **⚙️ How it works:** `ClaudeSessionService` manages sessions. The terminal uses IntelliJ's native `JBTerminalWidget`. Claude CLI is located via PATH; if not found, common locations like `~/.npm-global/bin`, `~/.local/bin`, `/usr/local/bin` are checked as fallback.
-
----
-
-### 💬 Automatic Commit Message Generation
-
-The **"Generate Commit Message with Claude"** button in the VCS commit dialog generates commit messages from staged changes.
-
-- 📝 `git diff --cached` and `git diff` outputs are sent to Claude CLI
-- 📏 Messages are generated in conventional commit format
-- 🔗 Optional Jira integration: ticket ID is extracted from the branch name and its URL is appended to the commit message
-- 🔄 If Claude is unavailable, a fallback logic kicks in (determines type by analyzing file extensions and changes)
-
-> **⚙️ How it works:** `GenerateCommitMessageAction` runs `claude -p <prompt>` with a 30-second timeout. The output is streamed into the commit message field.
+- **Multi-session** — Open multiple Claude terminals, switch between them
+- **Model picker** — Quick switch between Opus, Sonnet, and Haiku models
+- **Command palette** — Access skills, agents, Claude commands and SuperClaude commands by typing `/`
+- **File injection** — Append the current file's path to your message with the `@` button
+- **Image attachment** — Select and send images along with your message
+- **Remote control** — Start a remote Claude session with optional `caffeinate` sleep prevention (macOS)
 
 ---
 
-### 🚀 PR Creation
+### Commit Message Generation
 
-Create a pull request with a single click using the **"Create Review PR"** button.
+**"Generate Commit Message with Claude"** button in the VCS commit dialog.
 
-- 🌿 Base branch is auto-detected (via git reflog or closest ancestor branch: develop, main, master, staging, release)
-- 🏷️ Optional `review/` branch prefix
-- 👥 Reviewer selection — searchable list from repo contributors
-- 🏷️ Label selection — pick from existing labels or create new ones
-- 🎫 Jira integration: auto-selects labels based on ticket Fix Version
-
-> **⚙️ How it works:** `CreateReviewPRAction` detects the base branch, pushes the branch, then opens `CreatePRDialog`. The PR is created via GitHub CLI (`gh pr create`). Collaborator and label data is cached by `GitHubCacheService`.
+- Generates conventional commit messages from staged and unstaged diffs
+- Customizable prompt template
+- Optional Jira integration — ticket ID extracted from branch name, URL appended to message
+- Fallback logic when Claude is unavailable — determines type by analyzing file extensions and change ratios
 
 ---
 
-### 🔧 Fix PR Comments
+### PR Creation & Review
 
-The **"Fix PR Comments"** button resolves unresolved PR review comments with Claude.
+**"Create Review PR"** button — create a pull request with a single click.
 
-- 🔗 Enter the PR URL
-- 📡 Unresolved review threads are fetched via GitHub GraphQL API
-- 📋 Comments are listed with file path, line number, reviewer name and code context
-- ✅ Select the comments you want to fix and send them to Claude
-
-> **⚙️ How it works:** `FixPRCommentsAction` fetches comment data with a GraphQL query. `FixPRCommentsDialog` displays the comments. Selected comments are formatted and pasted into the Claude terminal.
-
----
-
-### 💡 Ask Claude (Code Query)
-
-Select code in the editor and use **"Ask Claude"** from the right-click menu.
-
-- 📄 Selected code is sent to Claude with file path and line number context
-- 🪟 Claude tool window opens automatically
-- 🖥️ Also works for console output
-
-> **⚙️ How it works:** `AskClaudeAction` injects the selected text and file context into the terminal input field via `ClaudeSessionService.setPendingInput()`.
+- Base branch auto-detection (develop, main, master, staging, release)
+- Optional `review/` branch prefix
+- Searchable reviewer selection from repo contributors
+- Label selection — pick existing or create new
+- Jira integration — auto-selects labels based on ticket Fix Version
+- **Supports GitHub (via `gh` CLI) and Bitbucket Cloud (via REST API)**
 
 ---
 
-### 🧩 Skill & Agent System
+### Fix PR Comments
 
-Skills and agents are defined as Markdown files and are automatically discovered by the plugin.
+**"Fix PR Comments"** button — resolve unresolved review comments with Claude.
 
-- 📘 **Skills** — Files with `SKILL.md` suffix, scanned from a configured directory
-- 🤖 **Agents** — Any `.md` file, scanned from a separate configured directory
-- ✏️ **Skill creation** — Define name, description, workflow, examples and references via `CreateSkillDialog`
-- ✅ **Validation** — Name format, description quality and frontmatter structure are checked
-
-> **⚙️ How it works:** `SkillRepositoryImpl` recursively scans the configured directory. Uses a 5-minute in-memory cache. The first non-empty line of the file body becomes the description.
+- Fetches unresolved review threads via GitHub GraphQL API or Bitbucket REST API
+- Lists comments with file path, line number, reviewer name, and code context
+- Select specific comments to fix — formatted and sent to Claude terminal
 
 ---
 
-### 📋 Skill Best Practices Check
+### Ask Claude
 
-A notification banner appears in the editor when a `SKILL.md` file is opened.
+Right-click any code selection in the editor and choose **"Ask Claude"**.
 
-- 📖 **"Open best practices"** — Opens the Claude documentation in the browser
-- 🔍 **"Check with Claude"** — Sends the skill content to Claude for a detailed review (frontmatter, naming, structure, content quality)
+- Selected code is sent to Claude with file path and line number context
+- Claude tool window opens automatically
+- Also works in console output
 
 ---
 
-### 🎨 Command Palette
+### Skill & Agent System
 
-Opens by typing `/` in the terminal input field or clicking the button. Lists searchable content in 4 categories:
+Custom skills and agents defined as Markdown files, automatically discovered by the plugin.
+
+- **Skills** — Files with `SKILL.md` suffix in the configured skills directory
+- **Agents** — Any `.md` file in the configured agents directory
+- **Skill creation dialog** — Define name, description, workflow, examples, and references
+- **Validation** — Name format, description quality, and frontmatter structure checks
+- **Best practices check** — Notification banner on SKILL.md files with "Check with Claude" action
+
+---
+
+### Command Palette
+
+Type `/` in the terminal input or click the palette button. Searchable content in 4 categories:
 
 | Category | Source |
 |---|---|
-| 📘 Skills | SKILL.md files in the skills directory |
-| 🤖 Agents | .md files in the agents directory |
-| ⌨️ Commands | 29 built-in Claude commands (`/clear`, `/model`, `/compact`...) |
-| ⚡ SC Commands | 25 SuperClaude commands (`/sc:analyze`, `/sc:design`...) |
+| Skills | SKILL.md files in the skills directory |
+| Agents | .md files in the agents directory |
+| Commands | 29 built-in Claude commands (`/clear`, `/model`, `/compact`...) |
+| SC Commands | 25+ SuperClaude commands (`/sc:analyze`, `/sc:design`...) |
 
 ---
 
-## ⚙️ Settings
+## Settings
 
-Configured via **Settings > Tools > Rune Settings**.
+**Settings > Tools > Rune Settings**
 
 | Setting | Description |
 |---|---|
-| 📁 Skills Directory | Directory to scan for skill files |
-| 📁 Agents Directory | Directory to scan for agent files |
-| 💬 Commit Message Prompt | Customizable prompt template sent to Claude |
-| 🔗 Jira Ticket URL | Append Jira ticket link to commit messages |
-| 🌿 Review Branch | Use `review/` branch prefix for PRs |
-| 🔑 Jira Credentials | Jira email and API token (securely stored in IDE credential store) |
+| Skills Directory | Directory to scan for skill files (default: `.claude/skills`) |
+| Agents Directory | Directory to scan for agent files (default: `.claude/agents`) |
+| Commit Message Prompt | Customizable prompt template sent to Claude |
+| Jira Ticket URL | Append Jira ticket link to commit messages |
+| Review Branch | Use `review/` branch prefix for PRs |
+| VCS Provider | GitHub or Bitbucket Cloud (auto-detected from git remote) |
+| GitHub Credentials | GitHub token (securely stored in IDE credential store) |
+| Bitbucket Credentials | Bitbucket username and API token |
+| Jira Credentials | Jira email and API token |
 
 ---
 
-## 📦 Installation
+## Installation
 
-1. In your IDE, go to <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Manage Plugin Repositories...</kbd>
+1. In your IDE, go to <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Gear icon</kbd> > <kbd>Manage Plugin Repositories...</kbd>
 2. Add the following URL:
    ```
    https://raw.githubusercontent.com/cnrture/rune-releases/main/updatePlugins.xml
    ```
 3. In the <kbd>Marketplace</kbd> tab, search for `"Rune"` and click <kbd>Install</kbd>
 
-## 📋 Requirements
+## Requirements
 
-- 🧰 JetBrains IDE (IntelliJ IDEA, Android Studio, WebStorm, PyCharm, GoLand, etc.) 2024.1+
-- 🤖 [Claude CLI](https://docs.anthropic.com/en/docs/claude-code) installed and accessible in PATH
-- 🐙 [GitHub CLI](https://cli.github.com/) (`gh`) — for PR operations
-- ☕ Java 21+
+- JetBrains IDE (IntelliJ IDEA, Android Studio, WebStorm, PyCharm, GoLand, etc.) **2024.1+**
+- [Claude CLI](https://docs.anthropic.com/en/docs/claude-code) installed and accessible in PATH
+- [GitHub CLI](https://cli.github.com/) (`gh`) — required for GitHub PR operations
+- Java 21+
 
-## 🛠️ Development
+## Development
 
 ```bash
 # Run plugin in a sandboxed IDE instance
@@ -155,9 +139,12 @@ Configured via **Settings > Tools > Rune Settings**.
 
 # Build distribution ZIP
 ./gradlew buildPlugin
+
+# Verify plugin compatibility
+./gradlew runPluginVerifier
 ```
 
-**Tech stack:** Kotlin 2.3.0 · Jetpack Compose Desktop 1.10.1 · IntelliJ Platform SDK · FreeMarker
+**Tech stack:** Kotlin 2.3.10 · Jetpack Compose Desktop 1.10.1 · IntelliJ Platform SDK · FreeMarker 2.3.34
 
 ---
 

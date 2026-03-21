@@ -19,6 +19,7 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Rune
     private lateinit var commitPromptField: JTextArea
     private lateinit var commitMessageJiraUrlField: JCheckBox
     private lateinit var useReviewBranchField: JCheckBox
+    private lateinit var jiraBaseUrlField: JTextField
     private lateinit var jiraEmailField: JTextField
     private lateinit var jiraTokenField: JPasswordField
 
@@ -163,6 +164,13 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Rune
             }
 
             group("Jira Integration") {
+                row("Base URL:") {
+                    jiraBaseUrlField = JTextField(settingsService.getJiraBaseUrl(), 30)
+                    cell(jiraBaseUrlField)
+                }
+                row {
+                    comment("Your Jira instance URL (e.g. <b>https://yourcompany.atlassian.net</b>)")
+                }
                 if (JiraService.hasCredentials()) {
                     row {
                         cell(savedCredentialLabel("Credentials saved (${JiraService.getEmail()})"))
@@ -198,14 +206,15 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Rune
             GitHubCredentialService.saveToken(ghToken)
         }
 
-        // Bitbucket credentials (token yeterli, username opsiyonel)
+        // Bitbucket credentials (token is required, username is optional)
         val bbUsername = bitbucketUsernameField.text.trim()
         val bbToken = String(bitbucketTokenField.password).trim()
         if (bbToken.isNotBlank()) {
             BitbucketCredentialService.saveCredentials(bbUsername, bbToken)
         }
 
-        // Jira credentials
+        // Jira settings
+        settingsService.setJiraBaseUrl(jiraBaseUrlField.text.trim())
         val email = jiraEmailField.text.trim()
         val token = String(jiraTokenField.password).trim()
         if (email.isNotBlank() && token.isNotBlank()) {
@@ -219,6 +228,7 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Rune
         val reviewBranchModified = useReviewBranchField.isSelected != settingsService.isUseReviewBranch()
         val pathsModified = skillsPathField.text.trim() != settingsService.getSkillsRootPath() ||
             agentsPathField.text.trim() != settingsService.getAgentsRootPath()
+        val jiraBaseUrlModified = jiraBaseUrlField.text.trim() != settingsService.getJiraBaseUrl()
         val jiraModified = jiraEmailField.text.trim() != (JiraService.getEmail() ?: "") ||
             String(jiraTokenField.password).trim().isNotBlank()
 
@@ -229,7 +239,7 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Rune
             String(bitbucketTokenField.password).trim().isNotBlank()
 
         return promptModified || jiraUrlToggleModified || reviewBranchModified || pathsModified ||
-            jiraModified || vcsProviderModified || ghTokenModified || bbCredModified
+            jiraBaseUrlModified || jiraModified || vcsProviderModified || ghTokenModified || bbCredModified
     }
 
     override fun reset() {
@@ -238,6 +248,7 @@ class PluginConfigurable(private val project: Project) : BoundConfigurable("Rune
         commitPromptField.text = settingsService.getCommitMessagePrompt()
         commitMessageJiraUrlField.isSelected = settingsService.isIncludeJiraUrlInCommit()
         useReviewBranchField.isSelected = settingsService.isUseReviewBranch()
+        jiraBaseUrlField.text = settingsService.getJiraBaseUrl()
         jiraEmailField.text = JiraService.getEmail() ?: ""
         jiraTokenField.text = ""
 
