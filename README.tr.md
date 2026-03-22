@@ -112,12 +112,8 @@ Terminal giris alaninda `/` yazarak veya palet butonuna tiklayarak acilir. 4 kat
 
 ## Kurulum
 
-1. IDE'de <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Disli ikonu</kbd> > <kbd>Manage Plugin Repositories...</kbd> acin
-2. Asagidaki URL'yi ekleyin:
-   ```
-   https://raw.githubusercontent.com/cnrture/rune-releases/main/updatePlugins.xml
-   ```
-3. <kbd>Marketplace</kbd> sekmesinde `"Rune"` arayin ve <kbd>Install</kbd> tiklayin
+1. IDE'de <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> acin
+2. `"Rune"` arayin ve <kbd>Install</kbd> tiklayin
 
 ## Gereksinimler
 

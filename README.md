@@ -114,12 +114,8 @@ Type `/` in the terminal input or click the palette button. Searchable content i
 
 ## Installation
 
-1. In your IDE, go to <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Gear icon</kbd> > <kbd>Manage Plugin Repositories...</kbd>
-2. Add the following URL:
-   ```
-   https://raw.githubusercontent.com/cnrture/rune-releases/main/updatePlugins.xml
-   ```
-3. In the <kbd>Marketplace</kbd> tab, search for `"Rune"` and click <kbd>Install</kbd>
+1. In your IDE, go to <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd>
+2. Search for `"Rune"` and click <kbd>Install</kbd>
 
 ## Requirements
 

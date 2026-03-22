@@ -173,7 +173,7 @@ TP prefix: `TPButton`, `TPCheckbox`, `TPTextField`, `TPText`, `TPSwitch`, `TPAct
 | Workflow | Amaç |
 |----------|------|
 | `build.yml` | Push/PR → build + test + Qodana + Plugin Verifier |
-| `release.yml` | GitHub release → ZIP deploy + updatePlugins.xml güncelleme |
+| `release.yml` | GitHub release → JetBrains Marketplace'e publish |
 | `run-ui-tests.yml` | Manuel → Robot server UI testleri (port 8082) |
 
 ---

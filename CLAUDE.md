@@ -140,5 +140,5 @@ Implement `EditorNotificationProvider` + `DumbAware` for file-specific banners. 
 
 GitHub Actions workflows in `.github/workflows/`:
 - **`build.yml`** — triggered on push to main and PRs: build, test, Qodana inspection, Plugin Verifier
-- **`release.yml`** — triggered on GitHub release: publish plugin ZIP via GitHub Releases and update `updatePlugins.xml` in distribution repo
+- **`release.yml`** — triggered on GitHub release: publish plugin to JetBrains Marketplace
 - **`run-ui-tests.yml`** — manual trigger: robot server UI tests
