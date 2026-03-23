@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -162,26 +163,24 @@ internal fun InlineCommandPanel(
     var selectedIndex by remember { mutableStateOf(-1) }
     var remoteClaudeCommands by remember { mutableStateOf<List<ClaudeCommand>?>(null) }
     var remoteScCommands by remember { mutableStateOf<List<ClaudeCommand>?>(null) }
+    var commandsLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         searchFocusRequester.requestFocus()
     }
 
     LaunchedEffect(Unit) {
-        ApplicationManager.getApplication().executeOnPooledThread {
-            val repo = CommandsRepository.getInstance()
-            if (repo.getClaudeCommands() == null || repo.isStale()) repo.fetchCommands()
-            val remoteClaude = repo.getClaudeCommands()?.map {
-                ClaudeCommand(it.command, it.description, it.icon)
-            }
-            val remoteSc = repo.getScCommands()?.map {
-                ClaudeCommand(it.command, it.description, it.icon)
-            }
-            ApplicationManager.getApplication().invokeLater {
-                remoteClaudeCommands = remoteClaude
-                remoteScCommands = remoteSc
-            }
+        val repo = CommandsRepository.getInstance()
+        while (repo.isFetching) {
+            kotlinx.coroutines.delay(100)
         }
+        remoteClaudeCommands = repo.getClaudeCommands()?.map {
+            ClaudeCommand(it.command, it.description, it.icon)
+        }
+        remoteScCommands = repo.getScCommands()?.map {
+            ClaudeCommand(it.command, it.description, it.icon)
+        }
+        commandsLoading = false
     }
 
     LaunchedEffect(Unit) {
@@ -204,8 +203,8 @@ internal fun InlineCommandPanel(
         }
     }
 
-    val effectiveClaudeCommands = remoteClaudeCommands ?: claudeCommands
-    val effectiveScCommands = remoteScCommands ?: scCommands
+    val effectiveClaudeCommands = remoteClaudeCommands ?: emptyList()
+    val effectiveScCommands = remoteScCommands ?: emptyList()
 
     val allItems = remember(skills, agents, superClaudeInstalled, effectiveClaudeCommands, effectiveScCommands) {
         buildList {
@@ -408,7 +407,25 @@ internal fun InlineCommandPanel(
         Spacer(Modifier.height(8.dp))
 
         // Items grid
-        if (filteredItems.isEmpty()) {
+        val showCommandsLoading = commandsLoading && selectedFilter in listOf(
+            PaletteFilter.ALL, PaletteFilter.COMMANDS, PaletteFilter.SC_COMMANDS
+        )
+        if (showCommandsLoading && filteredItems.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = TPTheme.colors.accent,
+                        strokeWidth = 2.dp,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    TPText(text = "Loading commands...", color = TPTheme.colors.textSecondary, fontSize = 13.sp)
+                }
+            }
+        } else if (filteredItems.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 contentAlignment = Alignment.Center,

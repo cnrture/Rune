@@ -13,7 +13,8 @@ object AppIcons {
         val density = Density(1f)
         return remember(name) {
             val stream = AppIcons::class.java.classLoader.getResourceAsStream("icons/$name.svg")
-                ?: error("Icon not found: icons/$name.svg")
+                ?: AppIcons::class.java.classLoader.getResourceAsStream("icons/help.svg")
+                ?: error("Fallback icon not found: icons/help.svg")
             stream.use { loadSvgPainter(it, density) }
         }
     }

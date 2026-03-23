@@ -1,6 +1,7 @@
 package com.github.cnrture.rune.service
 
 import com.github.cnrture.rune.common.Constants
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import kotlinx.serialization.json.*
@@ -14,6 +15,12 @@ class CommandsRepository {
 
     private val log = Logger.getInstance(CommandsRepository::class.java)
 
+    init {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            fetchCommands()
+        }
+    }
+
     @Volatile
     private var cachedClaudeCommands: List<RemoteCommand>? = null
 
@@ -21,15 +28,15 @@ class CommandsRepository {
     private var cachedScCommands: List<RemoteCommand>? = null
 
     @Volatile
-    private var lastFetchTime: Long = 0L
+    var isFetching: Boolean = true
+        private set
 
     fun getClaudeCommands(): List<RemoteCommand>? = cachedClaudeCommands
 
     fun getScCommands(): List<RemoteCommand>? = cachedScCommands
 
-    fun isStale(): Boolean = System.currentTimeMillis() - lastFetchTime > CACHE_TTL_MS
-
     fun fetchCommands() {
+        isFetching = true
         try {
             val body = fetchJson(REMOTE_URL) ?: loadBundled() ?: return
             parseAndCache(body)
@@ -41,6 +48,8 @@ class CommandsRepository {
             } catch (e2: Exception) {
                 log.warn("Bundled commands fallback also failed", e2)
             }
+        } finally {
+            isFetching = false
         }
     }
 
@@ -48,8 +57,7 @@ class CommandsRepository {
         val root = Json.parseToJsonElement(body).jsonObject
         cachedClaudeCommands = parseCommandList(root, "claude_commands")
         cachedScCommands = parseCommandList(root, "sc_commands")
-        lastFetchTime = System.currentTimeMillis()
-    }
+}
 
     private fun parseCommandList(root: JsonObject, key: String): List<RemoteCommand> {
         return root[key]?.jsonArray?.mapNotNull { element ->
@@ -88,12 +96,10 @@ class CommandsRepository {
     }
 
     companion object {
-        private const val CACHE_TTL_MS = 24 * 60 * 60 * 1000L
         private const val REMOTE_URL =
             "https://raw.githubusercontent.com/cnrture/Rune/master/src/main/resources/commands.json"
 
         fun getInstance(): CommandsRepository =
-            com.intellij.openapi.application.ApplicationManager.getApplication()
-                .getService(CommandsRepository::class.java)
+            ApplicationManager.getApplication().getService(CommandsRepository::class.java)
     }
 }
