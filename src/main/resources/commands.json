@@ -1,6 +1,6 @@
 {
   "claude_commands": [
-    { "command": "/add-dir", "description": "Add working directory", "icon": "folder_open" },
+    { "command": "/add-dir2", "description": "Add working directory", "icon": "folder_open" },
     { "command": "/branch", "description": "Branch conversation", "icon": "account_tree" },
     { "command": "/chrome", "description": "Chrome settings", "icon": "open_in_new" },
     { "command": "/clear", "description": "Clear conversation", "icon": "delete_sweep" },
