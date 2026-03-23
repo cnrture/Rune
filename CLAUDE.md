@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew runPluginVerifier
 ```
 
-**Target platform:** IntelliJ Community (IC) version `2024.3.1`, compatible with `241–253.*`. JVM toolchain: Java 21. Kotlin 2.3.10, Compose Desktop 1.10.1. Depends on bundled `org.jetbrains.plugins.terminal`.
+**Target platform:** IntelliJ Community (IC) version `2024.3.1`, compatible with `241–253.*`. JVM toolchain: Java 21. Kotlin 2.3.20, Compose Desktop 1.10.1. Depends on bundled `org.jetbrains.plugins.terminal`.
 
 **Key dependencies:** kotlinx-serialization-json 1.10.0, FreeMarker 2.3.34. Version catalog in `gradle/libs.versions.toml`.
 
