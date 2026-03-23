@@ -31,6 +31,7 @@ import com.github.cnrture.rune.common.AppIcons
 import com.github.cnrture.rune.components.TPText
 import com.github.cnrture.rune.domain.model.Skill
 import com.github.cnrture.rune.domain.usecase.ScanSkillsUseCase
+import com.github.cnrture.rune.service.CommandsRepository
 import com.github.cnrture.rune.service.PluginSettingsService
 import com.github.cnrture.rune.theme.TPTheme
 import com.intellij.openapi.application.ApplicationManager
@@ -159,9 +160,28 @@ internal fun InlineCommandPanel(
     var skills by remember { mutableStateOf<List<Skill>>(emptyList()) }
     var agents by remember { mutableStateOf<List<Skill>>(emptyList()) }
     var selectedIndex by remember { mutableStateOf(-1) }
+    var remoteClaudeCommands by remember { mutableStateOf<List<ClaudeCommand>?>(null) }
+    var remoteScCommands by remember { mutableStateOf<List<ClaudeCommand>?>(null) }
 
     LaunchedEffect(Unit) {
         searchFocusRequester.requestFocus()
+    }
+
+    LaunchedEffect(Unit) {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val repo = CommandsRepository.getInstance()
+            if (repo.getClaudeCommands() == null) repo.fetchCommands()
+            val remoteClaude = repo.getClaudeCommands()?.map {
+                ClaudeCommand(it.command, it.description, it.icon)
+            }
+            val remoteSc = repo.getScCommands()?.map {
+                ClaudeCommand(it.command, it.description, it.icon)
+            }
+            ApplicationManager.getApplication().invokeLater {
+                remoteClaudeCommands = remoteClaude
+                remoteScCommands = remoteSc
+            }
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -184,7 +204,10 @@ internal fun InlineCommandPanel(
         }
     }
 
-    val allItems = remember(skills, agents, superClaudeInstalled) {
+    val effectiveClaudeCommands = remoteClaudeCommands ?: claudeCommands
+    val effectiveScCommands = remoteScCommands ?: scCommands
+
+    val allItems = remember(skills, agents, superClaudeInstalled, effectiveClaudeCommands, effectiveScCommands) {
         buildList {
             skills.forEach { skill ->
                 add(
@@ -212,7 +235,7 @@ internal fun InlineCommandPanel(
                     )
                 )
             }
-            claudeCommands.forEach { cmd ->
+            effectiveClaudeCommands.forEach { cmd ->
                 add(
                     PaletteItem(
                         category = PaletteCategory.COMMAND,
@@ -225,7 +248,7 @@ internal fun InlineCommandPanel(
                 )
             }
             if (superClaudeInstalled) {
-                scCommands.forEach { cmd ->
+                effectiveScCommands.forEach { cmd ->
                     add(
                         PaletteItem(
                             category = PaletteCategory.SC_COMMAND,
