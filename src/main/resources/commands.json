@@ -1,6 +1,6 @@
 {
   "claude_commands": [
-    { "command": "/add-dir", "description": "Add working directory", "icon": "folder_open" },
+    { "command": "/add-dir2", "description": "Add working directory", "icon": "folder_open" },
     { "command": "/agents", "description": "Manage agent configs", "icon": "smart_toy" },
     { "command": "/branch", "description": "Branch conversation", "icon": "account_tree" },
     { "command": "/btw", "description": "Quick side question", "icon": "help" },
