@@ -20,9 +20,14 @@ class CommandsRepository {
     @Volatile
     private var cachedScCommands: List<RemoteCommand>? = null
 
+    @Volatile
+    private var lastFetchTime: Long = 0L
+
     fun getClaudeCommands(): List<RemoteCommand>? = cachedClaudeCommands
 
     fun getScCommands(): List<RemoteCommand>? = cachedScCommands
+
+    fun isStale(): Boolean = System.currentTimeMillis() - lastFetchTime > CACHE_TTL_MS
 
     fun fetchCommands() {
         try {
@@ -43,6 +48,7 @@ class CommandsRepository {
         val root = Json.parseToJsonElement(body).jsonObject
         cachedClaudeCommands = parseCommandList(root, "claude_commands")
         cachedScCommands = parseCommandList(root, "sc_commands")
+        lastFetchTime = System.currentTimeMillis()
     }
 
     private fun parseCommandList(root: JsonObject, key: String): List<RemoteCommand> {
@@ -61,6 +67,8 @@ class CommandsRepository {
         connection.connectTimeout = Constants.TIMEOUT_HTTP_MS
         connection.readTimeout = Constants.TIMEOUT_HTTP_MS
         connection.setRequestProperty("Accept", "application/json")
+        connection.setRequestProperty("Cache-Control", "no-cache, no-store")
+        connection.useCaches = false
         return try {
             if (connection.responseCode in 200..299) {
                 connection.inputStream.bufferedReader().readText()
@@ -80,6 +88,7 @@ class CommandsRepository {
     }
 
     companion object {
+        private const val CACHE_TTL_MS = 24 * 60 * 60 * 1000L
         private const val REMOTE_URL =
             "https://raw.githubusercontent.com/cnrture/Rune/master/src/main/resources/commands.json"
 

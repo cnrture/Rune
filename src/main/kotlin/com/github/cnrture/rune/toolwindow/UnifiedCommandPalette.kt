@@ -170,7 +170,7 @@ internal fun InlineCommandPanel(
     LaunchedEffect(Unit) {
         ApplicationManager.getApplication().executeOnPooledThread {
             val repo = CommandsRepository.getInstance()
-            if (repo.getClaudeCommands() == null) repo.fetchCommands()
+            if (repo.getClaudeCommands() == null || repo.isStale()) repo.fetchCommands()
             val remoteClaude = repo.getClaudeCommands()?.map {
                 ClaudeCommand(it.command, it.description, it.icon)
             }
