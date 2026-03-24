@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.jetbrains.plugins.terminal.LocalTerminalDirectRunner
 import java.awt.*
+import java.awt.datatransfer.StringSelection
+import java.awt.event.KeyEvent
 import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.swing.JLabel
@@ -313,6 +315,56 @@ private fun createClaudeTerminalPanel(
 
         panel.add(widget.component, BorderLayout.CENTER)
         onWidgetReady(widget)
+
+        val keyDispatcher = KeyEventDispatcher { e ->
+            val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
+            if (focusOwner == null || !SwingUtilities.isDescendingFrom(
+                    focusOwner,
+                    panel
+                )
+            ) return@KeyEventDispatcher false
+
+            val isMeta = e.isMetaDown // Cmd on macOS
+            // Allow Cmd+C (copy), Cmd+A (select all) — block everything else
+            if (e.id == KeyEvent.KEY_PRESSED) {
+                when {
+                    // Cmd+C → copy selected text from terminal
+                    isMeta && e.keyCode == KeyEvent.VK_C -> {
+                        try {
+                            val selected = widget.selectedText
+                            if (!selected.isNullOrEmpty()) {
+                                val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+                                clipboard.setContents(StringSelection(selected), null)
+                            }
+                        } catch (_: Exception) {
+                        }
+                        e.consume()
+                        return@KeyEventDispatcher true
+                    }
+                    // Cmd+A → select all terminal text
+                    isMeta && e.keyCode == KeyEvent.VK_A -> {
+                        return@KeyEventDispatcher false
+                    }
+                    // ESC → send escape to terminal (interrupt/cancel)
+                    e.keyCode == KeyEvent.VK_ESCAPE -> {
+                        @Suppress("DEPRECATION")
+                        widget.terminalStarter?.sendString("\u001B", true)
+                        e.consume()
+                        return@KeyEventDispatcher true
+                    }
+                    // Enter → allow sending to terminal as fallback
+                    e.keyCode == KeyEvent.VK_ENTER -> {
+                        return@KeyEventDispatcher false
+                    }
+                }
+            }
+
+            false
+        }
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(keyDispatcher)
+        Disposer.register(disposable) {
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(keyDispatcher)
+        }
 
         ApplicationManager.getApplication().executeOnPooledThread {
             val claudePath = CliUtils.findClaudeCli() ?: "claude"
