@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+    <defs>
+        <linearGradient id="bg20" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#222028"/>
+            <stop offset="100%" stop-color="#16141A"/>
+        </linearGradient>
+        <linearGradient id="r20" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#FFE082"/>
+            <stop offset="100%" stop-color="#FFB800"/>
+        </linearGradient>
+    </defs>
+
+    <!-- Ingwaz rune ᛝ — pure diamond, seed/potential -->
+    <polygon points="20,6 34,20 20,34 6,20" fill="none" stroke="url(#r20)" stroke-width="3" stroke-linejoin="round"/>
+    <polygon points="20,13 27,20 20,27 13,20" fill="none" stroke="url(#r20)" stroke-width="2.5" stroke-linejoin="round"
+             opacity="0.6"/>
+</svg>
