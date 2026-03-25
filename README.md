@@ -1,8 +1,8 @@
 # Rune
 
 ![Build](https://github.com/cnrture/Rune/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
+[![Version](https://img.shields.io/jetbrains/plugin/v/30873.svg)](https://plugins.jetbrains.com/plugin/30873)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/30873.svg)](https://plugins.jetbrains.com/plugin/30873)
 
 **[Turkce](README.tr.md)** | English
 
