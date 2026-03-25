@@ -48,7 +48,7 @@ private fun formatModelName(model: String): String {
     // "claude-haiku-3-5-20241022" → "Haiku 3.5"
     val parts = model.removePrefix("claude-").split("-")
     val name = parts.firstOrNull()?.replaceFirstChar { it.uppercase() } ?: return model
-    val versionParts = parts.drop(1).takeWhile { it.all { c -> c.isDigit() } }
+    val versionParts = parts.drop(1).takeWhile { it.length <= 2 && it.all { c -> c.isDigit() } }
     val version = versionParts.joinToString(".")
     return if (version.isNotEmpty()) "$name $version" else name
 }
