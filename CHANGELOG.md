@@ -6,6 +6,12 @@
 
 ## [0.0.3] - 2026-03-25
 
+### 🐛 Bug Fixes
+
+- **Version Parsing Fix** — Fixed version parsing in terminal input bar by limiting version part length to 2 digits, preventing incorrect version detection.
+
+## [0.0.3] - 2026-03-25
+
 ### ✨ New Features
 
 - **Key Event Dispatcher**: Added key event dispatcher for terminal interactions, enabling keyboard-driven navigation and actions
