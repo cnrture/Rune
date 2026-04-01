@@ -4,6 +4,7 @@
     { "command": "/agents", "description": "Manage agent configs", "icon": "smart_toy" },
     { "command": "/branch", "description": "Branch conversation", "icon": "account_tree" },
     { "command": "/btw", "description": "Quick side question", "icon": "help" },
+    { "command": "/buddy", "description": "See your pet", "icon": "smart_toy" },
     { "command": "/chrome", "description": "Chrome settings", "icon": "open_in_new" },
     { "command": "/clear", "description": "Clear conversation", "icon": "delete_sweep" },
     { "command": "/color", "description": "Prompt bar color", "icon": "palette" },
@@ -62,7 +63,7 @@
     { "command": "/upgrade", "description": "Upgrade plan", "icon": "trending_up" },
     { "command": "/usage", "description": "Usage limits", "icon": "data_usage" },
     { "command": "/vim", "description": "Toggle vim mode", "icon": "code" },
-    { "command": "/voice", "description": "Voice dictation", "icon": "search" }
+    { "command": "/voice", "description": "Voice dictation", "icon": "search" },
   ],
   "sc_commands": [
     { "command": "/sc:analyze", "description": "Code analysis", "icon": "analytics" },
