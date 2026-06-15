@@ -7,6 +7,7 @@
 ## [0.0.5] - 2026-06-15
 
 ### 🔧 Improvements
+
 - **Extended IDE Compatibility** — Raised the supported build range upper bound to `263.*`, so the plugin now works on IntelliJ Platform 2026.1, 2026.2, and 2026.3 (including Android Studio Quail and later builds).
 
 ## [0.0.4] - 2026-03-25
@@ -66,7 +67,8 @@
 
 Initial release
 
-[Unreleased]: https://github.com/cnrture/Rune/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/cnrture/Rune/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/cnrture/Rune/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/cnrture/Rune/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/cnrture/Rune/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/cnrture/Rune/compare/v0.0.1...v0.0.2
